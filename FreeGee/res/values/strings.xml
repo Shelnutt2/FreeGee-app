@@ -4,5 +4,7 @@
     <string name="app_name">FreeGee</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
+    <string name="Description">Team Codefire proudly present, Project FreeGee-Easier-Than-Ever. This application is only for those running an LG Optimus G and wish to unlock their device. Simply click the unlock button below and the process will start. This will void your warranty and no one on team Codefire not I can be held responsible for anything that comes as a result of unlocking. Please make sure you&amp;apos;re phone is over 15% on battery and do not touch the phone until the unlock process has completed.</string>
+    <string name="BtnText">Unlock my Optimus G</string>
 
 </resources>

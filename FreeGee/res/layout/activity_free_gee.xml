@@ -4,15 +4,15 @@
    android:layout_width="fill_parent"
    android:layout_height="fill_parent"
    >
-<TextView  
-   android:layout_width="fill_parent"
-   android:layout_height="wrap_content"
-   android:text="To unlock please click here"
-   />
+
+<TextView
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/Description"/>
+
 <Button
-    android:text="Start long running task.."
     android:id="@+id/startBtn"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content">
-</Button>
+    android:layout_height="wrap_content"
+    android:text="@string/BtnText" />
 </LinearLayout>

@@ -20,9 +20,14 @@ import com.stericson.RootTools.RootToolsException;
 
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncTask;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -35,6 +40,7 @@ public class FreeGee extends Activity {
     public static final int DIALOG_INSTALL_PROGRESS = 1;
     private Button startBtn;
     private ProgressDialog mProgressDialog;
+    private String varient;
    
     /** Called when the activity is first created. */
     @Override
@@ -44,7 +50,49 @@ public class FreeGee extends Activity {
         startBtn = (Button)findViewById(R.id.startBtn);
         startBtn.setOnClickListener(new OnClickListener(){
             public void onClick(View v) {
-                startDownload();
+            	IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            	Intent batteryStatus = FreeGee.this.registerReceiver(null, ifilter);
+            	int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            	int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            	float batteryPct = level / (float)scale;
+            	if(batteryPct < 0.10){
+            		alertbuilder("Battery Too Low","Your battery is too low. For safety please charge it before attempting unlock","ok",1);
+            	}
+            	else{
+            		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
+            	    
+                	// set title
+                	alertDialogBuilder.setTitle("Warning");
+
+                	// set dialog message
+                	alertDialogBuilder
+                	.setMessage("By Pressing Okay you are acknowledging that you are voiding you are voiding you warrenty and no one from team codefire can be held responsible.")
+                	.setCancelable(false)
+                	.setPositiveButton("I agree",new DialogInterface.OnClickListener() {
+                	public void onClick(DialogInterface dialog,int id) {
+                	// if this button is clicked, close
+                	// current activity
+                		 startDownload();
+                	}
+                	})
+                	.setNegativeButton("I disagree",new DialogInterface.OnClickListener() {
+                	public void onClick(DialogInterface dialog,int id) {
+                	// if this button is clicked, close
+                	// current activity
+                		
+                			FreeGee.this.finish();
+                			
+                	}
+                	});
+
+                	// create alert dialog
+                	AlertDialog alertDialog = alertDialogBuilder.create();
+
+                	// show it
+                	alertDialog.show();
+            		
+                   
+                }
             }
         });
     }
@@ -79,20 +127,20 @@ public class FreeGee extends Activity {
 		}
 		device = prop.getProperty("ro.product.name");
 		if(device.equalsIgnoreCase("geehrc4g_spr_us")){
-			//varient = "sprint";
+			varient = "sprint";
         String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint.tar";
         new DownloadFileAsync().execute(url);
         }
 		else if(device.equalsIgnoreCase("geeb_att_us")){
-			//varient = "att";
+			varient = "att";
 			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/att/private/freegee/freegee-apk-att.tar");
 		}
 		else if(device.equalsIgnoreCase("geeb_rgs_ca")){
-			//varient = "rogers";
+			varient = "rogers";
 			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/rogers/private/freegee/freegee-apk-rogers.tar");
 		}
 		else if(device.equalsIgnoreCase("geeb_tls_ca")){
-			//varient = "telus";
+			varient = "telus";
 			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/telus/private/freegee/freegee-apk-telus.tar");
 		}
         
@@ -253,7 +301,35 @@ public class FreeGee extends Activity {
        @Override
        protected void onPostExecute(String unused) {
            dismissDialog(DIALOG_INSTALL_PROGRESS);
+           alertbuilder("Success!","Success. Your "+varient+" OptimusG has been liberated!","Yay!",0);
        }
     	
     }	
+    public void alertbuilder(String title, String text, String Button, final int exits){
+    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+    	    
+    	// set title
+    	alertDialogBuilder.setTitle(title);
+
+    	// set dialog message
+    	alertDialogBuilder
+    	.setMessage(text)
+    	.setCancelable(false)
+    	.setPositiveButton(Button,new DialogInterface.OnClickListener() {
+    	public void onClick(DialogInterface dialog,int id) {
+    	// if this button is clicked, close
+    	// current activity
+    		if(exits==1){
+    			FreeGee.this.finish();
+    			}
+    	}
+    	});
+
+    	// create alert dialog
+    	AlertDialog alertDialog = alertDialogBuilder.create();
+
+    	// show it
+    	alertDialog.show();
+
+    	}
 }
