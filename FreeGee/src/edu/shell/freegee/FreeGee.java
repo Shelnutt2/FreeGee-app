@@ -262,6 +262,7 @@ public class FreeGee extends Activity {
 			e.printStackTrace();
 		}
     	if (err == 0){
+    		publishProgress(0);
     		command = "cd /data/local/tmp/ && chmod 777 freegee-backup.sh && sh freegee-backup.sh";
     		try {
    			 err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -275,6 +276,7 @@ public class FreeGee extends Activity {
    			e.printStackTrace();
    		}
     		if (err == 0){
+    			publishProgress(1);
     			command = "cd /data/local/tmp/ && chmod 777 freegee-install.sh && sh freegee-install.sh";
     			try {
     				 err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -295,7 +297,14 @@ public class FreeGee extends Activity {
 		
 		protected void onProgressUpdate(String... progress) {
             Log.d("ANDRO_ASYNC",progress[0]);
-            mProgressDialog.setProgress(Integer.parseInt(progress[0]));
+            
+           // mProgressDialog.setProgress(Integer.parseInt(progress[0]));
+            if(progress[0] == "0"){
+             mProgressDialog.setMessage("Creating Backups...");
+             }
+            if(progress[0] == "1"){
+                mProgressDialog.setMessage("Installing...");
+                }
        }
 
        @Override
