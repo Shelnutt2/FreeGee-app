@@ -17,6 +17,8 @@ import java.util.concurrent.TimeoutException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -40,7 +42,7 @@ import com.stericson.RootTools.RootToolsException;
 public class FreeGee extends Activity {
     public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
     private ProgressDialog mProgressDialog;
-    ProgressDialog myDialog;
+    private ProgressDialog myDialog;
     boolean abort;
     //private static final Activity FreeGee = null;
     private String varient;
@@ -55,25 +57,36 @@ public class FreeGee extends Activity {
             
             @Override
             public void onClick(View v) {
-                // TODO Auto-generated method stub
-              try {
-				unlock();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (TimeoutException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (RootToolsException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+              myDialog = new ProgressDialog(FreeGee.this);
+			  myDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+			  myDialog.setTitle("Unlocking");
+			  myDialog.setMessage("Downloading images:");
+			  myDialog.show();
+
+			Thread backgroundThread = new Thread(new Runnable() {            
+			    @Override
+			    public void run() {
+			        // keep sure that this operations
+			        // are thread-safe!
+			    	try {
+						unlock();
+					} catch (RootToolsException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				        catch (Exception e){
+				        e.printStackTrace();
+					}
+
+			        runOnUiThread(new Runnable() {                    
+			            @Override
+			            public void run() {
+			            //	myDialog.dismiss();                        
+			            }
+			        });
+			    }
+			});
+			backgroundThread.start();
             }
         });
     }
@@ -85,6 +98,7 @@ public class FreeGee extends Activity {
         return true;
     }
     
+    
     public void unlock() throws  RootToolsException, InterruptedException, IOException, TimeoutException, ExecutionException{
     	
     	try
@@ -95,32 +109,33 @@ public class FreeGee extends Activity {
         {
         	
         }
-    	myDialog = new ProgressDialog(this);
-        myDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        myDialog.setTitle("Unlocking");
-        myDialog.setMessage("Downloading images:");
-        myDialog.show();
+        
         if (!RootTools.isBusyboxAvailable()) {
         	RootTools.offerBusyBox(this);
         }
 
         download_images();
-        myDialog.incrementProgressBy(25);
+        this.runOnUiThread(new Runnable() {
+        	  public void run() {
+        	    myDialog.incrementProgressBy(25);
+        	  }
+        	});
+        
 
         if (RootTools.isAccessGiven()) {
             if(!abort){
 
             	untar unt = new untar();
-        	   unt.execute();
+        	   unt.execute().get(30, TimeUnit.SECONDS);
         	if(!abort){
 
         		backuppartitons bckpart = new backuppartitons();
-        		bckpart.execute();
+        		bckpart.execute().get(60, TimeUnit.SECONDS);;
         	if(!abort){
          	    installpartitions inpart = new installpartitions();
-         	   inpart.execute();
+         	   inpart.execute().get(60, TimeUnit.SECONDS);;
          	if(!abort){
-        	    myDialog.dismiss();
+        	    //myDialog.dismiss();
         	//alertbuilder("Success!","Success. Your "+varient+" Optimus G has been liberated!","Yay!",0);
         }
          	}
@@ -136,9 +151,13 @@ public class FreeGee extends Activity {
 	private class untar extends AsyncTask<Void, Integer, String>{
 		
 		protected void onPreExecute() { 
-		
-		myDialog.setMessage("Extracting images from download");
-		myDialog.incrementProgressBy(25);
+			runOnUiThread(new Runnable() {
+				  public void run() {
+						myDialog.setMessage("Extracting images from download");
+						myDialog.incrementProgressBy(25);
+				  }
+				});
+
 		}
 		protected String doInBackground(Void...Params) {
 		boolean hastarinbusybox = false;
@@ -218,9 +237,13 @@ public class FreeGee extends Activity {
 	private class backuppartitons extends AsyncTask<Void, Integer, String>{
 		
 		protected void onPreExecute() { 
-			
-    	    myDialog.setMessage("Making backup directory");
-    		myDialog.incrementProgressBy(25);
+			runOnUiThread(new Runnable() {
+				  public void run() {
+			    	    myDialog.setMessage("Making backup directory");
+			    		myDialog.incrementProgressBy(25);
+				  }
+				});
+
 		}
 		protected String doInBackground(Void...Params) {
     	String command =  ("cd /data/local/tmp/ && chmod 777 freegee-backup.sh && sh freegee-backup.sh");
@@ -273,9 +296,12 @@ public class FreeGee extends Activity {
     
 	private class installpartitions extends AsyncTask<Void, Integer, String>{
 		protected void onPreExecute() { 
-			
-		myDialog.setMessage("Extracting images from download");
-		myDialog.incrementProgressBy(25);
+			runOnUiThread(new Runnable() {
+				  public void run() {
+			    		myDialog.setMessage("Copying bootloader");
+			    		myDialog.incrementProgressBy(25);
+				  }
+				});
 		}
 		protected String doInBackground(Void...Params) {
     	String command =  ("cd /data/local/tmp/ && chmod 777 freegee-install.sh && sh freegee-backup.sh");
@@ -307,8 +333,7 @@ public class FreeGee extends Activity {
 			}
 		};
     	try {
-    		myDialog.setMessage("Copying bootloader");
-    		myDialog.incrementProgressBy(25);
+
 			RootTools.sendShell(command, result, -1);
 		} catch (RootToolsException e1) {
 			// TODO Auto-generated catch block
