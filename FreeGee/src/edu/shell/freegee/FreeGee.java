@@ -95,7 +95,7 @@ public class FreeGee extends Activity {
 			//varient = "telus";
 			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/telus/private/freegee/freegee-apk-telus.tar");
 		}
-        new unlock().execute();
+        
 		
     }
     @Override
@@ -111,7 +111,7 @@ public class FreeGee extends Activity {
 		case DIALOG_INSTALL_PROGRESS:
                 mProgressDialog = new ProgressDialog(this);
                 mProgressDialog.setMessage("Installing..");
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.show();
                 return mProgressDialog;
@@ -166,7 +166,8 @@ public class FreeGee extends Activity {
 
         @Override
         protected void onPostExecute(String unused) {
-            dismissDialog(DIALOG_DOWNLOAD_PROGRESS);
+        	removeDialog(DIALOG_DOWNLOAD_PROGRESS);
+        	new unlock().execute();
         }
     }
     
@@ -175,7 +176,7 @@ public class FreeGee extends Activity {
     	@Override
         protected void onPreExecute() {
             super.onPreExecute();
-            dismissDialog(DIALOG_DOWNLOAD_PROGRESS);
+            removeDialog(DIALOG_DOWNLOAD_PROGRESS);
             showDialog(DIALOG_INSTALL_PROGRESS);
         }
 
@@ -200,7 +201,6 @@ public class FreeGee extends Activity {
 			//Intent intent = RootTools.offerBusyBox(activity, 0);    		
     	}
     	int err = 0;
-    	publishProgress((int)((25)));
     	String command = "busybox mv /sdcard/freegee.tar /data/local/tmp/ && cd /data/local/tmp/ && busybox tar xvf freegee.tar";
     	try {
 			 err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -213,7 +213,6 @@ public class FreeGee extends Activity {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	publishProgress((int)((40)));
     	if (err == 0){
     		command = "cd /data/local/tmp/ && chmod 777 freegee-backup.sh && sh freegee-backup.sh";
     		try {
@@ -228,8 +227,7 @@ public class FreeGee extends Activity {
    			e.printStackTrace();
    		}
     		if (err == 0){
-    			publishProgress((int)((60)));
-    			command = "cd /data/local/tmp/ && chmod 777 freegee-install.sh && sh freegee-backup.sh";
+    			command = "cd /data/local/tmp/ && chmod 777 freegee-install.sh && sh freegee-install.sh";
     			try {
     				 err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
     			} catch (IOException e) {
@@ -244,7 +242,6 @@ public class FreeGee extends Activity {
     		   }
     		}
     	
-    	publishProgress((int)((100)));
 		return null;
 		}
 		
