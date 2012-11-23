@@ -2,12 +2,16 @@ package edu.shell.freegee;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import android.os.AsyncTask;
@@ -16,6 +20,7 @@ import android.os.Environment;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -36,6 +41,7 @@ public class FreeGee extends Activity {
     public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
     private ProgressDialog mProgressDialog;
     ProgressDialog myDialog;
+    boolean abort;
     //private static final Activity FreeGee = null;
     private String varient;
     
@@ -64,6 +70,9 @@ public class FreeGee extends Activity {
 			} catch (RootToolsException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
             }
         });
@@ -76,7 +85,7 @@ public class FreeGee extends Activity {
         return true;
     }
     
-    public void unlock() throws  RootToolsException, InterruptedException, IOException, TimeoutException{
+    public void unlock() throws  RootToolsException, InterruptedException, IOException, TimeoutException, ExecutionException{
     	
     	try
         {
@@ -86,245 +95,53 @@ public class FreeGee extends Activity {
         {
         	
         }
-        
-        if (!RootTools.isBusyboxAvailable()) {
-        	RootTools.offerBusyBox(this);
-        }
-        myDialog = new ProgressDialog(FreeGee.this);
+    	myDialog = new ProgressDialog(this);
         myDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         myDialog.setTitle("Unlocking");
         myDialog.setMessage("Downloading images:");
         myDialog.show();
+        if (!RootTools.isBusyboxAvailable()) {
+        	RootTools.offerBusyBox(this);
+        }
+
         download_images();
-        myDialog.incrementProgressBy(20);
+        myDialog.incrementProgressBy(25);
 
         if (RootTools.isAccessGiven()) {
-        	backuppartitons();
-        	erasepartitions();
-         	installpartitions();
-        	test();
-        	myDialog.dismiss();
-        	alertbuilder("Success!","Success. Your "+varient+" OptimusG has been liberated!","Yay!",0);
+            if(!abort){
+
+            	untar unt = new untar();
+        	   unt.execute();
+        	if(!abort){
+
+        		backuppartitons bckpart = new backuppartitons();
+        		bckpart.execute();
+        	if(!abort){
+         	    installpartitions inpart = new installpartitions();
+         	   inpart.execute();
+         	if(!abort){
+        	    myDialog.dismiss();
+        	//alertbuilder("Success!","Success. Your "+varient+" Optimus G has been liberated!","Yay!",0);
+        }
+         	}
+        	}
+            }
+         
         }
         else{
         	alertbuilder("Not Rooted","Please root you're phone!", "Ok",1);
         	}        	
         }
     
-
-	private void test() {
-	    RootTools.Result result = new RootTools.Result() {
-	        @Override
-	        public void process(String line) throws Exception {
-	            // Do something with current line;
-	            // Maybe store it using setData()
-	        }
-
-	        @Override
-	        public void onFailure(Exception ex) {
-	            // Do something if we failed while trying to run a command or read its output
-	            setError(1);
-	        }
-
-	        @Override
-	        public void onComplete(int diag) {
-	            // Invoked when we are done reading one or more command's output.
-	            // Convenient because we are still within the context of our result object.
-	        }
-
-			@Override
-			public void processError(String arg0) throws Exception {
-				// TODO Auto-generated method stub
-				
-			}
-
-	    };
-	    try {
-			RootTools.sendShell(
-			    "ls /sdflksmdfs",
-			    result,
-			    -1
-			);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (RootToolsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TimeoutException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	    if(0 != result.getError()){
-	    	Toast.makeText(this,"Test error code is: "+ result.getError(), Toast.LENGTH_LONG).show();
-	    }
-	
-	
+	private class untar extends AsyncTask<Void, Integer, String>{
 		
-	}
-
-	private void installpartitions() throws IOException, TimeoutException {
-    	String command =  ("busybox dd if=/data/local/tmp/aboot-"+varient+"-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot");
-    	RootTools.Result  result = new RootTools.Result() {
-			
-			@Override
-			public void processError(String arg0) throws Exception {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void process(String arg0) throws Exception {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void onFailure(Exception arg0) {
-				setError(1);
-
-				
-			}
-			
-			@Override
-			public void onComplete(int arg0) {
-				// TODO Auto-generated method stub
-				
-			}
-		};
-    	try {
-    		myDialog.setMessage("Copying bootloader");
-    		myDialog.incrementProgressBy(5);
-			RootTools.sendShell(command, result, -1);
-		} catch (RootToolsException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	Integer errcode = result.getError(); 
-    	//Toast.makeText(this,"Chmod error code is: "+ errcode, Toast.LENGTH_LONG).show();
-    	if(errcode != null && errcode != 0){
-    		alertbuilder("Error", "Can't install new bootloader. DO NOT TURN OFF YOUR PHONE. Contact Shelnutt2 or thecubed on XDA or IRC (freenode #lg-optimus-g).","Ok",1);
-    		
-    	}
-    	
-    	command =  ("busybox dd if=/data/local/tmp/recovery-"+varient+"-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery");
-    	try {
-    		myDialog.setMessage("Copying cwm recovery");
-    		myDialog.incrementProgressBy(5);
-			RootTools.sendShell(command, result, -1);
-		} catch (RootToolsException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	errcode = result.getError(); 
-    	//Toast.makeText(this,"Chmod error code is: "+ errcode, Toast.LENGTH_LONG).show();
-    	if(errcode != null && errcode != 0){
-    		alertbuilder("Error", "Can't install new recovery image. DO NOT TURN OFF YOUR PHONE. Contact Shelnutt2 or thecubed on XDA or IRC (freenode #lg-optimus-g).","Ok",1);
-    		
-    	}
-    	command =  ("busybox dd if=/data/local/tmp/boot-"+varient+"-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/boot");
-    	try {
-    		myDialog.setMessage("Copying unlocked boot image");
-    		myDialog.incrementProgressBy(5);
-			RootTools.sendShell(command, result, -1);
-		} catch (RootToolsException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	errcode = result.getError(); 
-    	//Toast.makeText(this,"Chmod error code is: "+ errcode, Toast.LENGTH_LONG).show();
-    	if(errcode != null && errcode != 0){
-    		alertbuilder("Error", "Can't install new boot image. DO NOT TURN OFF YOUR PHONE. Contact Shelnutt2 or thecubed on XDA or IRC (freenode #lg-optimus-g).","Ok",1);
-    		
-    	}
+		protected void onPreExecute() { 
 		
-	}
-
-	private void erasepartitions() throws IOException, TimeoutException {
-		
-
-	    /*File file = getBaseContext().getFileStreamPath("/data/local/tmp/recovery-"+varient+"-freegee.img");
-	    if(!file.exists()){
-	    	alertbuilder("Error","can't find new images, something went wrong in download or untar, aborting","ok",1);
-	    }*/
-	    	  
-    	String command =  ("busybox dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/recovery");
-    	RootTools.Result  result = new RootTools.Result() {
-			
-			@Override
-			public void processError(String arg0) throws Exception {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void process(String arg0) throws Exception {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void onFailure(Exception arg0) {
-				setError(1);
-
-				
-			}
-			
-			@Override
-			public void onComplete(int arg0) {
-				// TODO Auto-generated method stub
-				
-			}
-		};
-    	try {
-    		myDialog.setMessage("Erasing recovery");
-    		myDialog.incrementProgressBy(5);
-			RootTools.sendShell(command, result, -1);
-		} catch (RootToolsException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		myDialog.setMessage("Extracting images from download");
+		myDialog.incrementProgressBy(25);
 		}
-    	Integer errcode = result.getError(); 
-    	/*Toast.makeText(this,"Chmod error code is: "+ errcode, Toast.LENGTH_LONG).show();
-    	if(errcode != null && errcode != 0){
-    		alertbuilder("Error", "Can't create backup directory","Ok",1);
-    		
-    	}*/
-    	
-    	command =  ("busybox dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot");
-    	try {
-    		myDialog.setMessage("Erasing boot image");
-    		myDialog.incrementProgressBy(5);
-			RootTools.sendShell(command, result, -1);
-		} catch (RootToolsException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	errcode = result.getError(); 
-    	/*Toast.makeText(this,"Chmod error code is: "+ errcode, Toast.LENGTH_LONG).show();
-    	if(errcode != null && errcode != 0){
-    		alertbuilder("Error", "Can not make backup of boot image, aborting","Ok",1);
-    		
-    	}*/
-    	command =  ("busybox dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot");
-    	try {
-    		myDialog.setMessage("Ereasing bootloader");
-    		myDialog.incrementProgressBy(5);
-			RootTools.sendShell(command, result, -1);
-		} catch (RootToolsException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	errcode = result.getError(); 
-    	/*Toast.makeText(this,"Chmod error code is: "+ errcode, Toast.LENGTH_LONG).show();
-    	if(errcode != null && errcode != 0){
-    		alertbuilder("Error", "Can not make backup of boot image, aborting","Ok",1);
-    		
-    	}*/
-	}
-
-	public void untar() throws InterruptedException, IOException, TimeoutException{
-    	boolean hastarinbusybox = false;
+		protected String doInBackground(Void...Params) {
+		boolean hastarinbusybox = false;
 		try {
 			for (String curVal : RootTools.getBusyBoxApplets()){
 				  if (curVal.matches("tar")){
@@ -373,12 +190,16 @@ public class FreeGee extends Activity {
 			}
 		};
     	try {
-    		myDialog.setMessage("Extracting images from download");
-    		myDialog.incrementProgressBy(5);
 			RootTools.sendShell(command, result, -1);
 		} catch (RootToolsException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TimeoutException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
     	Integer errcode = result.getError(); 
     	//Toast.makeText(this,"Error code is: "+ errcode, Toast.LENGTH_LONG).show();
@@ -386,10 +207,23 @@ public class FreeGee extends Activity {
     		alertbuilder("Error", "Can't untar images!","Ok",1);
     		
     	}
+    	File f = new File("/data/local/tmp/freegee-working");
+    	if(!f.exists()) {
+    		alertbuilder("Error", "Can't untar images! Aborting!","Ok",1);
+    	}
+		return null;
+		}
     	
     }	
-    public void backuppartitons() throws InterruptedException, IOException, TimeoutException{
-    	String command =  ("mkdir Environment.getExternalStorageDirectory().getPath()/freegee");
+	private class backuppartitons extends AsyncTask<Void, Integer, String>{
+		
+		protected void onPreExecute() { 
+			
+    	    myDialog.setMessage("Making backup directory");
+    		myDialog.incrementProgressBy(25);
+		}
+		protected String doInBackground(Void...Params) {
+    	String command =  ("cd /data/local/tmp/ && chmod 777 freegee-backup.sh && sh freegee-backup.sh");
     	RootTools.Result  result = new RootTools.Result() {
 			
 			@Override
@@ -418,69 +252,98 @@ public class FreeGee extends Activity {
 			}
 		};
     	try {
-    		myDialog.setMessage("Making backup directory");
-    		myDialog.incrementProgressBy(5);
 			RootTools.sendShell(command, result, -1);
 		} catch (RootToolsException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}
-    	Integer errcode = result.getError(); 
-    	//Toast.makeText(this,"Chmod error code is: "+ errcode, Toast.LENGTH_LONG).show();
-    	if(errcode != null && errcode != 0){
-    		alertbuilder("Error", "Can't create backup directory","Ok",1);
-    		
-    	}
-    	command =  ("busybox dd if=/dev/block/platform/msm_sdcc.1/by-name/aboot of=/sdcard/freegee/aboot-"+varient+"-backup.img");
-    	try {
-    		myDialog.setMessage("Backing up bootloader");
-    		myDialog.incrementProgressBy(5);
-			RootTools.sendShell(command, result, -1);
-		} catch (RootToolsException e1) {
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	errcode = result.getError(); 
-    	//Toast.makeText(this,"Chmod error code is: "+ errcode, Toast.LENGTH_LONG).show();
-    	if(errcode != null && errcode != 0){
-    		alertbuilder("Error", "Can not make backup of bootloader, aborting","Ok",1);
-    		
-    	}
-    	command =  ("busybox dd if=/dev/block/platform/msm_sdcc.1/by-name/boot of=/sdcard/freegee/boot-"+varient+"-backup.img");
-    	try {
-    		myDialog.setMessage("Backing up boot image");
-    		myDialog.incrementProgressBy(5);
-			RootTools.sendShell(command, result, -1);
-		} catch (RootToolsException e1) {
+			e.printStackTrace();
+		} catch (TimeoutException e) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			e.printStackTrace();
 		}
-    	errcode = result.getError(); 
-    	//Toast.makeText(this,"Chmod error code is: "+ errcode, Toast.LENGTH_LONG).show();
-    	if(errcode != null && errcode != 0){
-    		alertbuilder("Error", "Can not make backup of boot image, aborting","Ok",1);
-    		
+    	File f = new File("/sdcard/freegee/error");
+    	if(f.exists()) {
+    		alertbuilder("Error", "Can't make backups! Aborting!","Ok",1);
     	}
-    	command =  ("busybox dd if=/dev/block/platform/msm_sdcc.1/by-name/recovery of=/sdcard/freegee/recovery-"+varient+"-backup.img");
-    	try {
-    		myDialog.setMessage("Backing up recovery");
-    		myDialog.incrementProgressBy(5);
-			RootTools.sendShell(command, result, -1);
-		} catch (RootToolsException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		return null;
 		}
-    	errcode = result.getError(); 
-    	//Toast.makeText(this,"Chmod error code is: "+ errcode, Toast.LENGTH_LONG).show();
-    	if(errcode != null && errcode != 0){
-    		alertbuilder("Error", "Can not make backup of bootloader, aborting","Ok",1);
-    		
-    	}
-
     }
     
-    public void download_images() throws InterruptedException, IOException, TimeoutException, RootToolsException{
-    	String device = android.os.Build.DEVICE;
+	private class installpartitions extends AsyncTask<Void, Integer, String>{
+		protected void onPreExecute() { 
+			
+		myDialog.setMessage("Extracting images from download");
+		myDialog.incrementProgressBy(25);
+		}
+		protected String doInBackground(Void...Params) {
+    	String command =  ("cd /data/local/tmp/ && chmod 777 freegee-install.sh && sh freegee-backup.sh");
+    	RootTools.Result  result = new RootTools.Result() {
+			
+			@Override
+			public void processError(String arg0) throws Exception {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void process(String arg0) throws Exception {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onFailure(Exception arg0) {
+				setError(1);
+
+				
+			}
+			
+			@Override
+			public void onComplete(int arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		};
+    	try {
+    		myDialog.setMessage("Copying bootloader");
+    		myDialog.incrementProgressBy(25);
+			RootTools.sendShell(command, result, -1);
+		} catch (RootToolsException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (TimeoutException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	File f = new File("/sdcard/freegee/error");
+    	if(f.exists()) {
+    		alertbuilder("Error", "Can't flash images. Do not reboot, contact Shelnutt2 or thecubed on xda or irc","Ok",1);
+    	}
+		return null;
+		}
+	}
+    
+    public void download_images() throws InterruptedException, IOException, TimeoutException, RootToolsException, ExecutionException{
+    	String device;
+    	
+    	
+    		// read the property text  file
+    		File file = new File("/system/build.prop");
+    		FileInputStream fis = new FileInputStream(file);
+
+    		Properties prop = new Properties();
+    		// feed the property with the file
+    		prop.load(fis);
+
+    		// Get the application to print out all the key and the value
+    		// of your property file
+    		device = prop.getProperty("ro.product.name");
+    	    	
     	//Toast.makeText(this,"Device is: "+ device, Toast.LENGTH_LONG).show();
     	
     		// declare the dialog as a member field of your activity
@@ -496,17 +359,32 @@ public class FreeGee extends Activity {
     		
     		// execute this when the downloader must be fired
     		DownloadFile downloadFile = new DownloadFile();
-    		if(device.equalsIgnoreCase("geehrc4g")){
+    		if(device.equalsIgnoreCase("geehrc4g_spr_us")){
     			varient = "sprint";
-    			downloadFile.execute("http://jellybean.dccontests.com/optimusg/sprint/freegee-sprint.tar");	
+    			//http://downloads.codefi.re/direct.php?file=Shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint.tar
+    			downloadFile.execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint.tar").get(1000, TimeUnit.SECONDS);	
     	    }
-    		else if(device.equalsIgnoreCase("geeb")){
+    		else if(device.equalsIgnoreCase("geeb_att_us")){
     			varient = "att";
-    			downloadFile.execute("http://jellybean.dccontests.com/optimusg/att/freegee-att.tar");
+    			downloadFile.execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/att/private/freegee/freegee-apk-att.tar").get(1000, TimeUnit.SECONDS);
+    		}
+    		else if(device.equalsIgnoreCase("geeb_rgs_ca")){
+    			varient = "rogers";
+    			downloadFile.execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/rogers/private/freegee/freegee-apk-rogers.tar").get(1000, TimeUnit.SECONDS);
+    		}
+    		else if(device.equalsIgnoreCase("geeb_tls_ca")){
+    			varient = "telus";
+    			downloadFile.execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/telus/private/freegee/freegee-apk-telus.tar").get(1000, TimeUnit.SECONDS);
     		}
     		else{
-    			alertbuilder("Not supporter", "Your device currently isn't support","ok",1);
+    			alertbuilder("Not supported", "Your device currently isn't support","ok",1);
     		}
+    		
+    		File f = new File(Environment.getExternalStorageDirectory().getPath() +"/freegee.tar");
+    		if(!f.exists()) { 
+    			alertbuilder("Download Failed", "The download failed. Please make sure you have internet access","ok",1);
+    		 }
+    		
     		String command =  ( "busybox mv "+ Environment.getExternalStorageDirectory().getPath() +"/freegee.tar /data/local/tmp/");
         	
         	RootTools.Result  result = new RootTools.Result() {
@@ -598,7 +476,7 @@ public void alertbuilder(String title, String text, String Button, final int exi
 				// if this button is clicked, close
 				// current activity
 				if(exits==1){
-				FreeGee.this.finish();
+				abort = true;
 				}
 			}
 		  });
