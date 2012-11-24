@@ -38,7 +38,9 @@ public class FreeGee extends Activity {
    
     public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
     public static final int DIALOG_INSTALL_PROGRESS = 1;
+    public static final int DIALOG_RESTORE_PROGRESS = 2;
     private Button startBtn;
+    private Button restoreBtn;
     private ProgressDialog mProgressDialog;
     private String varient;
    
@@ -73,6 +75,54 @@ public class FreeGee extends Activity {
                 	// if this button is clicked, close
                 	// current activity
                 		 startDownload();
+                	}
+                	})
+                	.setNegativeButton("I disagree",new DialogInterface.OnClickListener() {
+                	public void onClick(DialogInterface dialog,int id) {
+                	// if this button is clicked, close
+                	// current activity
+                		
+                			FreeGee.this.finish();
+                			
+                	}
+                	});
+
+                	// create alert dialog
+                	AlertDialog alertDialog = alertDialogBuilder.create();
+
+                	// show it
+                	alertDialog.show();
+            		
+                   
+                }
+            }
+        });
+        restoreBtn = (Button)findViewById(R.id.restoreBtn);
+        restoreBtn.setOnClickListener(new OnClickListener(){
+            public void onClick(View v) {
+            	IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            	Intent batteryStatus = FreeGee.this.registerReceiver(null, ifilter);
+            	int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            	int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            	float batteryPct = level / (float)scale;
+            	if(batteryPct < 0.10){
+            		alertbuilder("Battery Too Low","Your battery is too low. For safety please charge it before attempting unlock","ok",1);
+            	}
+            	else{
+            		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
+            	    
+                	// set title
+                	alertDialogBuilder.setTitle("Warning");
+
+                	// set dialog message
+                	alertDialogBuilder
+                	.setMessage("By Pressing Okay you are acknowledging that you are returning to a locked state by using the backups made while unlocking.")
+                	.setCancelable(false)
+                	.setPositiveButton("I agree",new DialogInterface.OnClickListener() {
+                	public void onClick(DialogInterface dialog,int id) {
+                	// if this button is clicked, close
+                	// current activity
+                		 new restore().execute();
                 	}
                 	})
                 	.setNegativeButton("I disagree",new DialogInterface.OnClickListener() {
@@ -143,6 +193,9 @@ public class FreeGee extends Activity {
 			varient = "telus";
 			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/telus/private/freegee/freegee-apk-telus.tar");
 		}
+		else{
+			alertbuilder("Error!","Your device currently isn't supported.","Ok",1);
+		}
         
 		
     }
@@ -163,6 +216,13 @@ public class FreeGee extends Activity {
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.show();
                 return mProgressDialog;
+		case DIALOG_RESTORE_PROGRESS:
+			mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage("Restoring..");
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+            return mProgressDialog;
 		default:
                 return null;
         }
@@ -284,8 +344,39 @@ public class FreeGee extends Activity {
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
+    			if (err !=0){
+    				
+AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
+            	    
+                	// set title
+                	alertDialogBuilder.setTitle("Error!");
+
+                	// set dialog message
+                	alertDialogBuilder
+                	.setMessage("There was a problem installing. Attempting to reinstall backups.")
+                	.setCancelable(false)
+                	.setPositiveButton("OK",new DialogInterface.OnClickListener() {
+                	public void onClick(DialogInterface dialog,int id) {
+                	// if this button is clicked, close
+                	// current activity
+                		 new restore().execute();
+                	}
+                	});
+                	// create alert dialog
+                	AlertDialog alertDialog = alertDialogBuilder.create();
+                	// show it
+                	alertDialog.show();
+    			}
     		   }
+    		else{
+    			alertbuilder("Error!","There was a problem creating backups. Aborting.","Ok",0);
+    			
+    		    }
     		}
+    	else {
+    		alertbuilder("Error!","There was a problem untaring the file. Please try again","Ok!",0);
+    		
+    	}
     	
 		return null;
 		}
@@ -303,10 +394,65 @@ public class FreeGee extends Activity {
        @Override
        protected void onPostExecute(String unused) {
            dismissDialog(DIALOG_INSTALL_PROGRESS);
-           alertbuilder("Success!","Success. Your "+varient+" OptimusG has been liberated!","Yay!",0);
+           alertbuilder("Success!","Success. Your "+varient+" Optimus G has been liberated!","Yay!",0);
        }
     	
     }	
+    
+    class restore extends AsyncTask<String, String, String> {
+        
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showDialog(DIALOG_RESTORE_PROGRESS);
+        }
+
+        @Override
+        protected String doInBackground(String... aurl) {
+        	String command = "busybox cp /sdcard/freegee/freegee-restore.sh /data/local/tmp";
+        	int err = 0;
+        	try {
+			    err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        	if ( err == 0 ){ 
+        	command = "cd /data/local/tmp/ && chmod 777 freegee-restore.sh && sh freegee-restore.sh";
+        	try {
+				err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        	if (err !=0){
+        		 alertbuilder("Error","Restoring failed! Please make sure backups and freegee-restore.sh are in /sdcard/freegee","Ok!",0);
+        	}
+        	}
+        	else{
+        		 alertbuilder("Error","Restore script not found! Please put backups and freegee-restore.sh in /sdcard/freegee","Ok!",0);
+        	}
+            return null;
+
+        }
+        protected void onProgressUpdate(String... progress) {
+           //  mProgressDialog.setProgress(Integer.parseInt(progress[0]));
+        }
+
+        @Override
+        protected void onPostExecute(String unused) {
+        	removeDialog(DIALOG_RESTORE_PROGRESS);
+        	 alertbuilder("Success!","Success. Your Optimus G has been restored!","Yay!",0);
+        	
+        }
+    }
+    
     public void alertbuilder(String title, String text, String Button, final int exits){
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
     	    
