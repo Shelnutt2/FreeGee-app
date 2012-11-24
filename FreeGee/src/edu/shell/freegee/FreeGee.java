@@ -183,15 +183,11 @@ public class FreeGee extends Activity {
                 URL url = new URL(aurl[0]);
                 URLConnection conexion = url.openConnection();
                 conexion.connect();
-
                 int lenghtOfFile = conexion.getContentLength();
-                Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
-
                 InputStream input = new BufferedInputStream(url.openStream());
                 OutputStream output = new FileOutputStream("/sdcard/freegee.tar");
 
                 byte data[] = new byte[1024];
-
                 long total = 0;
 
                 while ((count = input.read(data)) != -1) {
@@ -208,7 +204,6 @@ public class FreeGee extends Activity {
 
         }
         protected void onProgressUpdate(String... progress) {
-             Log.d("ANDRO_ASYNC",progress[0]);
              mProgressDialog.setProgress(Integer.parseInt(progress[0]));
         }
 
@@ -296,9 +291,7 @@ public class FreeGee extends Activity {
 		}
 		
 		protected void onProgressUpdate(String... progress) {
-            Log.d("ANDRO_ASYNC",progress[0]);
-            
-           // mProgressDialog.setProgress(Integer.parseInt(progress[0]));
+
             if(progress[0] == "0"){
              mProgressDialog.setMessage("Creating Backups...");
              }
