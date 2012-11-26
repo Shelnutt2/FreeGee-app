@@ -149,8 +149,21 @@ public class FreeGee extends Activity {
 
     private void startDownload() {
     	String device;
+    	int err = 0;
+    	String command = "busybox";
+    	try {
+			 err = Runtime.getRuntime().exec(new String[] { command }).waitFor();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			//RootTools.getShell(true).add(command).waitForFinish();
+        catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     	
-    	
+		if (err == 0){
 		// read the property text  file
 		File file = new File("/system/build.prop");
 		FileInputStream fis = null;
@@ -185,6 +198,10 @@ public class FreeGee extends Activity {
 			varient = "att";
 			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/att/private/freegee/freegee-apk-att.tar");
 		}
+		else if(device.equalsIgnoreCase("geeb_bell_ca")){
+			varient = "bell";
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/bell/private/freegee/freegee-apk-bell.tar");
+		}
 		else if(device.equalsIgnoreCase("geeb_rgs_ca")){
 			varient = "rogers";
 			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/rogers/private/freegee/freegee-apk-rogers.tar");
@@ -196,7 +213,10 @@ public class FreeGee extends Activity {
 		else{
 			alertbuilder("Error!","Your device currently isn't supported.","Ok",1);
 		}
-        
+		}
+		else{
+			alertbuilder("Error!","Please install busybox from the market.","Ok",0);
+		}
 		
     }
     @Override
@@ -284,25 +304,6 @@ public class FreeGee extends Activity {
         }
 
 		protected String doInBackground(String...Params) {
-		boolean hastarinbusybox = false;
-		try {
-			for (String curVal : RootTools.getBusyBoxApplets()){
-				  if (curVal.matches("tar")){
-					  hastarinbusybox = true;
-				  }
-				}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	
-    	if(hastarinbusybox == false){
-    		//alertbuilder("No tar support","Your busybox doesn't support tar, please download the new one from the market","ok",0);
-    		//not working yet
-    		//Activity activity = FreeGee;
-			
-			//Intent intent = RootTools.offerBusyBox(activity, 0);    		
-    	}
     	int err = 0;
     	String command = "busybox mv /sdcard/freegee.tar /data/local/tmp/ && cd /data/local/tmp/ && busybox tar xvf freegee.tar";
     	try {
@@ -346,7 +347,7 @@ public class FreeGee extends Activity {
     			}
     			if (err !=0){
     				
-AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
             	    
                 	// set title
                 	alertDialogBuilder.setTitle("Error!");
