@@ -74,7 +74,37 @@ public class FreeGee extends Activity {
                 	public void onClick(DialogInterface dialog,int id) {
                 	// if this button is clicked, close
                 	// current activity
-                		 startDownload();
+                		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
+                	    
+                    	// set title
+                    	alertDialogBuilder.setTitle("Warning");
+
+                    	// set dialog message
+                    	alertDialogBuilder
+                    	.setMessage("Please choose the recovery you want. CWM is stable but has backup issues. TWRP works in all aspects exception compressed backups. TWRP is the recommended choice.")
+                    	.setCancelable(false)
+                    	.setPositiveButton("TWRP",new DialogInterface.OnClickListener() {
+                    	public void onClick(DialogInterface dialog,int id) {
+                    	// if this button is clicked, close
+                    	// current activity
+                    		 startDownload("twrp");
+                    	}
+                    	})
+                    	.setNegativeButton("CWM",new DialogInterface.OnClickListener() {
+                    	public void onClick(DialogInterface dialog,int id) {
+                    	// if this button is clicked, close
+                    	// current activity
+                    		
+                    		 startDownload("cwm");
+                    			
+                    	}
+                    	});
+
+                    	// create alert dialog
+                    	AlertDialog alertDialog = alertDialogBuilder.create();
+
+                    	// show it
+                    	alertDialog.show();
                 	}
                 	})
                 	.setNegativeButton("I disagree",new DialogInterface.OnClickListener() {
@@ -147,7 +177,7 @@ public class FreeGee extends Activity {
         });
     }
 
-    private void startDownload() {
+    private void startDownload(String recovery) {
     	String device;
     	int err = 0;
     	String command = "busybox";
@@ -191,24 +221,24 @@ public class FreeGee extends Activity {
 		device = prop.getProperty("ro.product.name");
 		if(device.equalsIgnoreCase("geehrc4g_spr_us")){
 			varient = "sprint";
-        String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint.tar";
+        String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint-"+recovery+".tar";
         new DownloadFileAsync().execute(url);
         }
 		else if(device.equalsIgnoreCase("geeb_att_us")){
 			varient = "att";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/att/private/freegee/freegee-apk-att.tar");
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/att/private/freegee/freegee-apk-att-"+recovery+".tar");
 		}
 		else if(device.equalsIgnoreCase("geeb_bell_ca")){
 			varient = "bell";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/bell/private/freegee/freegee-apk-bell.tar");
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/bell/private/freegee/freegee-apk-bell-"+recovery+".tar");
 		}
 		else if(device.equalsIgnoreCase("geeb_rgs_ca")){
 			varient = "rogers";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/rogers/private/freegee/freegee-apk-rogers.tar");
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/rogers/private/freegee/freegee-apk-rogers-"+recovery+".tar");
 		}
 		else if(device.equalsIgnoreCase("geeb_tls_ca")){
 			varient = "telus";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/telus/private/freegee/freegee-apk-telus.tar");
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/telus/private/freegee/freegee-apk-telus-"+recovery+".tar");
 		}
 		else{
 			alertbuilder("Error!","Your device currently isn't supported.","Ok",1);
