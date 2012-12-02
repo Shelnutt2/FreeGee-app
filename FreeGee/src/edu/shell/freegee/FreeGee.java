@@ -332,9 +332,9 @@ public class FreeGee extends Activity {
             removeDialog(DIALOG_DOWNLOAD_PROGRESS);
             showDialog(DIALOG_INSTALL_PROGRESS);
         }
-
-		protected String doInBackground(String...Params) {
     	int err = 0;
+		protected String doInBackground(String...Params) {
+    	//int err = 0;
     	String command = "busybox mv /sdcard/freegee.tar /data/local/tmp/ && cd /data/local/tmp/ && busybox tar xvf freegee.tar";
     	try {
 			 err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -400,12 +400,13 @@ public class FreeGee extends Activity {
     			}
     		   }
     		else{
-    			alertbuilder("Error!","There was a problem creating backups. Aborting.","Ok",0);
+    			err=-1;
     			
     		    }
     		}
     	else {
-    		alertbuilder("Error!","There was a problem untaring the file. Please try again","Ok!",0);
+    		err = -2;
+    		
     		
     	}
     	
@@ -425,13 +426,21 @@ public class FreeGee extends Activity {
        @Override
        protected void onPostExecute(String unused) {
            dismissDialog(DIALOG_INSTALL_PROGRESS);
+           if(err==-1){
+        	   alertbuilder("Error!","There was a problem creating backups. Aborting.","Ok",0);
+           }
+           else if(err==-2){
+        	   alertbuilder("Error!","There was a problem untaring the file. Please try again","Ok!",0);
+           }
+           else{
            alertbuilder("Success!","Success. Your "+varient+" Optimus G has been liberated!","Yay!",0);
+           }
        }
     	
     }	
     
     class restore extends AsyncTask<String, String, String> {
-        
+    	int err = 0;
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -441,7 +450,7 @@ public class FreeGee extends Activity {
         @Override
         protected String doInBackground(String... aurl) {
         	String command = "busybox cp /sdcard/freegee/freegee-restore.sh /data/local/tmp";
-        	int err = 0;
+        	//int err = 0;
         	try {
 			    err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 			} catch (InterruptedException e1) {
@@ -463,11 +472,11 @@ public class FreeGee extends Activity {
 				e.printStackTrace();
 			}
         	if (err !=0){
-        		 alertbuilder("Error","Restoring failed! Please make sure backups and freegee-restore.sh are in /sdcard/freegee","Ok!",0);
+        		 err=-1;
         	}
         	}
         	else{
-        		 alertbuilder("Error","Restore script not found! Please put backups and freegee-restore.sh in /sdcard/freegee","Ok!",0);
+        		 err=-2;
         	}
             return null;
 
@@ -479,7 +488,15 @@ public class FreeGee extends Activity {
         @Override
         protected void onPostExecute(String unused) {
         	removeDialog(DIALOG_RESTORE_PROGRESS);
+        	if(err==-1){
+        		alertbuilder("Error","Restoring failed! Please make sure backups and freegee-restore.sh are in /sdcard/freegee","Ok!",0);
+        	}
+        	else if(err==-2){
+        		alertbuilder("Error","Restore script not found! Please put backups and freegee-restore.sh in /sdcard/freegee","Ok!",0);
+        	}
+        	else{
         	 alertbuilder("Success!","Success. Your Optimus G has been restored!","Yay!",0);
+        	 }
         	
         }
     }
