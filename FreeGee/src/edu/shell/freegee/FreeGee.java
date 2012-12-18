@@ -11,13 +11,6 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Properties;
-import java.util.concurrent.TimeoutException;
-
-import com.stericson.RootTools.CommandCapture;
-import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.RootToolsException;
-
-
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -29,7 +22,6 @@ import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -239,6 +231,14 @@ public class FreeGee extends Activity {
 		else if(device.equalsIgnoreCase("geeb_tls_ca")){
 			varient = "telus";
 			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/telus/private/freegee/freegee-apk-telus-"+recovery+".tar");
+		}
+		else if(device.equalsIgnoreCase("geehrc_kt_kr")){
+			varient = "korean_k";
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/korean_k/private/freegee/freegee-apk-korean_k-"+recovery+".tar");
+		}
+		else if(device.equalsIgnoreCase("geehrc4g_lgu_kr")){
+			varient = "korean_l";
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/korean_l/private/freegee/freegee-apk-korean_l-"+recovery+".tar");
 		}
 		else{
 			alertbuilder("Error!","Your device currently isn't supported.","Ok",1);
