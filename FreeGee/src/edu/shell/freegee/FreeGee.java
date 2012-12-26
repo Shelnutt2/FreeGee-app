@@ -35,6 +35,7 @@ public class FreeGee extends Activity {
     private Button restoreBtn;
     private ProgressDialog mProgressDialog;
     private String varient;
+    private boolean restoring;
    
     /** Called when the activity is first created. */
     @Override
@@ -144,7 +145,59 @@ public class FreeGee extends Activity {
                 	public void onClick(DialogInterface dialog,int id) {
                 	// if this button is clicked, close
                 	// current activity
-                		 new restore().execute();
+                		File backup_script=new File("/sdcard/freegee/freegee-restore.sh");
+           			  if(!backup_script.exists()){
+           				restoring = true; 
+           				File file = new File("/system/build.prop");
+           				FileInputStream fis = null;
+           				try {
+           					fis = new FileInputStream(file);
+           				} catch (FileNotFoundException e) {
+           					// TODO Auto-generated catch block
+           					e.printStackTrace();
+           				}
+
+           				Properties prop = new Properties();
+           				// feed the property with the file
+           				try {
+           					prop.load(fis);
+           				} catch (IOException e) {
+           					// TODO Auto-generated catch block
+           					e.printStackTrace();
+           				}
+           				try {
+           					fis.close();
+           				} catch (IOException e) {
+           					// TODO Auto-generated catch block
+           					e.printStackTrace();
+           				}
+           				String recovery = "twrp";
+           				String device = prop.getProperty("ro.product.name");
+           				if(device.equalsIgnoreCase("geehrc4g_spr_us")){
+           					varient = "sprint";
+           		        String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint-"+recovery+".tar";
+           		        new DownloadFileAsync().execute(url);
+           		        }
+           				else if(device.equalsIgnoreCase("geeb_att_us")){
+           					varient = "att";
+           					new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/att/private/freegee/freegee-apk-att-"+recovery+".tar");
+           				}
+           				else if(device.equalsIgnoreCase("geeb_bell_ca")){
+           					varient = "bell";
+           					new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/bell/private/freegee/freegee-apk-bell-"+recovery+".tar");
+           				}
+           				else if(device.equalsIgnoreCase("geeb_rgs_ca")){
+           					varient = "rogers";
+           					new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/rogers/private/freegee/freegee-apk-rogers-"+recovery+".tar");
+           				}
+           				else if(device.equalsIgnoreCase("geeb_tls_ca")){
+           					varient = "telus";
+           					new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/telus/private/freegee/freegee-apk-telus-"+recovery+".tar");
+           				}
+     			          }
+           			  else{
+                   		 new restore().execute();
+           			  }
                 	}
                 	})
                 	.setNegativeButton("I disagree",new DialogInterface.OnClickListener() {
@@ -240,6 +293,10 @@ public class FreeGee extends Activity {
 			varient = "korean_l";
 			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/korean_l/private/freegee/freegee-apk-korean_l-"+recovery+".tar");
 		}
+		else if(device.equalsIgnoreCase("geehrc_skt_kr")){
+			varient = "korean_s";
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/korean_k/private/freegee/freegee-apk-korean_k-"+recovery+".tar");
+		}
 		else{
 			alertbuilder("Error!","Your device currently isn't supported.","Ok",1);
 		}
@@ -320,7 +377,12 @@ public class FreeGee extends Activity {
         @Override
         protected void onPostExecute(String unused) {
         	removeDialog(DIALOG_DOWNLOAD_PROGRESS);
-        	new unlock().execute();
+        	if(restoring){
+        		new restore().execute();
+        	}
+        	else{
+        		new unlock().execute();
+        	}
         }
     }
     
@@ -449,8 +511,26 @@ public class FreeGee extends Activity {
 
         @Override
         protected String doInBackground(String... aurl) {
-        	String command = "busybox cp /sdcard/freegee/freegee-restore.sh /data/local/tmp";
-        	//int err = 0;
+        	int err = 0;
+        	String command;
+        	if(restoring){
+            	err = 0;
+            	command = "busybox mv /sdcard/freegee.tar /data/local/tmp/ && cd /data/local/tmp/ && busybox tar xvf freegee.tar";
+            	try {
+        			 err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+        		} catch (IOException e) {
+        			// TODO Auto-generated catch block
+        			e.printStackTrace();
+        		}
+        			//RootTools.getShell(true).add(command).waitForFinish();
+                catch (InterruptedException e) {
+        			// TODO Auto-generated catch block
+        			e.printStackTrace();
+        		}
+        	}else{
+        	  command = "busybox cp /sdcard/freegee/freegee-restore.sh /data/local/tmp";
+        	
+        	err = 0;
         	try {
 			    err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 			} catch (InterruptedException e1) {
@@ -460,6 +540,7 @@ public class FreeGee extends Activity {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
+        	}
         	if ( err == 0 ){ 
         	command = "cd /data/local/tmp/ && chmod 777 freegee-restore.sh && sh freegee-restore.sh";
         	try {
