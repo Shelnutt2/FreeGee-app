@@ -9,5 +9,10 @@
 			<attribute name="javadoc_location" value="jar:file:/mnt/Android/RootTools-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/home/s.shelnutt/Downloads/commons-codec-1.7/commons-codec-1.7.jar" sourcepath="/home/s.shelnutt/Downloads/commons-codec-1.7/commons-codec-1.7-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/home/s.shelnutt/Downloads/commons-codec-1.7/commons-codec-1.7-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

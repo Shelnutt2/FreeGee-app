@@ -11,21 +11,31 @@
         android:text="@string/Description" />
 
     <Button
+        android:id="@+id/restoreBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="71dp"
+        android:text="@string/RstText" />
+
+    <Button
         android:id="@+id/startBtn"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/restoreBtn"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="88dp"
+        android:text="@string/BtnText" />
+
+    <Button
+        android:id="@+id/rootBtn"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/textView1"
-        android:text="@string/BtnText" />
-
-    <Button
-        android:id="@+id/restoreBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/startBtn"
-        android:layout_marginTop="88dp"
-        android:text="@string/RstText" />
+        android:layout_marginTop="17dp"
+        android:text="@string/RootText" />
 
 </RelativeLayout>
