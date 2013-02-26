@@ -28,4 +28,14 @@
         android:layout_marginTop="88dp"
         android:text="@string/RstText" />
 
+    <Button
+        android:id="@+id/efsBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="83dp"
+        android:text="@string/efs_text" />
+
 </RelativeLayout>

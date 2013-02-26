@@ -12,6 +12,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Properties;
 
+import edu.shell.freegee.R;
+import edu.shell.freegee.R.id;
+import edu.shell.freegee.R.layout;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -31,11 +35,14 @@ public class FreeGee extends Activity {
     public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
     public static final int DIALOG_INSTALL_PROGRESS = 1;
     public static final int DIALOG_RESTORE_PROGRESS = 2;
+    public static final int DIALOG_BACKUP_PROGRESS = 3;
     private Button startBtn;
     private Button restoreBtn;
+    private Button efsBtn;
     private ProgressDialog mProgressDialog;
     private String varient;
     private boolean restoring;
+    private boolean override;
    
     /** Called when the activity is first created. */
     @Override
@@ -119,7 +126,7 @@ public class FreeGee extends Activity {
                    
                 }
             }
-        });
+        });        
         restoreBtn = (Button)findViewById(R.id.restoreBtn);
         restoreBtn.setOnClickListener(new OnClickListener(){
             public void onClick(View v) {
@@ -220,6 +227,80 @@ public class FreeGee extends Activity {
                 }
             }
         });
+        efsBtn = (Button)findViewById(R.id.efsBtn);
+        efsBtn.setOnClickListener(new OnClickListener(){
+            public void onClick(View v) {
+            	IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            	Intent batteryStatus = FreeGee.this.registerReceiver(null, ifilter);
+            	int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            	int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            	float batteryPct = level / (float)scale;
+            	if(batteryPct < 0.10){
+            		alertbuilder("Battery Too Low","Your battery is too low. For safety please charge it before attempting unlock","ok",1);
+            	}
+            	else{
+            		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
+            	    
+                	// set title
+                	alertDialogBuilder.setTitle("Warning");
+
+                	// set dialog message
+                	alertDialogBuilder
+                	.setMessage("It is highly important to backup your efs partitions. In the event of radio issues these backups might save your device. Do you want to backup or restore efs?")
+                	.setCancelable(false)
+                	.setPositiveButton("Backup",new DialogInterface.OnClickListener() {
+                	public void onClick(DialogInterface dialog,int id) {
+                		File efs1=new File("/sdcard/freegee/m9kefs1.img");
+                		File efs2=new File("/sdcard/freegee/m9kefs2.img");
+                		File efs3=new File("/sdcard/freegee/m9kefs3.img");
+                		if(efs1.exists() || efs2.exists() || efs3.exists()){
+                			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
+                    	    
+                        	// set title
+                        	alertDialogBuilder.setTitle("Warning");
+
+                        	// set dialog message
+                        	alertDialogBuilder
+                        	.setMessage("Existing backups detected, do you want to override them?")
+                        	.setCancelable(false)
+                        	.setPositiveButton("Override",new DialogInterface.OnClickListener() {
+                        		public void onClick(DialogInterface dialog,int id) {
+                        			override = true;
+                              		new efsbackup().execute();
+                        		}
+                        	})
+                        	.setNegativeButton("No",new DialogInterface.OnClickListener() {
+                            	public void onClick(DialogInterface dialog,int id) {
+                            	   override = false;  
+                            	}
+                            	});
+
+                            	// create alert dialog
+                            	AlertDialog alertDialog = alertDialogBuilder.create();
+
+                            	// show it
+                            	alertDialog.show();
+                		}
+                	}
+                	})
+                	.setNegativeButton("Restore",new DialogInterface.OnClickListener() {
+                	public void onClick(DialogInterface dialog,int id) {
+
+                  		 new efsrestore().execute();
+                			
+                	}
+                	});
+
+                	// create alert dialog
+                	AlertDialog alertDialog = alertDialogBuilder.create();
+
+                	// show it
+                	alertDialog.show();
+            		
+                   
+                }
+            }
+        });
     }
 
     private void startDownload(String recovery) {
@@ -295,7 +376,15 @@ public class FreeGee extends Activity {
 		}
 		else if(device.equalsIgnoreCase("geehrc_skt_kr")){
 			varient = "korean_s";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/korean_k/private/freegee/freegee-apk-korean_k-"+recovery+".tar");
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/korean_s/private/freegee/freegee-apk-korean_s-"+recovery+".tar");
+		}
+		else if(device.equalsIgnoreCase("geehrc_open_hk")){
+			varient = "Hong Kong";
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/e975/private/freegee/freegee-apk-e975-"+recovery+".tar");
+		}		
+		else if(device.equalsIgnoreCase("geehrc_open_tw")){
+			varient = "Taiwan";
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/e975/private/freegee/freegee-apk-e975-"+recovery+".tar");
 		}
 		else{
 			alertbuilder("Error!","Your device currently isn't supported.","Ok",1);
@@ -323,6 +412,13 @@ public class FreeGee extends Activity {
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.show();
                 return mProgressDialog;
+		case DIALOG_BACKUP_PROGRESS:
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage("Backing Up..");
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+            return mProgressDialog;
 		case DIALOG_RESTORE_PROGRESS:
 			mProgressDialog = new ProgressDialog(this);
             mProgressDialog.setMessage("Restoring..");
@@ -437,6 +533,7 @@ public class FreeGee extends Activity {
     				// TODO Auto-generated catch block
     				e.printStackTrace();
     			}
+            	
     			if (err !=0){
     				
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
@@ -459,8 +556,10 @@ public class FreeGee extends Activity {
                 	AlertDialog alertDialog = alertDialogBuilder.create();
                 	// show it
                 	alertDialog.show();
+                	
     			}
     		   }
+    		
     		else{
     			err=-1;
     			
@@ -497,6 +596,7 @@ public class FreeGee extends Activity {
            else{
            alertbuilder("Success!","Success. Your "+varient+" Optimus G has been liberated!","Yay!",0);
            }
+           
        }
     	
     }	
@@ -578,6 +678,193 @@ public class FreeGee extends Activity {
         	else{
         	 alertbuilder("Success!","Success. Your Optimus G has been restored!","Yay!",0);
         	 }
+        	
+        }
+    }
+    
+    class efsbackup extends AsyncTask<String, String, String> {
+    	int err = 0;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showDialog(DIALOG_BACKUP_PROGRESS);
+        }
+
+        @Override
+        protected String doInBackground(String... aurl) {
+        	String command;
+        	File freegeef=new File("/sdcard/freegee");
+			  if(!freegeef.exists()){
+				  freegeef.mkdirs();
+			  }
+              File efs1=new File("/sdcard/freegee/m9kefs1.img");
+ 			  if(!efs1.exists() || override == true){
+ 		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1 of=/sdcard/freegee/m9kefs1.img";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						// TODO Auto-generated catch block
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						// TODO Auto-generated catch block
+ 						e.printStackTrace();
+ 					}
+ 			  }
+ 	          File efs2=new File("/sdcard/freegee/m9kefs2.img");
+ 			  if(!efs2.exists() || override == true){
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2 of=/sdcard/freegee/m9kefs2.img";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			  }
+ 			  File efs3=new File("/sdcard/freegee/m9kefs3.img");
+ 			  if(!efs3.exists() || override == true){
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3 of=/sdcard/freegee/m9kefs3.img";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			  }
+			return null;
+        }
+        protected void onProgressUpdate(String... progress) {
+           //  mProgressDialog.setProgress(Integer.parseInt(progress[0]));
+        }
+
+        @Override
+        protected void onPostExecute(String unused) {
+        	removeDialog(DIALOG_BACKUP_PROGRESS);
+        	
+        	 alertbuilder("Success!","Success. Your Optimus G EFS been backed up!","Yay!",0);
+        	
+        	
+        }
+    }
+    
+    class efsrestore extends AsyncTask<String, String, String> {
+    	int err = 0;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showDialog(DIALOG_RESTORE_PROGRESS);
+        }
+
+        @Override
+        protected String doInBackground(String... aurl) {
+        	String command;
+        	File freegeef=new File("/sdcard/freegee");
+			  if(!freegeef.exists()){
+				  freegeef.mkdirs();
+			  }
+        	File efs1=new File("/sdcard/freegee/m9kefs1.img");
+        	File efs2=new File("/sdcard/freegee/m9kefs3.img");
+        	File efs3=new File("/sdcard/freegee/m9kefs2.img");
+ 			  if(efs1.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+ 		        	command = "dd if=/sdcard/freegee/m9kefs1.img of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						// TODO Auto-generated catch block
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						// TODO Auto-generated catch block
+ 						e.printStackTrace();
+ 					}
+ 			  }
+ 			  else{
+ 				  err=-1;
+ 			  }
+ 			  
+ 			  if(efs2.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		        	command = "dd if=/sdcard/freegee/m9kefs2.img of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			  }
+ 			  else{
+ 				  err=-2;
+ 			  }
+ 			  
+ 			  if(efs3.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		        	command = "dd if=/sdcard/freegee/m9kefs3.img of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			  }
+ 			  else {
+ 				  err = -3;
+ 			  }
+			return null;
+        }
+        protected void onProgressUpdate(String... progress) {
+           //  mProgressDialog.setProgress(Integer.parseInt(progress[0]));
+        }
+
+        @Override
+        protected void onPostExecute(String unused) {
+        	removeDialog(DIALOG_RESTORE_PROGRESS);
+        	if(err==0){
+        	    alertbuilder("Success!","Success. Your Optimus G EFS been restored up!","Yay!",0);
+        	}
+        	else if(err<=-1){
+        		alertbuilder("Error!","Could not restore, EFS backups not found!","Boo!",0);
+        	}
+        	else{
+        		alertbuilder("Error!","There was an error restoring your EFS backups","Boo!",0);
+        	}
         	
         }
     }
