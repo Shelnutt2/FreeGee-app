@@ -126,7 +126,7 @@ public class FreeGee extends Activity {
                    
                 }
             }
-        });        
+        });
         restoreBtn = (Button)findViewById(R.id.restoreBtn);
         restoreBtn.setOnClickListener(new OnClickListener(){
             public void onClick(View v) {
@@ -281,6 +281,9 @@ public class FreeGee extends Activity {
                             	// show it
                             	alertDialog.show();
                 		}
+                		else{
+                			new efsbackup().execute();
+                		}
                 	}
                 	})
                 	.setNegativeButton("Restore",new DialogInterface.OnClickListener() {
@@ -345,9 +348,16 @@ public class FreeGee extends Activity {
 			e.printStackTrace();
 		}
 		device = prop.getProperty("ro.product.name");
+		String version = prop.getProperty("ro.build.version.incremental");
 		if(device.equalsIgnoreCase("geehrc4g_spr_us")){
 			varient = "sprint";
-        String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint-"+recovery+".tar";
+			String url;
+			if(version.equalsIgnoreCase("LS970ZVB.1360739022")){
+				url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint-zvb-"+recovery+".tar";
+			}
+			else{
+                url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint-"+recovery+".tar";
+			}
         new DownloadFileAsync().execute(url);
         }
 		else if(device.equalsIgnoreCase("geeb_att_us")){
