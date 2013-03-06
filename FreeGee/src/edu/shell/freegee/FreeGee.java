@@ -329,7 +329,7 @@ public class FreeGee extends Activity {
 		try {
 			fis = new FileInputStream(file);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+			alertbuilder("Error!","Can't open build.prop, make sure you have root and perms are set correctly.","Ok",0);
 			e.printStackTrace();
 		}
 
@@ -338,13 +338,13 @@ public class FreeGee extends Activity {
 		try {
 			prop.load(fis);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			alertbuilder("Error!","Can't load build.prop make sure you have root and perms are set correctly","Ok",0);
 			e.printStackTrace();
 		}
 		try {
 			fis.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			alertbuilder("Error!","Can't close build.prop, something went wrong.","Ok",0);
 			e.printStackTrace();
 		}
 		device = prop.getProperty("ro.product.name");
@@ -394,6 +394,14 @@ public class FreeGee extends Activity {
 		}		
 		else if(device.equalsIgnoreCase("geehrc_open_tw")){
 			varient = "Taiwan";
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/e975/private/freegee/freegee-apk-e975-"+recovery+".tar");
+		}
+		else if(device.equalsIgnoreCase("geehrc_open_eu")){
+			varient = "Europe";
+			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/e975/private/freegee/freegee-apk-e975-"+recovery+".tar");
+		}
+		else if(device.equalsIgnoreCase("geehrc_shb_sg")){
+			varient = "Singaporean";
 			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/e975/private/freegee/freegee-apk-e975-"+recovery+".tar");
 		}
 		else{
