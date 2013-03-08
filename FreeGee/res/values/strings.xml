@@ -8,4 +8,5 @@
     <string name="BtnText">Unlock my Optimus G</string>
     <string name="RstText">Restore with backups</string>
     <string name="efs_text">Backup/Restore EFS</string>
+    <string name="recovery">Select a recovery to install</string>
 </resources>

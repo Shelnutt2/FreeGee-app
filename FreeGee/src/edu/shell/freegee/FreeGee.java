@@ -13,9 +13,7 @@ import java.net.URLConnection;
 import java.util.Properties;
 
 import edu.shell.freegee.R;
-import edu.shell.freegee.R.id;
-import edu.shell.freegee.R.layout;
-
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -30,6 +28,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
+@SuppressLint("SdCardPath")
 public class FreeGee extends Activity {
    
     public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
@@ -49,6 +48,10 @@ public class FreeGee extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_free_gee);
+    	File freegeef=new File("/sdcard/freegee");
+		  if(!freegeef.exists()){
+			  freegeef.mkdirs();
+		  }
         startBtn = (Button)findViewById(R.id.startBtn);
         startBtn.setOnClickListener(new OnClickListener(){
             public void onClick(View v) {
@@ -72,39 +75,9 @@ public class FreeGee extends Activity {
                 	.setCancelable(false)
                 	.setPositiveButton("I agree",new DialogInterface.OnClickListener() {
                 	public void onClick(DialogInterface dialog,int id) {
-                	// if this button is clicked, close
-                	// current activity
-                		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
-                	    
-                    	// set title
-                    	alertDialogBuilder.setTitle("Warning");
-
-                    	// set dialog message
-                    	alertDialogBuilder
-                    	.setMessage("Please choose the recovery you want. CWM is stable but has backup issues. TWRP works in all aspects exception compressed backups. TWRP is the recommended choice.")
-                    	.setCancelable(false)
-                    	.setPositiveButton("TWRP",new DialogInterface.OnClickListener() {
-                    	public void onClick(DialogInterface dialog,int id) {
-                    	// if this button is clicked, close
-                    	// current activity
-                    		 startDownload("twrp");
-                    	}
-                    	})
-                    	.setNegativeButton("CWM",new DialogInterface.OnClickListener() {
-                    	public void onClick(DialogInterface dialog,int id) {
-                    	// if this button is clicked, close
-                    	// current activity
-                    		
-                    		 startDownload("cwm");
-                    			
-                    	}
-                    	});
-
-                    	// create alert dialog
-                    	AlertDialog alertDialog = alertDialogBuilder.create();
-
-                    	// show it
-                    	alertDialog.show();
+                	
+                		Intent newActivity = new Intent(getBaseContext(), install.class);
+                        startActivity(newActivity);
                 	}
                 	})
                 	.setNegativeButton("I disagree",new DialogInterface.OnClickListener() {
@@ -306,113 +279,7 @@ public class FreeGee extends Activity {
         });
     }
 
-    private void startDownload(String recovery) {
-    	String device;
-    	int err = 0;
-    	String command = "busybox";
-    	try {
-			 err = Runtime.getRuntime().exec(new String[] { command }).waitFor();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-			//RootTools.getShell(true).add(command).waitForFinish();
-        catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	
-		if (err == 0){
-		// read the property text  file
-		File file = new File("/system/build.prop");
-		FileInputStream fis = null;
-		try {
-			fis = new FileInputStream(file);
-		} catch (FileNotFoundException e) {
-			alertbuilder("Error!","Can't open build.prop, make sure you have root and perms are set correctly.","Ok",0);
-			e.printStackTrace();
-		}
 
-		Properties prop = new Properties();
-		// feed the property with the file
-		try {
-			prop.load(fis);
-		} catch (IOException e) {
-			alertbuilder("Error!","Can't load build.prop make sure you have root and perms are set correctly","Ok",0);
-			e.printStackTrace();
-		}
-		try {
-			fis.close();
-		} catch (IOException e) {
-			alertbuilder("Error!","Can't close build.prop, something went wrong.","Ok",0);
-			e.printStackTrace();
-		}
-		device = prop.getProperty("ro.product.name");
-		String version = prop.getProperty("ro.build.version.incremental");
-		if(device.equalsIgnoreCase("geehrc4g_spr_us")){
-			varient = "sprint";
-			String url;
-			if(version.equalsIgnoreCase("LS970ZVB.1360739022")){
-				url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint-zvb-"+recovery+".tar";
-			}
-			else{
-                url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/sprint/private/freegee/freegee-apk-sprint-"+recovery+".tar";
-			}
-        new DownloadFileAsync().execute(url);
-        }
-		else if(device.equalsIgnoreCase("geeb_att_us")){
-			varient = "att";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/att/private/freegee/freegee-apk-att-"+recovery+".tar");
-		}
-		else if(device.equalsIgnoreCase("geeb_bell_ca")){
-			varient = "bell";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/bell/private/freegee/freegee-apk-bell-"+recovery+".tar");
-		}
-		else if(device.equalsIgnoreCase("geeb_rgs_ca")){
-			varient = "rogers";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/rogers/private/freegee/freegee-apk-rogers-"+recovery+".tar");
-		}
-		else if(device.equalsIgnoreCase("geeb_tls_ca")){
-			varient = "telus";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/telus/private/freegee/freegee-apk-telus-"+recovery+".tar");
-		}
-		else if(device.equalsIgnoreCase("geehrc_kt_kr")){
-			varient = "korean_k";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/korean_k/private/freegee/freegee-apk-korean_k-"+recovery+".tar");
-		}
-		else if(device.equalsIgnoreCase("geehrc4g_lgu_kr")){
-			varient = "korean_l";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/korean_l/private/freegee/freegee-apk-korean_l-"+recovery+".tar");
-		}
-		else if(device.equalsIgnoreCase("geehrc_skt_kr")){
-			varient = "korean_s";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/korean_s/private/freegee/freegee-apk-korean_s-"+recovery+".tar");
-		}
-		else if(device.equalsIgnoreCase("geehrc_open_hk")){
-			varient = "Hong Kong";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/e975/private/freegee/freegee-apk-e975-"+recovery+".tar");
-		}		
-		else if(device.equalsIgnoreCase("geehrc_open_tw")){
-			varient = "Taiwan";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/e975/private/freegee/freegee-apk-e975-"+recovery+".tar");
-		}
-		else if(device.equalsIgnoreCase("geehrc_open_eu")){
-			varient = "Europe";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/e975/private/freegee/freegee-apk-e975-"+recovery+".tar");
-		}
-		else if(device.equalsIgnoreCase("geehrc_shb_sg")){
-			varient = "Singaporean";
-			new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/e975/private/freegee/freegee-apk-e975-"+recovery+".tar");
-		}
-		else{
-			alertbuilder("Error!","Your device currently isn't supported.","Ok",1);
-		}
-		}
-		else{
-			alertbuilder("Error!","Please install busybox from the market.","Ok",0);
-		}
-		
-    }
     @Override
     protected Dialog onCreateDialog(int id) {
         switch (id) {
@@ -619,7 +486,7 @@ public class FreeGee extends Activity {
     	
     }	
     
-    class restore extends AsyncTask<String, String, String> {
+    public class restore extends AsyncTask<String, String, String> {
     	int err = 0;
         @Override
         protected void onPreExecute() {
