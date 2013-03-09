@@ -7,6 +7,7 @@
     <string name="Description">Team Codefire proudly present, Project FreeGee-Easier-Than-Ever. This application is only for those running an LG Optimus G and wish to unlock their device. Simply click the unlock button below and the process will start. This will void your warranty and no one on team Codefire not I can be held responsible for anything that comes as a result of unlocking. Please make sure your phone is over 15% on battery and do not touch the phone until the unlock process has completed. To restore your phone to a locked state, press the restore with backups button.</string>
     <string name="BtnText">Unlock my Optimus G</string>
     <string name="RstText">Restore with backups</string>
+    <string name="UpText">Upload boot image and device info</string>
     <string name="efs_text">Backup/Restore EFS</string>
     <string name="recovery">Select a recovery to install</string>
 </resources>

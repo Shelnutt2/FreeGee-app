@@ -31,6 +31,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
@@ -46,11 +47,12 @@ public class install extends Activity {
 
     public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
     public static final int DIALOG_INSTALL_PROGRESS = 1;
+    public static final int DIALOG_RESTORE_PROGRESS = 2;
     public static final int DIALOG_BACKUP_PROGRESS = 3;
     private Button recoveryBtn;
     private String saveloc;
-    private String device;
-    private String version;
+    public static String device;
+    public static String version;
     private String recovery;
     private String boot;
     private String aboot_md5sum = "bc54a6a730658550713a0779b30bf6b7";
@@ -72,7 +74,6 @@ public class install extends Activity {
         
         
         String command;
-        int err;
         
         
 	// read the property text  file
@@ -81,34 +82,35 @@ public class install extends Activity {
 	try {
 		fis = new FileInputStream(file);
 	} catch (FileNotFoundException f) {
+        int err;
 		command = "mount -o remount,rw /system";
     	try {
 			err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 		command = "chmod 644 /system/build.prop";
     	try {
 			err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 		command = "mount -o remount,ro /system";
     	try {
 			err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 	}
@@ -207,6 +209,13 @@ public class install extends Activity {
             mProgressDialog.setCancelable(false);
             mProgressDialog.show();
             return mProgressDialog;
+		case DIALOG_RESTORE_PROGRESS:
+			mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage("Restoring..");
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.show();
+            return mProgressDialog;
 		default:
                 return null;
         }
@@ -243,7 +252,9 @@ public class install extends Activity {
                 output.flush();
                 output.close();
                 input.close();
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            	alertbuilder("Error!","There was a problem downloading a file. Please try agian.","Ok",0);
+            }
             return null;
 
         }
@@ -291,14 +302,14 @@ public class install extends Activity {
 			try {
 				md = MessageDigest.getInstance("MD5");
 			} catch (NoSuchAlgorithmException e1) {
-				// TODO Auto-generated catch block
+				
 				e1.printStackTrace();
 			}
     		    FileInputStream fis = null;
 				try {
 					fis = new FileInputStream("/sdcard/freegee/working/"+f+"-freegee.img");
 				} catch (FileNotFoundException e1) {
-					// TODO Auto-generated catch block
+					
 					e1.printStackTrace();
 				}
     		    byte[] dataBytes = new byte[1024];
@@ -308,7 +319,7 @@ public class install extends Activity {
     				  md.update(dataBytes, 0, nread);
     				}
     			} catch (IOException e) {
-    				// TODO Auto-generated catch block
+    				
     				e.printStackTrace();
     			};
     		    byte[] mdbytes = md.digest();
@@ -324,10 +335,10 @@ public class install extends Activity {
     		    	alertbuilder("Error!",f+"md5sum mismatch. Aborting.","Ok",1);
     		    }
     		    else{
-    		    	Toast.makeText(getApplicationContext(),f+ " md5sum okay", Toast.LENGTH_LONG).show();
+    		    	Toast.makeText(getApplicationContext(),f+ " md5sum okay", Toast.LENGTH_SHORT).show();
     		    }
     	}
-    	if (err ==0){
+    	if (err == 0){
     		new backup().execute();
     	}
     }
@@ -337,6 +348,7 @@ public class install extends Activity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            removeDialog(DIALOG_DOWNLOAD_PROGRESS);
             showDialog(DIALOG_BACKUP_PROGRESS);
         }
 
@@ -355,10 +367,10 @@ public class install extends Activity {
  		        	try {
  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
  					} catch (InterruptedException e) {
- 						// TODO Auto-generated catch block
+ 						
  						e.printStackTrace();
  					} catch (IOException e) {
- 						// TODO Auto-generated catch block
+ 						
  						e.printStackTrace();
  					}
  		        	
@@ -367,10 +379,10 @@ public class install extends Activity {
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					}
  			  }
@@ -380,10 +392,10 @@ public class install extends Activity {
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					}
      			 }
@@ -393,10 +405,10 @@ public class install extends Activity {
  		        	try {
  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
  					} catch (InterruptedException e) {
- 						// TODO Auto-generated catch block
+ 						
  						e.printStackTrace();
  					} catch (IOException e) {
- 						// TODO Auto-generated catch block
+ 						
  						e.printStackTrace();
  					}
 	 			 }
@@ -406,10 +418,10 @@ public class install extends Activity {
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					}
 	 			 }
@@ -419,49 +431,49 @@ public class install extends Activity {
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					}
 	 			 }
 		      	
 		      	if(err==0){
-		         	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/aboot of=/sdcard/freegee/aboot.img";
+		         	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/aboot of=/sdcard/freegee/aboot-backup.img";
  		        	try {
  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
  					} catch (InterruptedException e) {
- 						// TODO Auto-generated catch block
+ 						
  						e.printStackTrace();
  					} catch (IOException e) {
- 						// TODO Auto-generated catch block
+ 						
  						e.printStackTrace();
  					}
 	 			 }
 		      	
 		      	if(err==0){
-		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/boot of=/sdcard/freegee/boot.img";
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/boot of=/sdcard/freegee/boot-backup.img";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					}
 	 			 }
 		      	
 		      	if(err==0){
-		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/recovery of=/sdcard/freegee/recovery.img";
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/recovery of=/sdcard/freegee/recovery-backup.img";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
+						
 						e.printStackTrace();
 					}
 		      	}
@@ -494,130 +506,105 @@ public class install extends Activity {
             showDialog(DIALOG_INSTALL_PROGRESS);
         }
     	int err = 0;
+    	int err2 = 0;
+    	int err3 = 0;
 		protected String doInBackground(String...Params) {
     	//int err = 0;
-    	String command = "busybox mv /sdcard/freegee/working /data/local/tmp/";
+		//Toast.makeText(getApplicationContext(),"Moving files", Toast.LENGTH_SHORT).show();
+    	String command = "busybox mv -f /sdcard/freegee/working/* /data/local/tmp/";
     	try {
 			 err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 			//RootTools.getShell(true).add(command).waitForFinish();
- catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+        catch (InterruptedException e) {
+			
 			e.printStackTrace();
 		}
     	if (err == 0){
     		publishProgress(0);
-   		    command = "dd if=/data/local/tmp/working/aboot.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+    	//	Toast.makeText(getApplicationContext(),"Zeroing bootloader", Toast.LENGTH_SHORT).show();
+   		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+        	try {
+				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			} catch (InterruptedException e) {
+				
+				e.printStackTrace();
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+			}
+        //	Toast.makeText(getApplicationContext(),"Flashing bootloader", Toast.LENGTH_SHORT).show();
+   		    command = "dd if=/data/local/tmp/aboot-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
 	        	try {
 					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
+					
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
+					
 					e.printStackTrace();
 				}
 
       	if(err==0){
       		publishProgress(1);
-        	command = "dd if=/data/local/tmp/working/boot.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+      	//	Toast.makeText(getApplicationContext(),"Zeroing boot", Toast.LENGTH_SHORT).show();
+   		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
         	try {
-				err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
+				
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				
+				e.printStackTrace();
+			}
+        //	Toast.makeText(getApplicationContext(),"Flashing boot", Toast.LENGTH_SHORT).show();
+        	command = "dd if=/data/local/tmp/boot-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+        	try {
+				err2 = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			} catch (InterruptedException e) {
+				
+				e.printStackTrace();
+			} catch (IOException e) {
+				
 				e.printStackTrace();
 			}
 			 }
       	
       	if(err==0){
       		publishProgress(2);
-        	command = "dd if=/data/local/tmp/working/recovery.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
+      	//	Toast.makeText(getApplicationContext(),"Zeroing Recovery", Toast.LENGTH_SHORT).show();
+   		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
         	try {
-				err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
+				
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				
+				e.printStackTrace();
+			}
+        //	Toast.makeText(getApplicationContext(),"Flashing recovery", Toast.LENGTH_SHORT).show();
+        	command = "dd if=/data/local/tmp/recovery-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
+        	try {
+				err3 = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			} catch (InterruptedException e) {
+				
+				e.printStackTrace();
+			} catch (IOException e) {
+				
 				e.printStackTrace();
 			}
       	 }
     	}  	
-    	if (err !=0){
-    				
-                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(install.this);
-            	    
-                	// set title
-                	alertDialogBuilder.setTitle("Error!");
-
-                	// set dialog message
-                	alertDialogBuilder
-                	.setMessage("There was a problem installing. Attempting to reinstall backups.")
-                	.setCancelable(false)
-                	.setPositiveButton("OK",new DialogInterface.OnClickListener() {
-                	public void onClick(DialogInterface dialog,int id) {
-                		String command;
-                		
-        		         	command = "dd if=/sdcard/freegee/aboot.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
-         		        	try {
-         						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-         					} catch (InterruptedException e) {
-         						// TODO Auto-generated catch block
-         						e.printStackTrace();
-         					} catch (IOException e) {
-         						// TODO Auto-generated catch block
-         						e.printStackTrace();
-         					}
-
-        		      	if(err==0){
-        		        	command = "dd if=/sdcard/freegee/boot.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
-        		        	try {
-        						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-        					} catch (InterruptedException e) {
-        						// TODO Auto-generated catch block
-        						e.printStackTrace();
-        					} catch (IOException e) {
-        						// TODO Auto-generated catch block
-        						e.printStackTrace();
-        					}
-        	 			 }
-        		      	
-        		      	if(err==0){
-        		        	command = "dd if=/sdcard/freegee/recovery.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
-        		        	try {
-        						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-        					} catch (InterruptedException e) {
-        						// TODO Auto-generated catch block
-        						e.printStackTrace();
-        					} catch (IOException e) {
-        						// TODO Auto-generated catch block
-        						e.printStackTrace();
-        					}
-        		      	}
-                		if(err==0){
-                			err=-10;
-                		}
-                	}
-                	});
-                	// create alert dialog
-                	AlertDialog alertDialog = alertDialogBuilder.create();
-                	// show it
-                	alertDialog.show();
-                	
+    	if (err != 0 || err2 != 0 || err3 != 0){
+    			
+                err=-10;
     			}
     		   
-    		
-    		else{
-    			err=-1;
-    			
-    		    }
-
     	
 		return null;
 		}
@@ -625,10 +612,10 @@ public class install extends Activity {
 		protected void onProgressUpdate(String... progress) {
 
             if(progress[0] == "0"){
-             mProgressDialog.setMessage("Creating Backups...");
+             mProgressDialog.setMessage("Installing Bootloader...");
              }
             if(progress[0] == "1"){
-                mProgressDialog.setMessage("Installing...");
+                mProgressDialog.setMessage("Installing Boot...");
                 }
        }
 
@@ -636,7 +623,8 @@ public class install extends Activity {
        protected void onPostExecute(String unused) {
            dismissDialog(DIALOG_INSTALL_PROGRESS);
            if(err==-10){
-        	   alertbuilder("Error!","Error encountared but backups restored.","Ok",0);
+        	   alertbuilder("Error!","Error encountared attempting to restore backups","Ok",0);
+        	   new restore().execute();
            }
            else{
            alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated!","Yay!",0);
@@ -644,7 +632,124 @@ public class install extends Activity {
            
        }
     	
-    }	
+    }
+    
+    class restore extends AsyncTask<String, String, String> {
+    	int err = 0;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showDialog(DIALOG_RESTORE_PROGRESS);
+        }
+
+        @Override
+        protected String doInBackground(String... aurl) {
+        	String command;
+        	File freegeef=new File("/sdcard/freegee");
+			  if(!freegeef.exists()){
+				  freegeef.mkdirs();
+			  }
+        	File boot=new File("/sdcard/freegee/boot-backup.img");
+        	File recovery=new File("/sdcard/freegee/recovery-backup.img");
+        	File aboot=new File("/sdcard/freegee/aboot-backup.img");
+ 			  if(boot.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+ 		        	command = "dd if=/sdcard/freegee/boot-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						
+ 						e.printStackTrace();
+ 					}
+ 			  }
+ 			  else{
+ 				  err=-1;
+ 			  }
+ 			  
+ 			  if(aboot.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+		        	command = "dd if=/sdcard/freegee/aboot-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+			  }
+ 			  else{
+ 				  err=-2;
+ 			  }
+ 			  
+ 			  if(recovery.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+		        	command = "dd if=/sdcard/freegee/recovery-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+			  }
+ 			  else {
+ 				  err = -3;
+ 			  }
+			return null;
+        }
+        protected void onProgressUpdate(String... progress) {
+           //  mProgressDialog.setProgress(Integer.parseInt(progress[0]));
+        }
+
+        @Override
+        protected void onPostExecute(String unused) {
+        	removeDialog(DIALOG_RESTORE_PROGRESS);
+        	if(err==0){
+        	    alertbuilder("Success!","Success. Your Optimus G been restored up!","Yay!",0);
+        	}
+        	else if(err<=-1){
+        		alertbuilder("Error!","Could not restore, backups not found! Do not reboot!","Boo!",0);
+        	}
+        	else{
+        		alertbuilder("Error!","There was an error restoring your backups Do not reboot!","Boo!",0);
+        	}
+        	
+        }
+    }
     
     public void alertbuilder(String title, String text, String Button, final int exits){
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -673,6 +778,41 @@ public class install extends Activity {
     	alertDialog.show();
 
     	}
+    
+    public void alertbuilderu(String title, String text, String Button, final int exits){
+    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+    	    
+    	// set title
+    	alertDialogBuilder.setTitle(title);
+
+    	// set dialog message
+    	alertDialogBuilder
+    	.setMessage(text)
+    	.setCancelable(false)
+    	.setPositiveButton(Button,new DialogInterface.OnClickListener() {
+    	public void onClick(DialogInterface dialog,int id) {
+    	// if this button is clicked, close
+    	// current activity
+    		Intent newActivity = new Intent(getBaseContext(), upload.class);
+            startActivity(newActivity);
+    	}
+    	})
+    	.setNegativeButton("No", new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				install.this.finish();
+				
+			}
+		});
+
+    	// create alert dialog
+    	AlertDialog alertDialog = alertDialogBuilder.create();
+
+    	// show it
+    	alertDialog.show();
+
+    	}
 
 
 	public void readxml() {
@@ -685,7 +825,7 @@ public class install extends Activity {
 	    	doc.getDocumentElement().normalize();
 	    	Toast.makeText(getApplicationContext(),device, Toast.LENGTH_LONG).show();
 	    	NodeList nList = doc.getElementsByTagName(device);
-	    	
+	    	if(nList.getLength() > 0){
 	    	for (int temp = 0; temp < nList.getLength(); temp++) {
 	     
 	    		Node nNode = nList.item(temp);
@@ -695,6 +835,7 @@ public class install extends Activity {
 	    			Element eElement = (Element) nNode;
 	    			NodeList rList = eElement.getElementsByTagName("recovery").item(0).getChildNodes();
 	    			//Toast.makeText(getApplicationContext(),rList.getLength(), Toast.LENGTH_LONG).show();
+	    			if(rList.getLength() >0){
 	    	        for (int temp2 = 0; temp2 < rList.getLength(); temp2++){
 	    	            Node aNode = rList.item(temp2);
 	    	        	if (aNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -707,7 +848,7 @@ public class install extends Activity {
 	    	        }
 	    	        
 	    	        NodeList bList = eElement.getElementsByTagName("boot").item(0).getChildNodes();
-	    			
+	    			if(bList.getLength() >0){
 	    	        for (int temp2 = 0; temp2 < bList.getLength(); temp2++){
 	    	            Node aNode = bList.item(temp2);
 	    	        	if (aNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -715,14 +856,27 @@ public class install extends Activity {
 	    	        	String[] sa ={bNode.getTextContent(),bNode.getAttribute("md5sum")};
 	    	        	BSmap.put(bNode.getTagName(),sa);
 	    	        	   
-	    	        }
-	    	        }
+	    	            }
+	    	          }
+	    			 }
+	    			else{
+	    				alertbuilderu("Sorry!","Sorry your varient is not currently supported, will attempt to upload boot image for support.","Ok",0);
+	    			 }
+	    			}
+	    			else{
+	    				alertbuilderu("Sorry!","Sorry your varient is not currently supported, will attempt to upload boot image for support.","Ok",0);
+	    			}
 	    			
 	    			//System.out.println("recovery: " + eElement.getElementsByTagName("recovery").item(0).getTextContent());
 	    			//System.out.println("boot: " + eElement.getElementsByTagName("boot").item(0).getTextContent());
-	    			
-	    		}
-	    	}
+	    		   	
+	    		     }
+	    	       }
+	        	}
+    			else{
+    				alertbuilderu("Sorry!","Sorry your varient is not currently supported, will attempt to upload boot image for support.","Ok",0);
+    			}
+	    	
 	    	
 	        //Toast.makeText(getApplicationContext(),RSArrayList.get(0), Toast.LENGTH_LONG).show();
 	    	Spinner spinner = (Spinner) findViewById(R.id.recoveryspinner);

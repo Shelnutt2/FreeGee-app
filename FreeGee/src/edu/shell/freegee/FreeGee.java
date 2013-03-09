@@ -486,7 +486,7 @@ public class FreeGee extends Activity {
     	
     }	
     
-    public class restore extends AsyncTask<String, String, String> {
+    class restore extends AsyncTask<String, String, String> {
     	int err = 0;
         @Override
         protected void onPreExecute() {
@@ -496,56 +496,92 @@ public class FreeGee extends Activity {
 
         @Override
         protected String doInBackground(String... aurl) {
-        	int err = 0;
         	String command;
-        	if(restoring){
-            	err = 0;
-            	command = "busybox mv /sdcard/freegee.tar /data/local/tmp/ && cd /data/local/tmp/ && busybox tar xvf freegee.tar";
-            	try {
-        			 err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-        		} catch (IOException e) {
-        			// TODO Auto-generated catch block
-        			e.printStackTrace();
-        		}
-        			//RootTools.getShell(true).add(command).waitForFinish();
-                catch (InterruptedException e) {
-        			// TODO Auto-generated catch block
-        			e.printStackTrace();
-        		}
-        	}else{
-        	  command = "busybox cp /sdcard/freegee/freegee-restore.sh /data/local/tmp";
-        	
-        	err = 0;
-        	try {
-			    err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-        	}
-        	if ( err == 0 ){ 
-        	command = "cd /data/local/tmp/ && chmod 777 freegee-restore.sh && sh freegee-restore.sh";
-        	try {
-				err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-        	if (err !=0){
-        		 err=-1;
-        	}
-        	}
-        	else{
-        		 err=-2;
-        	}
-            return null;
-
+        	File freegeef=new File("/sdcard/freegee");
+			  if(!freegeef.exists()){
+				  freegeef.mkdirs();
+			  }
+        	File boot=new File("/sdcard/freegee/boot-backup.img");
+        	File recovery=new File("/sdcard/freegee/recovery-backup.img");
+        	File aboot=new File("/sdcard/freegee/aboot-backup.img");
+ 			  if(boot.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+ 		        	command = "dd if=/sdcard/freegee/boot-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						// TODO Auto-generated catch block
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						// TODO Auto-generated catch block
+ 						e.printStackTrace();
+ 					}
+ 			  }
+ 			  else{
+ 				  err=-1;
+ 			  }
+ 			  
+ 			  if(aboot.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		        	command = "dd if=/sdcard/freegee/aboot-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			  }
+ 			  else{
+ 				  err=-2;
+ 			  }
+ 			  
+ 			  if(recovery.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		        	command = "dd if=/sdcard/freegee/recovery-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			  }
+ 			  else {
+ 				  err = -3;
+ 			  }
+			return null;
         }
         protected void onProgressUpdate(String... progress) {
            //  mProgressDialog.setProgress(Integer.parseInt(progress[0]));
@@ -554,15 +590,15 @@ public class FreeGee extends Activity {
         @Override
         protected void onPostExecute(String unused) {
         	removeDialog(DIALOG_RESTORE_PROGRESS);
-        	if(err==-1){
-        		alertbuilder("Error","Restoring failed! Please make sure backups and freegee-restore.sh are in /sdcard/freegee","Ok!",0);
+        	if(err==0){
+        	    alertbuilder("Success!","Success. Your Optimus G been restored up!","Yay!",0);
         	}
-        	else if(err==-2){
-        		alertbuilder("Error","Restore script not found! Please put backups and freegee-restore.sh in /sdcard/freegee","Ok!",0);
+        	else if(err<=-1){
+        		alertbuilder("Error!","Could not restore, backups not found! Do not reboot!","Boo!",0);
         	}
         	else{
-        	 alertbuilder("Success!","Success. Your Optimus G has been restored!","Yay!",0);
-        	 }
+        		alertbuilder("Error!","There was an error restoring your backups Do not reboot!","Boo!",0);
+        	}
         	
         }
     }
