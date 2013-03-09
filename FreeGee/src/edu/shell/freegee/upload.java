@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -50,7 +52,12 @@ public class upload extends Activity{
         UploadBtn.setOnClickListener(new OnClickListener(){
             public void onClick(View v) {
         try {
-			new upload_async().execute();
+        	if(install.version != null && install.device != null){
+			   new upload_async().execute();
+        	}
+        	else{
+        		alertbuilder("Not stock","Please return to stock to upload the images","ok",0);        		
+        	}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -66,7 +73,7 @@ public class upload extends Activity{
         switch (id) {
             case DIALOG_UPLOAD_PROGRESS:
                 mProgressDialog = new ProgressDialog(this);
-                mProgressDialog.setMessage("Uploading  ..");
+                mProgressDialog.setMessage("Uploading...");
                 mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
                 mProgressDialog.setCancelable(false);
                 mProgressDialog.show();
@@ -78,6 +85,8 @@ public class upload extends Activity{
 
 class upload_async extends AsyncTask<String, String, String> {
 	int err = 0;
+	String msg;
+	String result;
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
@@ -87,7 +96,22 @@ class upload_async extends AsyncTask<String, String, String> {
     @Override
     protected String doInBackground(String... aurl) {
     	try {
-			upload_file();
+        	File freegeef=new File("/sdcard/freegee/boot-original.img");
+			  if(!freegeef.exists()){
+				  String command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/boot of=/sdcard/freegee/boot-original.img";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+			  }
+			  if(err==0){
+			   upload_file();
+			  }
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -104,10 +128,19 @@ class upload_async extends AsyncTask<String, String, String> {
     @Override
     protected void onPostExecute(String unused) {
     	removeDialog(DIALOG_UPLOAD_PROGRESS);
-    	
-    	 //alertbuilder("Success!","Success. Your Optimus G EFS been backed up!","Yay!",0);
-    	
-    	
+    	if(err == 0){
+    		File freegeef=new File("/sdcard/freegee/boot-original.img");
+    		freegeef.delete();
+           if(result.equals("failed")){
+        	   alertbuilder("Error!","There was an error uploading: \n" +msg,"Boo!",0);
+           }
+           else{
+        	   alertbuilder("Success","Your images has been uploaded. Please allow time for it to be proccessed!","Cool!",0);
+           }
+    	}
+    	else{
+    		alertbuilder("Error!","There was a problem getting the boot image","Boo!",0);
+    	}
     }
     
     public void upload_file() throws Exception {
@@ -125,17 +158,17 @@ class upload_async extends AsyncTask<String, String, String> {
 			}
 		});
         //Path of the file to be uploaded
-        String filepath = "/sdcard/freegee/boot.img";
+        String filepath = "/sdcard/freegee/boot-original.img";
         File file = new File(filepath);
-        ContentBody cbFile = new FileBody(file, filepath);         
+        ContentBody cbFile = new FileBody(file);         
 
         //Add the data to the multipart entity
         mpEntity.addPart("image", cbFile);
-        mpEntity.addPart("id",new StringBody("cf573ca8ea7d2", Charset.forName("UTF-8")));
-        mpEntity.addPart("incremental",new StringBody("61249c215428d3309c", Charset.forName("UTF-8")));
-        mpEntity.addPart("factoryversion",new StringBody("46d0622d0", Charset.forName("UTF-8")));
-        mpEntity.addPart("name", new StringBody("geehrc4g_spr_us", Charset.forName("UTF-8")));
-        mpEntity.addPart("version", new StringBody("LS970ZV8", Charset.forName("UTF-8")));
+        mpEntity.addPart("id",new StringBody(install.id, Charset.forName("UTF-8")));
+        mpEntity.addPart("incremental",new StringBody(install.incremental, Charset.forName("UTF-8")));
+        mpEntity.addPart("factoryversion",new StringBody(install.factoryversion, Charset.forName("UTF-8")));
+        mpEntity.addPart("name", new StringBody(install.device, Charset.forName("UTF-8")));
+        mpEntity.addPart("version", new StringBody(install.version, Charset.forName("UTF-8")));
         totalsize = mpEntity.getContentLength();
         post.setEntity(mpEntity);
         //Execute the post request
@@ -148,11 +181,38 @@ class upload_async extends AsyncTask<String, String, String> {
         JSONArray jsonarray = new JSONArray("["+Response+"]");
         JSONObject jsonobject = jsonarray.getJSONObject(0);
         //Get the result variables from response 
-        String result = (jsonobject.getString("result"));
-        String msg = (jsonobject.getString("msg"));
+        result = (jsonobject.getString("result"));
+        msg = (jsonobject.getString("msg"));
         //Close the connection
         client.getConnectionManager().shutdown();
     }
     
   }
+public void alertbuilder(String title, String text, String Button, final int exits){
+	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+	    
+	// set title
+	alertDialogBuilder.setTitle(title);
+
+	// set dialog message
+	alertDialogBuilder
+	.setMessage(text)
+	.setCancelable(false)
+	.setPositiveButton(Button,new DialogInterface.OnClickListener() {
+	public void onClick(DialogInterface dialog,int id) {
+	// if this button is clicked, close
+	// current activity
+		if(exits==1){
+			upload.this.finish();
+			}
+	}
+	});
+
+	// create alert dialog
+	AlertDialog alertDialog = alertDialogBuilder.create();
+
+	// show it
+	alertDialog.show();
+
+	}
 }

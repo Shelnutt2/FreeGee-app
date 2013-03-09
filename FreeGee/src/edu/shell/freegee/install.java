@@ -32,6 +32,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
@@ -53,15 +54,22 @@ public class install extends Activity {
     private String saveloc;
     public static String device;
     public static String version;
+    public static String id = "cf573ca8ea7d2";
+    public static String incremental = "61249c215428d3309c";
+    public static String factoryversion = "46d0622d0";
     private String recovery;
     private String boot;
-    private String aboot_md5sum = "bc54a6a730658550713a0779b30bf6b7";
+    private String aboot_md5sum = "8a742f5776e73df2e6753b1694cda7e2";
+    private String sbl1_md5sum = "25d877b9fc5852846478b8e583be020a";
+    private String sbl2_md5sum = "20732aa3ad2eb2049c32ce55c00b3edb";
+    private String sbl3_md5sum = "afdf190f364cec079050ce7750251b20";
     private String recovery_md5sum; 
     private String boot_md5sum; 
 	private HashMap<String,String[]> RSmap = new HashMap<String,String[]>();
 	private HashMap<String,String[]> BSmap = new HashMap<String,String[]>();
     private String dfname;
     private int step = 0;
+    private int sstep = 0;
 	private ProgressDialog mProgressDialog;
 
 	
@@ -133,7 +141,7 @@ public class install extends Activity {
 	version = prop.getProperty("ro.lge.swversion");
     String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/supported.xml";
     saveloc="/sdcard/freegee/supported.xml";
-    dfname = "supported.xml";
+    dfname = "supported device list";
     new DownloadFileAsync().execute(url);
     
     recoveryBtn = (Button)findViewById(R.id.recoveryBtn);
@@ -286,17 +294,56 @@ public class install extends Activity {
         		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+recovery);            	
             }
             else if(step==3){
-            	checkmd5sums();
+            	if(isSpecial && sstep < 3){
+            		if(sstep==0){
+            		sstep=1;
+            		saveloc="/sdcard/freegee/working/sbl1-freegee.img";
+            		dfname="SBL1 image";
+            		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/sbl1.img");
+            		}
+            		if(sstep==1){
+            		sstep=2;
+            		saveloc="/sdcard/freegee/working/sbl2-freegee.img";
+            		dfname="SBL2 image";
+            		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/sbl2.img");
+            		}
+            		if(sstep==2){
+            		sstep=3;
+            		saveloc="/sdcard/freegee/working/sbl3-freegee.img";
+            		dfname="SBL3 image";
+            		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/sbl3.img");
+            		}
+            	}
+            	else{
+            	   checkmd5sums();
+            	}
             }
 
         }
     }
+    private boolean isSpecial = isSpecial();
+    private boolean isSpecial(){
+    	SharedPreferences prefs = getPreferences(MODE_PRIVATE); 
+    	if(prefs.getInt("Special", 2) ==3){
+    	   return true;
+    	}
+    	else{
+    	   return false;
+    	}
+    			   
+    }
+    
     private void checkmd5sums() {
     	int err = 0;
     	HashMap<String,String> files = new HashMap<String, String>();
     	files.put("recovery",recovery_md5sum);
     	files.put("aboot",aboot_md5sum);
     	files.put("boot",boot_md5sum);
+    	if(isSpecial){
+    		files.put("sbl1",sbl1_md5sum);
+    		files.put("sbl2",sbl2_md5sum);
+    		files.put("sbl3",sbl3_md5sum);
+    	}
     	for(String f:files.keySet()){
     		 MessageDigest md = null;
 			try {
@@ -477,6 +524,46 @@ public class install extends Activity {
 						e.printStackTrace();
 					}
 		      	}
+		      	if(isSpecial){
+			      	if(err==0){
+			         	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/sbl1 of=/sdcard/freegee/sbl1-backup.img";
+	 		        	try {
+	 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+	 					} catch (InterruptedException e) {
+	 						
+	 						e.printStackTrace();
+	 					} catch (IOException e) {
+	 						
+	 						e.printStackTrace();
+	 					}
+		 			 }
+			      	
+			      	if(err==0){
+			        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/sbl2 of=/sdcard/freegee/sbl2-backup.img";
+			        	try {
+							err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+						} catch (InterruptedException e) {
+							
+							e.printStackTrace();
+						} catch (IOException e) {
+							
+							e.printStackTrace();
+						}
+		 			 }
+			      	
+			      	if(err==0){
+			        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/sbl3 of=/sdcard/freegee/sbl3-backup.img";
+			        	try {
+							err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+						} catch (InterruptedException e) {
+							
+							e.printStackTrace();
+						} catch (IOException e) {
+							
+							e.printStackTrace();
+						}
+			      	}
+		      	}
 					return null;
 			  
         }
@@ -574,7 +661,7 @@ public class install extends Activity {
 			}
 			 }
       	
-      	if(err==0){
+      	if(err2==0){
       		publishProgress(2);
       	//	Toast.makeText(getApplicationContext(),"Zeroing Recovery", Toast.LENGTH_SHORT).show();
    		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
@@ -604,8 +691,89 @@ public class install extends Activity {
     			
                 err=-10;
     			}
-    		   
+    	if(isSpecial && err != -10){
+    		
     	
+        	if (err == 0){
+        		publishProgress(0);
+        	    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/sbl1";
+            	try {
+    				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+    			} catch (InterruptedException e) {
+    				
+    				e.printStackTrace();
+    			} catch (IOException e) {
+    				
+    				e.printStackTrace();
+    			}
+            //	Toast.makeText(getApplicationContext(),"Flashing bootloader", Toast.LENGTH_SHORT).show();
+       		    command = "dd if=/data/local/tmp/sbl1-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl1";
+    	        	try {
+    					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+    				} catch (InterruptedException e) {
+    					
+    					e.printStackTrace();
+    				} catch (IOException e) {
+    					
+    					e.printStackTrace();
+    				}
+
+          	if(err==0){
+          		publishProgress(1);
+          	//	Toast.makeText(getApplicationContext(),"Zeroing boot", Toast.LENGTH_SHORT).show();
+       		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/sbl2";
+            	try {
+    				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+    			} catch (InterruptedException e) {
+    				
+    				e.printStackTrace();
+    			} catch (IOException e) {
+    				
+    				e.printStackTrace();
+    			}
+            	command = "dd if=/data/local/tmp/sbl2-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl2";
+            	try {
+    				err2 = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+    			} catch (InterruptedException e) {
+    				
+    				e.printStackTrace();
+    			} catch (IOException e) {
+    				
+    				e.printStackTrace();
+    			}
+    			 }
+          	
+          	if(err2==0){
+          		publishProgress(2);
+       		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/sbl3";
+            	try {
+    				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+    			} catch (InterruptedException e) {
+    				
+    				e.printStackTrace();
+    			} catch (IOException e) {
+    				
+    				e.printStackTrace();
+    			}
+            	command = "dd if=/data/local/tmp/sbl3-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl3";
+            	try {
+    				err3 = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+    			} catch (InterruptedException e) {
+    				
+    				e.printStackTrace();
+    			} catch (IOException e) {
+    				
+    				e.printStackTrace();
+    			}
+          	 }
+    		
+    	}
+    		   
+    	}
+    	if (err != 0 || err2 != 0 || err3 != 0){
+			
+            err=-10;
+			}
 		return null;
 		}
 		
@@ -628,6 +796,7 @@ public class install extends Activity {
            }
            else{
            alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated!","Yay!",0);
+           new File("/sdcard/freegee/working").delete();
            }
            
        }
@@ -729,6 +898,88 @@ public class install extends Activity {
  			  else {
  				  err = -3;
  			  }
+ 			  if(isSpecial){
+ 	        		File sbl1=new File("/sdcard/freegee/sbl1-backup.img");
+ 	            	File sbl2=new File("/sdcard/freegee/sbl2-backup.img");
+ 	            	File sbl3=new File("/sdcard/freegee/sbl3-backup.img");	
+ 				 if(sbl1.exists()){
+ 		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/sbl1";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						
+ 						e.printStackTrace();
+ 					}
+  		        	command = "dd if=/sdcard/freegee/sbl1-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl1";
+  		        	try {
+  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+  					} catch (InterruptedException e) {
+  						
+  						e.printStackTrace();
+  					} catch (IOException e) {
+  						
+  						e.printStackTrace();
+  					}
+  			  }
+  			  else{
+  				  err=-1;
+  			  }
+  			  
+  			  if(sbl2.exists()){
+ 		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/sbl2";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						
+ 						e.printStackTrace();
+ 					}
+ 		        	command = "dd if=/sdcard/freegee/sbl2-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl2";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						
+ 						e.printStackTrace();
+ 					}
+ 			  }
+  			  else{
+  				  err=-2;
+  			  }
+  			  
+  			  if(sbl3.exists()){
+ 		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/sbl3";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						
+ 						e.printStackTrace();
+ 					}
+ 		        	command = "dd if=/sdcard/freegee/sbl3-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl3";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						
+ 						e.printStackTrace();
+ 					}
+ 			    }
+  			    else {
+ 				  err = -3;
+ 			    }
+ 			  }
 			return null;
         }
         protected void onProgressUpdate(String... progress) {
@@ -825,7 +1076,7 @@ public class install extends Activity {
 	    	doc.getDocumentElement().normalize();
 	    	Toast.makeText(getApplicationContext(),device, Toast.LENGTH_LONG).show();
 	    	NodeList nList = doc.getElementsByTagName(device);
-	    	if(nList.getLength() > 0){
+	    	if(nList != null && nList.getLength() > 0){
 	    	for (int temp = 0; temp < nList.getLength(); temp++) {
 	     
 	    		Node nNode = nList.item(temp);
@@ -887,10 +1138,12 @@ public class install extends Activity {
 	    	adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    	// Apply the adapter to the spinner
 	    	spinner.setAdapter(adapter);
-	    	
-	    	boot = BSmap.get(version)[0];
-	    	boot_md5sum = BSmap.get(version)[1];
-	    	
+	    	if(BSmap.containsKey(version)){
+	    	   boot = BSmap.get(version)[0];
+	    	   boot_md5sum = BSmap.get(version)[1];
+	    	}
+	    	else
+    		 alertbuilderu("Sorry!","Sorry your software version is not currently supported, will attempt to upload boot image for support.","Ok",0);
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }

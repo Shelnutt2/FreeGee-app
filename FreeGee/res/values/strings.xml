@@ -10,4 +10,5 @@
     <string name="UpText">Upload boot image and device info</string>
     <string name="efs_text">Backup/Restore EFS</string>
     <string name="recovery">Select a recovery to install</string>
+    <string name="Ssblu">SBL Unlock method</string>
 </resources>
