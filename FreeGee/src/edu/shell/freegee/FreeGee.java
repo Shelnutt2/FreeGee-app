@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.MessageDigest;
@@ -19,12 +18,28 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
 
+import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.DropboxAPI.UploadRequest;
+import com.dropbox.client2.ProgressListener;
+import com.dropbox.client2.android.AndroidAuthSession;
+import com.dropbox.client2.exception.DropboxException;
+import com.dropbox.client2.exception.DropboxFileSizeException;
+import com.dropbox.client2.exception.DropboxIOException;
+import com.dropbox.client2.exception.DropboxParseException;
+import com.dropbox.client2.exception.DropboxPartialFileException;
+import com.dropbox.client2.exception.DropboxServerException;
+import com.dropbox.client2.exception.DropboxUnlinkedException;
+import com.dropbox.client2.session.AccessTokenPair;
+import com.dropbox.client2.session.AppKeyPair;
+import com.dropbox.client2.session.Session.AccessType;
+
 import edu.shell.freegee.R;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -55,10 +70,58 @@ public class FreeGee extends Activity {
     private String varient;
     private boolean restoring;
     private boolean override;
+    public static boolean isSpecial;
+    private Button DbBtn;
     DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     Date date = new Date();
     private String now = dateFormat.format(date);
-   
+    
+    @Override
+    public void onResume(){
+    	super.onResume();
+    	DbBtn = (Button)findViewById(R.id.DbBtn);
+        SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
+        if(prefs.contains("dropbox_key")){
+           DbBtn.setVisibility(View.VISIBLE); //View.GONE, View.INVISIBLE are available too.
+        }
+        else{
+           DbBtn.setVisibility(View.INVISIBLE);
+        }
+        DbBtn.setOnClickListener(new OnClickListener(){
+            public void onClick(View v) {
+            	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
+        	    
+            	// set title
+            	alertDialogBuilder.setTitle("DropBox Sync");
+
+            	// set dialog message
+            	alertDialogBuilder
+            	.setMessage("Do you want to force an upload or download of your backups?")
+            	.setCancelable(true)
+            	.setPositiveButton("Upload",new DialogInterface.OnClickListener() {
+            	public void onClick(DialogInterface dialog,int id) {
+            		File[] toBeUploaded = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img")};
+            		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(FreeGee.this);
+            		DBUpload dbupload = new DBUpload(FreeGee.this, mDBApi, toBeUploaded);
+            			dbupload.execute();
+            		}
+            	})
+            	.setNegativeButton("Download", new DialogInterface.OnClickListener() {
+            	public void onClick(DialogInterface dialog,int id) {
+            		}
+            	});
+            	// create alert dialog
+            	AlertDialog alertDialog = alertDialogBuilder.create();
+
+            	// show it
+            	alertDialog.show();
+            	
+            }
+        
+        });
+        
+    }
+    
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -116,6 +179,47 @@ public class FreeGee extends Activity {
                 }
             }
         });
+        
+        DbBtn = (Button)findViewById(R.id.DbBtn);
+        SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
+        if(prefs.contains("dropbox_key")){
+           DbBtn.setVisibility(View.VISIBLE); //View.GONE, View.INVISIBLE are available too.
+        }
+        DbBtn.setOnClickListener(new OnClickListener(){
+            public void onClick(View v) {
+            	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
+        	    
+            	// set title
+            	alertDialogBuilder.setTitle("DropBox Sync");
+
+            	// set dialog message
+            	alertDialogBuilder
+            	.setMessage("Do you want to force an upload or download of your backups?")
+            	.setCancelable(true)
+            	.setPositiveButton("Upload",new DialogInterface.OnClickListener() {
+            	public void onClick(DialogInterface dialog,int id) {
+            		File[] toBeUploaded = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img")};
+            		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(FreeGee.this);
+            		DBUpload dbupload = new DBUpload(FreeGee.this, mDBApi, toBeUploaded);
+            			dbupload.execute();
+            		}
+            	})
+            	.setNegativeButton("Download", new DialogInterface.OnClickListener() {
+            	public void onClick(DialogInterface dialog,int id) {
+            		}
+            	});
+            	// create alert dialog
+            	AlertDialog alertDialog = alertDialogBuilder.create();
+
+            	// show it
+            	alertDialog.show();
+        		
+            }
+            
+        
+        
+        });
+        
         restoreBtn = (Button)findViewById(R.id.restoreBtn);
         restoreBtn.setOnClickListener(new OnClickListener(){
             public void onClick(View v) {
@@ -198,11 +302,7 @@ public class FreeGee extends Activity {
                 	})
                 	.setNegativeButton("I disagree",new DialogInterface.OnClickListener() {
                 	public void onClick(DialogInterface dialog,int id) {
-                	// if this button is clicked, close
-                	// current activity
-                		
-                			FreeGee.this.finish();
-                			
+ 
                 	}
                 	});
 
@@ -307,7 +407,7 @@ public class FreeGee extends Activity {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.sbl_ul:
-            	SharedPreferences prefs = getPreferences(MODE_PRIVATE); 
+            	SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
             	if(prefs.getInt("Special-always", 2) ==3){
             		sbltoggle();
             	}
@@ -315,7 +415,8 @@ public class FreeGee extends Activity {
             	  sblalert();
                 return true;
             case R.id.menu_settings:
-                
+        		Intent newActivity = new Intent(this, settings.class);
+                startActivity(newActivity);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -727,6 +828,175 @@ public class FreeGee extends Activity {
         }
     }
     
+    public class DBUpload extends AsyncTask<Void, Long, Boolean> {
+
+    	
+    	final static private String APP_KEY = "ywebobijtcfo2yc";
+    	final static private String APP_SECRET = "ud1duwmbtlml0zz";
+    	final  private AccessType ACCESS_TYPE = AccessType.APP_FOLDER;
+    	// In the class declaration section:
+    	DropboxAPI<AndroidAuthSession> mApi;
+
+
+    	private UploadRequest mRequest;
+    	private Context mContext;
+    	private ProgressDialog mDialog;
+
+    	private String mErrorMsg;
+
+    	//new class variables:
+    	private int mFilesUploaded;
+    	private File[] mFilesToUpload;
+    	private int mCurrentFileIndex;
+
+    	public DBUpload(Context context, DropboxAPI<?> api, File[] filesToUpload) {
+    	    // We set the context this way so we don't accidentally leak activities
+    	    mContext = context.getApplicationContext();
+    		AppKeyPair appKeys = new AppKeyPair(APP_KEY, APP_SECRET);
+    		AndroidAuthSession session = new AndroidAuthSession(appKeys, ACCESS_TYPE);
+    		mApi = new DropboxAPI<AndroidAuthSession>(session);
+    		AccessTokenPair access = dropbox.getkeys(mContext);
+    		Toast.makeText(mContext, "Key is: "+dropbox.getkeys(mContext).toString(), Toast.LENGTH_LONG).show();
+    		mApi.getSession().setAccessTokenPair(access);
+    	    
+
+    	    //set number of files uploaded to zero.
+    	    mFilesUploaded = 0;
+    	    mFilesToUpload = filesToUpload;
+    	    mCurrentFileIndex = 0;
+
+    	    mDialog = new ProgressDialog(context);
+    	    mDialog.setMax(100);
+    	    mDialog.setMessage("Uploading file 1 / " + filesToUpload.length);
+    	    mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+    	    mDialog.setProgress(0);
+    	    mDialog.setButton(DialogInterface.BUTTON_NEUTRAL,"Cancel", new  DialogInterface.OnClickListener() {
+    	        public void onClick(DialogInterface dialog, int which) {
+    	            cancel(true);
+    	        }
+    	    });
+    	    mDialog.show();
+    	}
+
+    	@Override
+    	protected Boolean doInBackground(Void... params) {
+    	    try {
+    	        for (int i = 0; i < mFilesToUpload.length; i++) {
+    	            mCurrentFileIndex = i;
+    	            File file = mFilesToUpload[i];
+
+    	            // By creating a request, we get a handle to the putFile operation,
+    	            // so we can cancel it later if we want to
+    	            FileInputStream fis = new FileInputStream(file);
+    	            String path = file.getName();
+    	            mRequest = mApi.putFileOverwriteRequest(path, fis, file.length(),
+    	                    new ProgressListener() {
+    	                @Override
+    	                public long progressInterval() {
+    	                     // Update the progress bar every half-second or so
+    	                     return 500;
+    	                }
+
+    	                @Override
+    	                public void onProgress(long bytes, long total) {
+    	                    if(isCancelled()) {
+    	                        // This will cancel the putFile operation
+    	                        mRequest.abort();
+    	                    }
+    	                    else {
+    	                        publishProgress(bytes);
+    	                    }
+    	                }
+    	            });
+
+    	            mRequest.upload();
+
+    	            if(!isCancelled()) {
+    	                mFilesUploaded++;
+    	            }
+    	            else {
+    	                return false;
+    	            }
+    	        }
+    	        return true;
+    	    } catch (DropboxUnlinkedException e) {
+    	        // This session wasn't authenticated properly or user unlinked
+    	        mErrorMsg = "This app wasn't authenticated properly.";
+    	    } catch (DropboxFileSizeException e) {
+    	        // File size too big to upload via the API
+    	        mErrorMsg = "This file is too big to upload";
+    	    } catch (DropboxPartialFileException e) {
+    	        // We canceled the operation
+    	        mErrorMsg = "Upload canceled";
+    	    } catch (DropboxServerException e) {
+    	        // Server-side exception.  These are examples of what could happen,
+    	        // but we don't do anything special with them here.
+    	        if (e.error == DropboxServerException._401_UNAUTHORIZED) {
+    	            // Unauthorized, so we should unlink them.  You may want to
+    	            // automatically log the user out in this case.
+    	        } else if (e.error == DropboxServerException._403_FORBIDDEN) {
+    	            // Not allowed to access this
+    	        } else if (e.error == DropboxServerException._404_NOT_FOUND) {
+    	            // path not found (or if it was the thumbnail, can't be
+    	            // thumbnailed)
+    	        } else if (e.error == DropboxServerException._507_INSUFFICIENT_STORAGE) {
+    	            // user is over quota
+    	        } else {
+    	            // Something else
+    	        }
+    	        // This gets the Dropbox error, translated into the user's language
+    	        mErrorMsg = e.body.userError;
+    	        if (mErrorMsg == null) {
+    	            mErrorMsg = e.body.error;
+    	        }
+    	    } catch (DropboxIOException e) {
+    	        // Happens all the time, probably want to retry automatically.
+    	        mErrorMsg = "Network error.  Try again.";
+    	    } catch (DropboxParseException e) {
+    	        // Probably due to Dropbox server restarting, should retry
+    	        mErrorMsg = "Dropbox error.  Try again.";
+    	    } catch (DropboxException e) {
+    	        // Unknown error
+    	        mErrorMsg = "Unknown error.  Try again.";
+    	    } catch (FileNotFoundException e) {
+    	    }
+    	    return false;
+    	}
+
+    	@Override
+    	protected void onProgressUpdate(Long... progress) {
+    	    int totalBytes = 0;
+    	    int bytesUploaded = 0;
+    	    for(int i=0;i<mFilesToUpload.length;i++) {
+    	        Long bytes = mFilesToUpload[i].length();
+    	        totalBytes += bytes;
+
+    	        if(i < mCurrentFileIndex) {
+    	            bytesUploaded += bytes;
+    	        }
+    	    }
+    	    bytesUploaded += progress[0];
+
+    	    mDialog.setMessage("Uploading file " + (mCurrentFileIndex+1) + " / " + mFilesToUpload.length);
+    	    mDialog.setProgress((int) ((bytesUploaded / totalBytes) * 100));
+    	}
+
+    	@Override
+    	protected void onPostExecute(Boolean result) {
+    	    mDialog.dismiss();
+    	    if (result) {
+    	        showToast("Image successfully uploaded");
+    	    } else {
+    	        showToast(mErrorMsg);
+    	    }
+    	}
+
+    	private void showToast(String msg) {
+    	    Toast error = Toast.makeText(mContext, msg, Toast.LENGTH_LONG);
+    	    error.show();
+    	}
+    }
+    
     class efsbackup extends AsyncTask<String, String, String> {
     	int err = 0;
         @Override
@@ -914,12 +1184,15 @@ public class FreeGee extends Activity {
         }
     }
     
-    private boolean isSpecial(){
-    	SharedPreferences prefs = getPreferences(MODE_PRIVATE); 
+    
+    public boolean isSpecial(){
+    	SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE); 
     	if(prefs.getInt("Special", 2) ==3){
+    		isSpecial = true;
     	   return true;
     	}
     	else{
+    		isSpecial = false;
     	   return false;
     	}
     			   
@@ -989,8 +1262,7 @@ public class FreeGee extends Activity {
     		String value = input.getText().toString();
     		try {
 				if(value.equals(computeSum(secret+now).substring(0, Math.min(value.length(), 5)))){
-					Toast.makeText(getApplicationContext(),"It worked!", Toast.LENGTH_SHORT).show();
-					SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+					SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
 					SharedPreferences.Editor editor = prefs.edit();
 					editor.putInt("Special", 3);
 					editor.putInt("Special-always", 3);
@@ -1000,7 +1272,6 @@ public class FreeGee extends Activity {
 				alertbuilder("Error!","Failed to sha1!","Boo!",0);
 				e.printStackTrace();
 			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
     	}
@@ -1029,11 +1300,11 @@ public class FreeGee extends Activity {
 
     	// set dialog message
     	alertDialogBuilder
-    	.setMessage("This is the special SBL unlock need for a select few devices. Due to the hard brick risk, please enter the code given to you by Shelnutt2")
+    	.setMessage("You have already Enabled the special sbl unlock process. Please select if you want to enable or disable it currently.")
     	.setCancelable(true)
     	.setPositiveButton("Enable",new DialogInterface.OnClickListener() {
     	public void onClick(DialogInterface dialog,int id) {
-    		SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+    		SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
 			SharedPreferences.Editor editor = prefs.edit();
 			editor.putInt("Special", 3);
 			editor.commit();
@@ -1042,7 +1313,7 @@ public class FreeGee extends Activity {
         .setNegativeButton("Disable", new DialogInterface.OnClickListener() {
 
             public void onClick(DialogInterface dialog, int which) {
-            	SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+            	SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
 				SharedPreferences.Editor editor = prefs.edit();
 				editor.putInt("Special", 2);
 				editor.commit();

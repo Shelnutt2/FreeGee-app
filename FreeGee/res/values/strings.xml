@@ -11,4 +11,7 @@
     <string name="efs_text">Backup/Restore EFS</string>
     <string name="recovery">Select a recovery to install</string>
     <string name="Ssblu">SBL Unlock method</string>
+    <string name="uptitle">Upload Settings</string>
+    <string name="DropBoxToggle">Enable DropBox</string>
+    <string name="dbbtntxt">Force Sync with Dropbox</string>
 </resources>

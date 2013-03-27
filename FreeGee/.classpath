@@ -4,25 +4,15 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry kind="lib" path="/mnt/Android/RootTools-2.4.jar">
+	<classpathentry kind="lib" path="libs/dropbox-android-sdk-1.5.3.jar" sourcepath="/home/s.shelnutt/Downloads/dropbox-android-sdk-1.5.3/src">
 		<attributes>
-			<attribute name="javadoc_location" value="jar:file:/mnt/Android/RootTools-javadoc.jar!/"/>
+			<attribute name="javadoc_location" value="file:/home/s.shelnutt/Downloads/dropbox-android-sdk-1.5.3/docs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/home/s.shelnutt/Downloads/httpcomponents-client-4.2.3/lib/httpclient-4.2.3.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="file:/home/s.shelnutt/Downloads/httpcomponents-client-4.2.3/javadoc/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="/home/s.shelnutt/Downloads/httpcomponents-client-4.2.3/lib/httpcore-4.2.2.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="file:/home/s.shelnutt/Downloads/httpcomponents-client-4.2.3/javadoc/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="/home/s.shelnutt/Downloads/httpcomponents-client-4.2.3/lib/httpmime-4.2.3.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="file:/home/s.shelnutt/Downloads/httpcomponents-client-4.2.3/javadoc/"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="lib" path="libs/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="libs/httpclient-4.2.3.jar"/>
+	<classpathentry kind="lib" path="libs/httpcore-4.2.2.jar"/>
+	<classpathentry kind="lib" path="libs/httpmime-4.2.3.jar"/>
+	<classpathentry kind="lib" path="libs/json_simple-1.1.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

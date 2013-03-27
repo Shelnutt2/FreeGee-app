@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Properties;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -35,10 +36,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -52,8 +55,7 @@ public class install extends Activity {
     public static final int DIALOG_BACKUP_PROGRESS = 3;
     private Button recoveryBtn;
     private String saveloc;
-    public static String device;
-    public static String version;
+    public static String device, version, aversion;
     public static String id = "cf573ca8ea7d2";
     public static String incremental = "61249c215428d3309c";
     public static String factoryversion = "46d0622d0";
@@ -71,7 +73,11 @@ public class install extends Activity {
     private int step = 0;
     private int sstep = 0;
 	private ProgressDialog mProgressDialog;
-
+	SharedPreferences prefs;
+	private boolean isSpecial;
+	private String sbl1 = "sbl1-freegee";
+	private String sbl2 = "sbl2-freegee";
+	private String sbl3 = "sbl3-freegee";
 	
     /** Called when the activity is first created. */
     @Override
@@ -79,11 +85,11 @@ public class install extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_install);
         
-        
+        prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
         
         String command;
         
-        
+    isSpecial = isSpecial();//FreeGee.isSpecial;
 	// read the property text  file
 	File file = new File("/system/build.prop");
 	FileInputStream fis = null;
@@ -139,6 +145,11 @@ public class install extends Activity {
 	}
 	device = prop.getProperty("ro.product.name");
 	version = prop.getProperty("ro.lge.swversion");
+	aversion = prop.getProperty("ro.build.version.release");
+	ListView lv = (ListView) findViewById(R.id.install_list_view);
+    String[] lStr = new String[]{"Device Name: "+device,"Software Version: "+version};
+    lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
+
     String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/supported.xml";
     saveloc="/sdcard/freegee/supported.xml";
     dfname = "supported device list";
@@ -155,7 +166,7 @@ public class install extends Activity {
 
             	// set dialog message
             	alertDialogBuilder
-            	.setMessage("By Pressing Okay you are acknowledging that you are voiding you are voiding you warrenty and no one from team codefire can be held responsible.")
+            	.setMessage("By Pressing I agree you are acknowledging that you are voiding you are voiding you warrenty and no one from team codefire can be held responsible.")
             	.setCancelable(false)
             	.setPositiveButton("I agree",new DialogInterface.OnClickListener() {
             	public void onClick(DialogInterface dialog,int id) {
@@ -163,10 +174,67 @@ public class install extends Activity {
           		  if(!freegeefw.exists()){
           			  freegeefw.mkdirs();
           		  }
-          		  step=1;
-          		  dfname="Bootloader";
-          		  saveloc="/sdcard/freegee/working/aboot-freegee.img";
-          		  new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/aboot-freegee.img");
+          		if(!isSpecial && aversion.equals("4.1.2") && !device.equals("geehrc4g_spr_us") && !device.equals("geeb_att_us")){
+          			//alertbuilderu("Sorry!","Sorry you are running a varient with jellybean which requires the sbl unlock. You must read and accept the warning first disabled on this activity.","Ok",0);
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(install.this);
+	        	    
+	    	    	// set title
+	    	    	alertDialogBuilder.setTitle("Please Read Carefully");
+
+	    	    	// set dialog message
+	    	    	alertDialogBuilder
+	    	    	.setMessage("Your device is running jellybean and requires the new special unlock. This unlock flashes your sbl stack. If anything goes wrong you might hard brick. Press menu key if you agree to the risks. Download mode is stored in the sbl stack, thus if it fails to flash you can't recover. If you get any errors or any problems do NOT reboot. Find Shelnutt2 on xda or IRC. After you enable this click 'Unlock my Optimus G' to proceed.")
+	    	    	.setCancelable(false)
+	    	    	.setPositiveButton("I Understand",new DialogInterface.OnClickListener() {
+	    	    	public void onClick(DialogInterface dialog,int id) {
+	    	    	// if this button is clicked, close
+	    	    	// current activity
+	    	    		Toast.makeText(install.this, "Jellybean unlock NOT enabled, please read the instructions!", Toast.LENGTH_LONG).show();
+	    	    		install.this.finish();
+	    	    	}
+	    	    	})
+	    	    	.setNegativeButton("I do not want to risk it", new DialogInterface.OnClickListener() {
+	    				
+	    				@Override
+	    				public void onClick(DialogInterface dialog, int which) {
+	    					Toast.makeText(install.this, "Jellybean unlock NOT enabled", Toast.LENGTH_LONG).show();
+	    					install.this.finish();
+	    					
+	    				}
+	    			})
+	    			.setOnKeyListener(new DialogInterface.OnKeyListener() {
+                        public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                        if (keyCode == KeyEvent.KEYCODE_MENU)  {
+                           isSpecial = true;
+                           sbl1 = "sbl1-E971-ICS";
+                           sbl2 = "sbl2-E971-ICS";
+                           sbl3 = "sbl3-E971-ICS";
+                           sbl1_md5sum = "ff193e1835c633d94c61240085428c9d"; 
+                           sbl2_md5sum = "13d7941c2aada2b67e4e6f3f0ce5d31e";
+                           sbl3_md5sum = "4ac3be33e8a5e8b83b1212160a769e7c";
+                           Toast.makeText(install.this, "Jellybean unlock enabled", Toast.LENGTH_SHORT).show();
+                           step=1;
+                 		    dfname="Bootloader";
+                 		    saveloc="/sdcard/freegee/working/aboot-freegee.img";
+                 		    new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/aboot-freegee.img");
+                           return true;
+                        }
+                        return false;
+                       }
+                     });
+
+	    	    	// create alert dialog
+	    	    	AlertDialog alertDialog = alertDialogBuilder.create();
+
+	    	    	// show it
+	    	    	alertDialog.show();
+          		}
+          		  else{
+          		    step=1;
+          		    dfname="Bootloader";
+          		    saveloc="/sdcard/freegee/working/aboot-freegee.img";
+          		    new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/aboot-freegee.img");
+          		  }
             	}
             	})
             	.setNegativeButton("I disagree",new DialogInterface.OnClickListener() {
@@ -229,7 +297,7 @@ public class install extends Activity {
         }
     }
     class DownloadFileAsync extends AsyncTask<String, String, String> {
-        
+        int err;
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -261,7 +329,7 @@ public class install extends Activity {
                 output.close();
                 input.close();
             } catch (Exception e) {
-            	alertbuilder("Error!","There was a problem downloading a file. Please try agian.","Ok",0);
+            	err = -1;
             }
             return null;
 
@@ -273,6 +341,10 @@ public class install extends Activity {
         @Override
         protected void onPostExecute(String unused) {
         	removeDialog(DIALOG_DOWNLOAD_PROGRESS);
+        	if (err!=0) {
+        	alertbuilder("Error!","There was a problem downloading a file. Please try agian.","Ok",0);
+        	}
+        	else{
             if(step==0){
         	readxml();
         	}
@@ -280,7 +352,6 @@ public class install extends Activity {
             	step=2;
         		saveloc="/sdcard/freegee/working/boot-freegee.img";
         		dfname="Boot image";
-        		Toast.makeText(getApplicationContext(),boot, Toast.LENGTH_LONG).show();
         		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+boot);
             }
             else if(step==2){
@@ -290,46 +361,105 @@ public class install extends Activity {
         		Spinner spinner = (Spinner) findViewById(R.id.recoveryspinner);
         		recovery = RSmap.get(spinner.getSelectedItem().toString())[0];
         		recovery_md5sum = RSmap.get(spinner.getSelectedItem().toString())[1];
-        		Toast.makeText(getApplicationContext(),recovery, Toast.LENGTH_LONG).show();
         		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+recovery);            	
             }
             else if(step==3){
-            	if(isSpecial && sstep < 3){
-            		if(sstep==0){
+            	if(isSpecial){
             		sstep=1;
             		saveloc="/sdcard/freegee/working/sbl1-freegee.img";
             		dfname="SBL1 image";
-            		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/sbl1.img");
-            		}
-            		if(sstep==1){
-            		sstep=2;
-            		saveloc="/sdcard/freegee/working/sbl2-freegee.img";
-            		dfname="SBL2 image";
-            		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/sbl2.img");
-            		}
-            		if(sstep==2){
-            		sstep=3;
-            		saveloc="/sdcard/freegee/working/sbl3-freegee.img";
-            		dfname="SBL3 image";
-            		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/sbl3.img");
-            		}
+            		new DownloadSBLFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+sbl1+".img");
             	}
             	else{
-            	   checkmd5sums();
+            	  checkmd5sums();
             	}
             }
+            
+          }
 
         }
     }
-    private boolean isSpecial = isSpecial();
+    
+    class DownloadSBLFileAsync extends AsyncTask<String, String, String> {
+        int err;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showDialog(DIALOG_DOWNLOAD_PROGRESS);
+        }
+
+        @Override
+        protected String doInBackground(String... aurl) {
+            int count;
+
+            try {
+                URL url = new URL(aurl[0]);
+                URLConnection conexion = url.openConnection();
+                conexion.connect();
+                int lenghtOfFile = conexion.getContentLength();
+                InputStream input = new BufferedInputStream(url.openStream());
+                OutputStream output = new FileOutputStream(saveloc);
+
+                byte data[] = new byte[1024];
+                long total = 0;
+
+                while ((count = input.read(data)) != -1) {
+                    total += count;
+                    publishProgress(""+(int)((total*100)/lenghtOfFile));
+                    output.write(data, 0, count);
+                }
+
+                output.flush();
+                output.close();
+                input.close();
+            } catch (Exception e) {
+            	err = -1;
+            }
+            return null;
+
+        }
+        protected void onProgressUpdate(String... progress) {
+             mProgressDialog.setProgress(Integer.parseInt(progress[0]));
+        }
+
+        @Override
+        protected void onPostExecute(String unused) {
+        	removeDialog(DIALOG_DOWNLOAD_PROGRESS);
+        	if (err!=0) {
+        	alertbuilder("Error!","There was a problem downloading a file. Please try agian.","Ok",0);
+        	}
+        	else{
+        		if(sstep==1){
+            		sstep=2;
+            		saveloc="/sdcard/freegee/working/sbl2-freegee.img";
+            		dfname="SBL2 image";
+            		
+            		new DownloadSBLFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+sbl2+".img");
+            		}
+            	if(sstep==2){
+            		sstep=3;
+            		saveloc="/sdcard/freegee/working/sbl3-freegee.img";
+            		dfname="SBL3 image";
+            		new DownloadSBLFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+sbl3+".img");
+            		}
+            	if(sstep==3){
+            		checkmd5sums();
+            	}
+            }
+            
+          }
+
+        
+    }
+    
     private boolean isSpecial(){
-    	SharedPreferences prefs = getPreferences(MODE_PRIVATE); 
-    	if(prefs.getInt("Special", 2) ==3){
-    	   return true;
-    	}
-    	else{
+        if(prefs.contains("Special")){
+           if(prefs.getInt("Special", 2) == 3){
+    	      return true;
+    	   }
+        }
+    	
     	   return false;
-    	}
     			   
     }
     
@@ -379,11 +509,9 @@ public class install extends Activity {
 
     		    if(! sb.toString().equalsIgnoreCase(files.get(f))){
     		    	err = -1;
-    		    	alertbuilder("Error!",f+"md5sum mismatch. Aborting.","Ok",1);
+    		    	alertbuilder("Error!",f+" md5sum mismatch. Aborting.","Ok",1);
     		    }
-    		    else{
-    		    	Toast.makeText(getApplicationContext(),f+ " md5sum okay", Toast.LENGTH_SHORT).show();
-    		    }
+    		    
     	}
     	if (err == 0){
     		new backup().execute();
@@ -410,7 +538,7 @@ public class install extends Activity {
 			  if(!freegeef.exists()){
 				  freegeef.mkdirs();
 			  }
- 		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1 of=/sdcard/freegee/m9kefs1-"+df+".img";
+ 		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1 of=/sdcard/freegee/m9kefs1-"+df+"-backup.img";
  		        	try {
  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
  					} catch (InterruptedException e) {
@@ -422,7 +550,7 @@ public class install extends Activity {
  					}
  		        	
  			  if(err==0){
-		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2 of=/sdcard/freegee/m9kefs2-"+df+".img";
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2 of=/sdcard/freegee/m9kefs2-"+df+"-backup.img";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
@@ -435,7 +563,7 @@ public class install extends Activity {
  			  }
  			  
  			 if(err==0){
-		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3 of=/sdcard/freegee/m9kefs3-"+df+".img";
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3 of=/sdcard/freegee/m9kefs3-"+df+"-backup.img";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
@@ -448,7 +576,7 @@ public class install extends Activity {
      			 }
  			 
 		      	if(err==0){
-		         	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1 of=/sdcard/freegee/m9kefs1.img";
+		         	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1 of=/sdcard/freegee/m9kefs1-backup.img";
  		        	try {
  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
  					} catch (InterruptedException e) {
@@ -461,7 +589,7 @@ public class install extends Activity {
 	 			 }
 		      	
 		      	if(err==0){
-		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2 of=/sdcard/freegee/m9kefs2.img";
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2 of=/sdcard/freegee/m9kefs2-backup.img";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
@@ -474,7 +602,7 @@ public class install extends Activity {
 	 			 }
 		      	
 		      	if(err==0){
-		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3 of=/sdcard/freegee/m9kefs3.img";
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3 of=/sdcard/freegee/m9kefs3-backup.img";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
@@ -596,23 +724,9 @@ public class install extends Activity {
     	int err2 = 0;
     	int err3 = 0;
 		protected String doInBackground(String...Params) {
-    	//int err = 0;
-		//Toast.makeText(getApplicationContext(),"Moving files", Toast.LENGTH_SHORT).show();
-    	String command = "busybox mv -f /sdcard/freegee/working/* /data/local/tmp/";
-    	try {
-			 err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-		} catch (IOException e) {
-			
-			e.printStackTrace();
-		}
-			//RootTools.getShell(true).add(command).waitForFinish();
-        catch (InterruptedException e) {
-			
-			e.printStackTrace();
-		}
+    	String command;
     	if (err == 0){
     		publishProgress(0);
-    	//	Toast.makeText(getApplicationContext(),"Zeroing bootloader", Toast.LENGTH_SHORT).show();
    		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
         	try {
 				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -623,8 +737,7 @@ public class install extends Activity {
 				
 				e.printStackTrace();
 			}
-        //	Toast.makeText(getApplicationContext(),"Flashing bootloader", Toast.LENGTH_SHORT).show();
-   		    command = "dd if=/data/local/tmp/aboot-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+        	command = "dd if=/sdcard/freegee/working/aboot-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
 	        	try {
 					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 				} catch (InterruptedException e) {
@@ -637,7 +750,6 @@ public class install extends Activity {
 
       	if(err==0){
       		publishProgress(1);
-      	//	Toast.makeText(getApplicationContext(),"Zeroing boot", Toast.LENGTH_SHORT).show();
    		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
         	try {
 				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -648,8 +760,7 @@ public class install extends Activity {
 				
 				e.printStackTrace();
 			}
-        //	Toast.makeText(getApplicationContext(),"Flashing boot", Toast.LENGTH_SHORT).show();
-        	command = "dd if=/data/local/tmp/boot-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+        	command = "dd if=/sdcard/freegee/working/boot-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
         	try {
 				err2 = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 			} catch (InterruptedException e) {
@@ -663,7 +774,6 @@ public class install extends Activity {
       	
       	if(err2==0){
       		publishProgress(2);
-      	//	Toast.makeText(getApplicationContext(),"Zeroing Recovery", Toast.LENGTH_SHORT).show();
    		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
         	try {
 				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -674,8 +784,7 @@ public class install extends Activity {
 				
 				e.printStackTrace();
 			}
-        //	Toast.makeText(getApplicationContext(),"Flashing recovery", Toast.LENGTH_SHORT).show();
-        	command = "dd if=/data/local/tmp/recovery-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
+        	command = "dd if=/sdcard/freegee/working/recovery-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
         	try {
 				err3 = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 			} catch (InterruptedException e) {
@@ -706,8 +815,7 @@ public class install extends Activity {
     				
     				e.printStackTrace();
     			}
-            //	Toast.makeText(getApplicationContext(),"Flashing bootloader", Toast.LENGTH_SHORT).show();
-       		    command = "dd if=/data/local/tmp/sbl1-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl1";
+       		    command = "dd if=/sdcard/freegee/working/sbl1-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl1";
     	        	try {
     					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
     				} catch (InterruptedException e) {
@@ -720,7 +828,6 @@ public class install extends Activity {
 
           	if(err==0){
           		publishProgress(1);
-          	//	Toast.makeText(getApplicationContext(),"Zeroing boot", Toast.LENGTH_SHORT).show();
        		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/sbl2";
             	try {
     				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -731,7 +838,7 @@ public class install extends Activity {
     				
     				e.printStackTrace();
     			}
-            	command = "dd if=/data/local/tmp/sbl2-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl2";
+            	command = "dd if=/sdcard/freegee/working/sbl2-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl2";
             	try {
     				err2 = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
     			} catch (InterruptedException e) {
@@ -755,7 +862,7 @@ public class install extends Activity {
     				
     				e.printStackTrace();
     			}
-            	command = "dd if=/data/local/tmp/sbl3-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl3";
+            	command = "dd if=/sdcard/freegee/working/sbl3-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl3";
             	try {
     				err3 = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
     			} catch (InterruptedException e) {
@@ -1074,7 +1181,6 @@ public class install extends Activity {
 	    	DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 	    	Document doc = dBuilder.parse(fXmlFile);
 	    	doc.getDocumentElement().normalize();
-	    	Toast.makeText(getApplicationContext(),device, Toast.LENGTH_LONG).show();
 	    	NodeList nList = doc.getElementsByTagName(device);
 	    	if(nList != null && nList.getLength() > 0){
 	    	for (int temp = 0; temp < nList.getLength(); temp++) {
@@ -1085,7 +1191,6 @@ public class install extends Activity {
 	     
 	    			Element eElement = (Element) nNode;
 	    			NodeList rList = eElement.getElementsByTagName("recovery").item(0).getChildNodes();
-	    			//Toast.makeText(getApplicationContext(),rList.getLength(), Toast.LENGTH_LONG).show();
 	    			if(rList.getLength() >0){
 	    	        for (int temp2 = 0; temp2 < rList.getLength(); temp2++){
 	    	            Node aNode = rList.item(temp2);
@@ -1094,7 +1199,6 @@ public class install extends Activity {
 	    	        	RSArrayList.add(rNode.getAttribute("id"));
 	    	        	String[] sa = {rNode.getTextContent(),rNode.getAttribute("md5sum")};
 	    	        	RSmap.put(rNode.getAttribute("id"),sa);
-	    	            //System.out.println("recovery "+ rNode.getAttribute("id") +"- "+" " + rNode.getTextContent());
 	    	        }
 	    	        }
 	    	        
@@ -1116,12 +1220,8 @@ public class install extends Activity {
 	    			}
 	    			else{
 	    				alertbuilderu("Sorry!","Sorry your varient is not currently supported, will attempt to upload boot image for support.","Ok",0);
-	    			}
-	    			
-	    			//System.out.println("recovery: " + eElement.getElementsByTagName("recovery").item(0).getTextContent());
-	    			//System.out.println("boot: " + eElement.getElementsByTagName("boot").item(0).getTextContent());
-	    		   	
-	    		     }
+	    			  } 		   	
+	    		    }
 	    	       }
 	        	}
     			else{
@@ -1129,18 +1229,17 @@ public class install extends Activity {
     			}
 	    	
 	    	
-	        //Toast.makeText(getApplicationContext(),RSArrayList.get(0), Toast.LENGTH_LONG).show();
 	    	Spinner spinner = (Spinner) findViewById(R.id.recoveryspinner);
 	        // Create an ArrayAdapter using the string array and a default spinner layout
-	    	//ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, RSArrayList, android.R.layout.simple_spinner_item);
 	    	ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, RSArrayList);
 	    	// Specify the layout to use when the list of choices appears
 	    	adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    	// Apply the adapter to the spinner
 	    	spinner.setAdapter(adapter);
-	    	if(BSmap.containsKey(version)){
-	    	   boot = BSmap.get(version)[0];
-	    	   boot_md5sum = BSmap.get(version)[1];
+	    	if(BSmap.containsKey(version.toUpperCase(Locale.US))){
+	    	   boot = BSmap.get(version.toUpperCase(Locale.US))[0];
+	    	   boot_md5sum = BSmap.get(version.toUpperCase(Locale.US))[1];
+
 	    	}
 	    	else
     		 alertbuilderu("Sorry!","Sorry your software version is not currently supported, will attempt to upload boot image for support.","Ok",0);

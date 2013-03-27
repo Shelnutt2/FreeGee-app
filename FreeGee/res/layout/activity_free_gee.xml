@@ -5,7 +5,7 @@
     android:orientation="vertical" >
 
     <TextView
-        android:id="@+id/textView1"
+        android:id="@+id/UploadTitle"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/Description" />
@@ -15,18 +15,18 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_below="@+id/textView1"
+        android:layout_below="@+id/UploadTitle"
         android:text="@string/BtnText" />
 
     <Button
-        android:id="@+id/restoreBtn"
+        android:id="@+id/DbBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/startBtn"
-        android:layout_marginTop="88dp"
-        android:text="@string/RstText" />
+        android:layout_centerVertical="true"
+        android:text="@string/dbbtntxt"
+        android:visibility="invisible" />
 
     <Button
         android:id="@+id/efsBtn"
@@ -35,7 +35,17 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_marginBottom="83dp"
+        android:layout_marginBottom="29dp"
         android:text="@string/efs_text" />
+
+    <Button
+        android:id="@+id/restoreBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/DbBtn"
+        android:layout_marginTop="59dp"
+        android:text="@string/RstText" />
 
 </RelativeLayout>
