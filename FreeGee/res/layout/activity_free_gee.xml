@@ -19,33 +19,22 @@
         android:text="@string/BtnText" />
 
     <Button
-        android:id="@+id/DbBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:text="@string/dbbtntxt"
-        android:visibility="invisible" />
-
-    <Button
-        android:id="@+id/efsBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginBottom="29dp"
-        android:text="@string/efs_text" />
-
-    <Button
         android:id="@+id/restoreBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/DbBtn"
-        android:layout_marginTop="59dp"
+        android:layout_centerVertical="true"
         android:text="@string/RstText" />
+
+    <Button
+        android:id="@+id/utilBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="87dp"
+        android:text="@string/utilBtnTxt" />
 
 </RelativeLayout>

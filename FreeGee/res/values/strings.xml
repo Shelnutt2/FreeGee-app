@@ -14,4 +14,6 @@
     <string name="uptitle">Upload Settings</string>
     <string name="DropBoxToggle">Enable DropBox</string>
     <string name="dbbtntxt">Force Sync with Dropbox</string>
+    <string name="utilBtnTxt">FreeGee Utilities</string>
+    <string name="miscBtnTxt">Attempt Misc Fix</string>
 </resources>

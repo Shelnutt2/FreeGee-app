@@ -65,6 +65,9 @@ public class install extends Activity {
     private String sbl1_md5sum = "25d877b9fc5852846478b8e583be020a";
     private String sbl2_md5sum = "20732aa3ad2eb2049c32ce55c00b3edb";
     private String sbl3_md5sum = "afdf190f364cec079050ce7750251b20";
+    private String sbl1_after_md5sum = "25d877b9fc5852846478b8e583be020a";
+    private String sbl2_after_md5sum = "3ab81262ccbd8df348aae1d4ab296401";
+    private String sbl3_after_md5sum = "77a4d6622b8f169ce74b39b5403a6c78";
     private String recovery_md5sum; 
     private String boot_md5sum; 
 	private HashMap<String,String[]> RSmap = new HashMap<String,String[]>();
@@ -176,6 +179,7 @@ public class install extends Activity {
           		  }
           		if(!isSpecial && aversion.equals("4.1.2") && !device.equals("geehrc4g_spr_us") && !device.equals("geeb_att_us")){
           			//alertbuilderu("Sorry!","Sorry you are running a varient with jellybean which requires the sbl unlock. You must read and accept the warning first disabled on this activity.","Ok",0);
+          			AlertDialog alertDialog;
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(install.this);
 	        	    
 	    	    	// set title
@@ -183,14 +187,28 @@ public class install extends Activity {
 
 	    	    	// set dialog message
 	    	    	alertDialogBuilder
-	    	    	.setMessage("Your device is running jellybean and requires the new special unlock. This unlock flashes your sbl stack. If anything goes wrong you might hard brick. Press menu key if you agree to the risks. Download mode is stored in the sbl stack, thus if it fails to flash you can't recover. If you get any errors or any problems do NOT reboot. Find Shelnutt2 on xda or IRC. After you enable this click 'Unlock my Optimus G' to proceed.")
+	    	    	.setMessage("Your device is running jellybean and requires the new special unlock. This unlock flashes your sbl stack. If anything goes wrong you might hard brick. Download mode is stored in the sbl stack, thus if it fails to flash you can't recover. If you get any errors or any problems do NOT reboot. Find Shelnutt2 on xda or IRC. After you enable this click 'Unlock my Optimus G' to proceed.")
 	    	    	.setCancelable(false)
 	    	    	.setPositiveButton("I Understand",new DialogInterface.OnClickListener() {
 	    	    	public void onClick(DialogInterface dialog,int id) {
 	    	    	// if this button is clicked, close
 	    	    	// current activity
-	    	    		Toast.makeText(install.this, "Jellybean unlock NOT enabled, please read the instructions!", Toast.LENGTH_LONG).show();
-	    	    		install.this.finish();
+	    	    		//Toast.makeText(install.this, "Jellybean unlock NOT enabled, please read the instructions!", Toast.LENGTH_LONG).show();
+	    	    		isSpecial = true;
+                        sbl1 = "sbl1-E971-ICS";
+                        sbl2 = "sbl2-E971-ICS";
+                        sbl3 = "sbl3-E971-ICS";
+                        sbl1_md5sum = "ff193e1835c633d94c61240085428c9d"; 
+                        sbl2_md5sum = "13d7941c2aada2b67e4e6f3f0ce5d31e";
+                        sbl3_md5sum = "4ac3be33e8a5e8b83b1212160a769e7c";
+                        sbl1_after_md5sum = "ff193e1835c633d94c61240085428c9d";
+                        sbl2_after_md5sum = "13d7941c2aada2b67e4e6f3f0ce5d31e";
+                        sbl3_after_md5sum = "4ac3be33e8a5e8b83b1212160a769e7c";
+                        Toast.makeText(install.this, "Jellybean unlock enabled", Toast.LENGTH_SHORT).show();
+                        step=1;
+              		    dfname="Bootloader";
+              		    saveloc="/sdcard/freegee/working/aboot-freegee.img";
+              		    new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/aboot-freegee.img");
 	    	    	}
 	    	    	})
 	    	    	.setNegativeButton("I do not want to risk it", new DialogInterface.OnClickListener() {
@@ -201,30 +219,11 @@ public class install extends Activity {
 	    					install.this.finish();
 	    					
 	    				}
-	    			})
-	    			.setOnKeyListener(new DialogInterface.OnKeyListener() {
-                        public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
-                        if (keyCode == KeyEvent.KEYCODE_MENU)  {
-                           isSpecial = true;
-                           sbl1 = "sbl1-E971-ICS";
-                           sbl2 = "sbl2-E971-ICS";
-                           sbl3 = "sbl3-E971-ICS";
-                           sbl1_md5sum = "ff193e1835c633d94c61240085428c9d"; 
-                           sbl2_md5sum = "13d7941c2aada2b67e4e6f3f0ce5d31e";
-                           sbl3_md5sum = "4ac3be33e8a5e8b83b1212160a769e7c";
-                           Toast.makeText(install.this, "Jellybean unlock enabled", Toast.LENGTH_SHORT).show();
-                           step=1;
-                 		    dfname="Bootloader";
-                 		    saveloc="/sdcard/freegee/working/aboot-freegee.img";
-                 		    new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/aboot-freegee.img");
-                           return true;
-                        }
-                        return false;
-                       }
-                     });
+	    			});
 
 	    	    	// create alert dialog
-	    	    	AlertDialog alertDialog = alertDialogBuilder.create();
+	    	    	alertDialog = alertDialogBuilder.create();
+	    	    	
 
 	    	    	// show it
 	    	    	alertDialog.show();
@@ -307,7 +306,19 @@ public class install extends Activity {
         @Override
         protected String doInBackground(String... aurl) {
             int count;
-
+            boolean fgood = false;
+            if(new File(saveloc).exists()){
+              if(saveloc.contains("aboot")){
+            	fgood=checkmd5sum("/sdcard/freegee/working/aboot-freegee.img",aboot_md5sum);
+              }
+              else if(saveloc.contains("boot")){
+            	fgood=checkmd5sum("/sdcard/freegee/working/boot-freegee.img",boot_md5sum);
+              }
+              else if(saveloc.contains("recovery")){
+            	fgood=checkmd5sum("/sdcard/freegee/working/recovery-freegee.img",recovery_md5sum);
+              }
+            }
+            if(!fgood){
             try {
                 URL url = new URL(aurl[0]);
                 URLConnection conexion = url.openConnection();
@@ -330,6 +341,7 @@ public class install extends Activity {
                 input.close();
             } catch (Exception e) {
             	err = -1;
+            }
             }
             return null;
 
@@ -353,6 +365,7 @@ public class install extends Activity {
         		saveloc="/sdcard/freegee/working/boot-freegee.img";
         		dfname="Boot image";
         		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+boot);
+        		return;
             }
             else if(step==2){
             	step=3;
@@ -361,7 +374,8 @@ public class install extends Activity {
         		Spinner spinner = (Spinner) findViewById(R.id.recoveryspinner);
         		recovery = RSmap.get(spinner.getSelectedItem().toString())[0];
         		recovery_md5sum = RSmap.get(spinner.getSelectedItem().toString())[1];
-        		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+recovery);            	
+        		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+recovery);
+        		return;
             }
             else if(step==3){
             	if(isSpecial){
@@ -369,9 +383,11 @@ public class install extends Activity {
             		saveloc="/sdcard/freegee/working/sbl1-freegee.img";
             		dfname="SBL1 image";
             		new DownloadSBLFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+sbl1+".img");
+            		return;
             	}
             	else{
             	  checkmd5sums();
+            	  return;
             	}
             }
             
@@ -391,7 +407,19 @@ public class install extends Activity {
         @Override
         protected String doInBackground(String... aurl) {
             int count;
-
+            boolean fgood = false;
+            if(new File(saveloc).exists()){
+              if(saveloc.contains("sbl1")){
+            	fgood=checkmd5sum("/sdcard/freegee/working/sbl1-freegee.img",sbl1_md5sum);
+              }
+              else if(saveloc.contains("sbl2")){
+            	fgood=checkmd5sum("/sdcard/freegee/working/sbl2-freegee.img",sbl2_md5sum);
+              }
+              else if(saveloc.contains("sbl3")){
+            	fgood=checkmd5sum("/sdcard/freegee/working/sbl3-freegee.img",sbl3_md5sum);
+              }
+            }      
+            if(!fgood){
             try {
                 URL url = new URL(aurl[0]);
                 URLConnection conexion = url.openConnection();
@@ -415,6 +443,7 @@ public class install extends Activity {
             } catch (Exception e) {
             	err = -1;
             }
+            }
             return null;
 
         }
@@ -432,18 +461,20 @@ public class install extends Activity {
         		if(sstep==1){
             		sstep=2;
             		saveloc="/sdcard/freegee/working/sbl2-freegee.img";
-            		dfname="SBL2 image";
-            		
+            		dfname="SBL2 image";            		
             		new DownloadSBLFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+sbl2+".img");
+            		return;
             		}
             	if(sstep==2){
             		sstep=3;
             		saveloc="/sdcard/freegee/working/sbl3-freegee.img";
             		dfname="SBL3 image";
             		new DownloadSBLFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+sbl3+".img");
+            		return;
             		}
             	if(sstep==3){
             		checkmd5sums();
+            		return;
             	}
             }
             
@@ -457,10 +488,8 @@ public class install extends Activity {
            if(prefs.getInt("Special", 2) == 3){
     	      return true;
     	   }
-        }
-    	
-    	   return false;
-    			   
+        }    	
+    	   return false;    			   
     }
     
     private void checkmd5sums() {
@@ -515,6 +544,55 @@ public class install extends Activity {
     	}
     	if (err == 0){
     		new backup().execute();
+    	}
+    }
+    
+    private boolean checkmd5sum(String fname,String fmd5) {
+    	int err = 0;
+    		 MessageDigest md = null;
+			try {
+				md = MessageDigest.getInstance("MD5");
+			} catch (NoSuchAlgorithmException e1) {
+				
+				e1.printStackTrace();
+			}
+    		    FileInputStream fis = null;
+				try {
+					fis = new FileInputStream(fname);
+				} catch (FileNotFoundException e1) {
+					
+					e1.printStackTrace();
+				}
+    		    byte[] dataBytes = new byte[1024];
+    		    int nread = 0; 
+    		    try {
+    				while ((nread = fis.read(dataBytes)) != -1) {
+    				  md.update(dataBytes, 0, nread);
+    				}
+    			} catch (IOException e) {
+    				
+    				e.printStackTrace();
+    			};
+    		    byte[] mdbytes = md.digest();
+
+    		    //convert the byte to hex format method 1
+    		    StringBuffer sb = new StringBuffer();
+    		    for (int i = 0; i < mdbytes.length; i++) {
+    		      sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+    		    }
+
+    		    if(! sb.toString().equalsIgnoreCase(fmd5)){
+    		    	err = -1;
+    		    	
+    		    	
+    		    }
+    		    
+    	
+    	if (err == 0){
+    		return true;
+    	}
+    	else{
+    		return false;
     	}
     }
     
@@ -704,9 +782,11 @@ public class install extends Activity {
         	removeDialog(DIALOG_BACKUP_PROGRESS);
         	if(err==0){
         	   new unlock().execute();
+        	   return;
         	}
         	else{
         		alertbuilder("Error!","There was a problem creating backups. Aborting.","Ok",0);
+        		return;
         	}
         	
         }
@@ -900,10 +980,18 @@ public class install extends Activity {
            if(err==-10){
         	   alertbuilder("Error!","Error encountared attempting to restore backups","Ok",0);
         	   new restore().execute();
+        	   return;
            }
            else{
-           alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated!","Yay!",0);
-           new File("/sdcard/freegee/working").delete();
+        	   if(isSpecial){
+        		   checksblflash();
+        		   return;
+        	   }
+        	   else{
+                   alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated!","Yay!",0);
+                   new File("/sdcard/freegee/working").delete();
+                   return;
+           }
            }
            
        }
@@ -1097,13 +1185,16 @@ public class install extends Activity {
         protected void onPostExecute(String unused) {
         	removeDialog(DIALOG_RESTORE_PROGRESS);
         	if(err==0){
-        	    alertbuilder("Success!","Success. Your Optimus G been restored up!","Yay!",0);
+        	    alertbuilder("Success!","Success. Your Optimus G been restored!","Yay!",0);
+        	    return;
         	}
         	else if(err<=-1){
         		alertbuilder("Error!","Could not restore, backups not found! Do not reboot!","Boo!",0);
+        		return;
         	}
         	else{
         		alertbuilder("Error!","There was an error restoring your backups Do not reboot!","Boo!",0);
+        		return;
         	}
         	
         }
@@ -1137,7 +1228,65 @@ public class install extends Activity {
 
     	}
     
-    public void alertbuilderu(String title, String text, String Button, final int exits){
+    public void checksblflash() {
+    	String command;
+    	int err = 0;
+    	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/sbl1 of=/sdcard/freegee/working/sbl1_after.img";
+     	try {
+				err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			} catch (InterruptedException e) {
+				
+				e.printStackTrace();
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+			}
+    	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/sbl2 of=/sdcard/freegee/working/sbl2_after.img";
+     	try {
+				err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			} catch (InterruptedException e) {
+				
+				e.printStackTrace();
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+			}
+    	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/sbl3 of=/sdcard/freegee/working/sbl3_after.img";
+     	try {
+				err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			} catch (InterruptedException e) {
+				
+				e.printStackTrace();
+			} catch (IOException e) {
+				
+				e.printStackTrace();
+			}
+
+		if(checkmd5sum("/sdcard/freegee/working/sbl1_after.img",sbl1_after_md5sum)){		
+		  if(checkmd5sum("/sdcard/freegee/working/sbl2_after.img",sbl2_after_md5sum)){
+		    if(checkmd5sum("/sdcard/freegee/working/sbl3_after.img",sbl3_after_md5sum)){
+		    	alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated!","Yay!",0);
+                new File("/sdcard/freegee/working").delete();
+		    }
+		    else{
+	        	   alertbuilder("Error!","sbl3 md5sum did not match after flashing. Attempting to restore original sbls. Do not reboot until finished","Ok",0);
+	        	   new restore().execute();
+		    }
+		  }
+		    else{
+	        	   alertbuilder("Error!","sbl2 md5sum did not match after flashing. Attempting to restore original sbls. Do not reboot until finished","Ok",0);
+	        	   new restore().execute();
+		    }
+		}
+	    else{
+     	   alertbuilder("Error!","sbl1 md5sum did not match after flashing. Attempting to restore original sbls. Do not reboot until finished","Ok",0);
+     	   new restore().execute();
+	    }
+		    	
+	}
+
+
+	public void alertbuilderu(String title, String text, String Button, final int exits){
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
     	    
     	// set title
