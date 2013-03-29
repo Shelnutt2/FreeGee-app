@@ -29,7 +29,9 @@ import com.dropbox.client2.session.Session.AccessType;
 
 import edu.shell.freegee.install.DownloadFileAsync;
 import edu.shell.freegee.install.DownloadSBLFileAsync;
+import edu.shell.freegee.R;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -42,12 +44,16 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+@SuppressLint("SdCardPath")
 public class utilities extends Activity{
 	
     private Button efsBtn;
@@ -353,7 +359,25 @@ public class utilities extends Activity{
             }
         });
     }
-    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_utilities, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.menu_settings:
+        		Intent newActivity = new Intent(this, settings.class);
+                startActivity(newActivity);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
     @Override
     protected Dialog onCreateDialog(int id) {
         switch (id) {

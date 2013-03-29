@@ -44,6 +44,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
+import edu.shell.freegee.R;
 
 
 @SuppressLint("SdCardPath")
@@ -720,6 +721,18 @@ public class install extends Activity {
 		      	
 		      	if(err==0){
 		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/recovery of=/sdcard/freegee/recovery-backup.img";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+		      	}
+		      	if(err==0){
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/misc of=/sdcard/freegee/misc-backup.img";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {

@@ -15,7 +15,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
@@ -24,7 +23,6 @@ private CheckBox dbcheck;
 final static private String APP_KEY = "ywebobijtcfo2yc";
 final static private String APP_SECRET = "ud1duwmbtlml0zz";
 final static private AccessType ACCESS_TYPE = AccessType.APP_FOLDER;
-private static String key,secret;
 // In the class declaration section:
 static DropboxAPI<AndroidAuthSession> mDBApi;
 	

@@ -68,9 +68,6 @@ public class FreeGee extends Activity {
     private Button utilBtn;
 
     private ProgressDialog mProgressDialog;
-    private String varient;
-    private boolean restoring;
-    private boolean override;
     public static boolean isSpecial;
 
     DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");

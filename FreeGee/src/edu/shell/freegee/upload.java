@@ -1,6 +1,7 @@
 package edu.shell.freegee;
 
 import edu.shell.freegee.CustomMultiPartEntity.*;
+import edu.shell.freegee.R;
 
 import java.io.File;
 import java.io.IOException;
