@@ -281,6 +281,97 @@ class restore extends AsyncTask<String, String, String> {
 		  if(!freegeef.exists()){
 			  freegeef.mkdirs();
 		  }
+		  String varient = "";
+			File file = new File("/system/build.prop");
+			FileInputStream fis = null;
+			try {
+				fis = new FileInputStream(file);
+			} catch (FileNotFoundException f) {
+		        int err;
+				command = "mount -o remount,rw /system";
+		    	try {
+					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+				} catch (InterruptedException e) {
+					
+					e.printStackTrace();
+				} catch (IOException e) {
+					
+					e.printStackTrace();
+				}
+				command = "chmod 644 /system/build.prop";
+		    	try {
+					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+				} catch (InterruptedException e) {
+					
+					e.printStackTrace();
+				} catch (IOException e) {
+					
+					e.printStackTrace();
+				}
+				command = "mount -o remount,ro /system";
+		    	try {
+					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+				} catch (InterruptedException e) {
+					
+					e.printStackTrace();
+				} catch (IOException e) {
+					
+					e.printStackTrace();
+				}
+			}
+
+			Properties prop = new Properties();
+			// feed the property with the file
+			try {
+				prop.load(fis);
+			} catch (IOException e) {
+				alertbuilder("Error!","Can't load build.prop make sure you have root and perms are set correctly","Ok",0);
+				e.printStackTrace();
+			}
+			try {
+				fis.close();
+			} catch (IOException e) {
+				alertbuilder("Error!","Can't close build.prop, something went wrong.","Ok",0);
+				e.printStackTrace();
+			}
+			String device = prop.getProperty("ro.product.name");
+			if(device.equalsIgnoreCase("geehrc4g_spr_us")){
+				varient = "sprint";
+		        }
+				else if(device.equalsIgnoreCase("geeb_att_us")){
+				varient = "att";
+				}
+				else if(device.equalsIgnoreCase("geeb_bell_ca")){
+				varient = "bell";
+				}
+				else if(device.equalsIgnoreCase("geeb_rgs_ca")){
+				varient = "rogers";
+				}
+				else if(device.equalsIgnoreCase("geeb_tls_ca")){
+				varient = "telus";
+				}
+				else if(device.equalsIgnoreCase("geehrc_kt_kr")){
+				varient = "korean_k";
+				}
+				else if(device.equalsIgnoreCase("geehrc4g_lgu_kr")){
+				varient = "korean_l";
+				}
+				else if(device.equalsIgnoreCase("geehrc_skt_kr")){
+				varient = "korean_s";
+				}
+				else if(device.equalsIgnoreCase("geehrc_open_hk")){
+				varient = "e975";
+				}	
+				else if(device.equalsIgnoreCase("geehrc_open_tw")){
+				varient = "e975";
+				}
+				else if(device.equalsIgnoreCase("geehrc_open_eu")){
+				varient = "e975";
+				}
+				else if(device.equalsIgnoreCase("geehrc_shb_sg")){
+				varient = "e975";
+				}
+			
     	File boot=new File("/sdcard/freegee/boot-backup.img");
     	File recovery=new File("/sdcard/freegee/recovery-backup.img");
     	File aboot=new File("/sdcard/freegee/aboot-backup.img");
@@ -305,6 +396,29 @@ class restore extends AsyncTask<String, String, String> {
 						
 						e.printStackTrace();
 					}
+			  }
+			  else if(new File("/sdcard/freegee/boot-"+varient+"-backup.img").exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+			        	command = "dd if=/sdcard/freegee/boot-"+varient+"-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+			        	try {
+							err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+						} catch (InterruptedException e) {
+							
+							e.printStackTrace();
+						} catch (IOException e) {
+							
+							e.printStackTrace();
+						}
+				  
 			  }
 			  else{
 				  err=-1;
@@ -332,6 +446,29 @@ class restore extends AsyncTask<String, String, String> {
 					e.printStackTrace();
 				}
 		  }
+			  else if(new File("/sdcard/freegee/aboot-"+varient+"-backup.img").exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+			        	command = "dd if=/sdcard/freegee/aboot-"+varient+"-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+			        	try {
+							err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+						} catch (InterruptedException e) {
+							
+							e.printStackTrace();
+						} catch (IOException e) {
+							
+							e.printStackTrace();
+						}
+				  
+			  }
 			  else{
 				  err=-2;
 			  }
@@ -358,6 +495,29 @@ class restore extends AsyncTask<String, String, String> {
 					e.printStackTrace();
 				}
 		  }
+			  else if(new File("/sdcard/freegee/recovery-"+varient+"-backup.img").exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+			        	command = "dd if=/sdcard/freegee/recovery-"+varient+"-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
+			        	try {
+							err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+						} catch (InterruptedException e) {
+							
+							e.printStackTrace();
+						} catch (IOException e) {
+							
+							e.printStackTrace();
+						}
+				  
+			  }
 			  else {
 				  err = -3;
 			  }
