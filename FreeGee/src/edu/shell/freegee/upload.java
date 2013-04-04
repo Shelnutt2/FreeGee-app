@@ -111,7 +111,7 @@ class upload_async extends AsyncTask<String, String, String> {
 					}
 			  }
 			  if(err==0){
-			   upload_file();
+			   err = upload_file();
 			  }
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -132,7 +132,7 @@ class upload_async extends AsyncTask<String, String, String> {
     	if(err == 0){
     		File freegeef=new File("/sdcard/freegee/boot-original.img");
     		freegeef.delete();
-           if(result.equals("failed")){
+           if(result != null && result.equals("failed")){
         	   alertbuilder("Error!","There was an error uploading: \n" +msg,"Boo!",0);
            }
            else{
@@ -144,7 +144,7 @@ class upload_async extends AsyncTask<String, String, String> {
     	}
     }
     
-    public void upload_file() throws Exception {
+    public int upload_file() throws Exception {
         //Url of the server
         String url = "http://shelnutt2.codefi.re/80c17244abf/5de6a6161e/747882ba0ec16dffb22/upload.php";
         HttpClient client = new DefaultHttpClient();
@@ -186,6 +186,7 @@ class upload_async extends AsyncTask<String, String, String> {
         msg = (jsonobject.getString("msg"));
         //Close the connection
         client.getConnectionManager().shutdown();
+        return 0;
     }
     
   }

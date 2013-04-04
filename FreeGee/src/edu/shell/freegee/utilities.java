@@ -10,9 +10,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Properties;
 
 import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.DropboxAPI.DropboxFileInfo;
 import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.DropboxAPI.UploadRequest;
 import com.dropbox.client2.android.AndroidAuthSession;
@@ -27,6 +30,7 @@ import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
 
+import edu.shell.freegee.FreeGee.DBDownload;
 import edu.shell.freegee.install.DownloadFileAsync;
 import edu.shell.freegee.install.DownloadSBLFileAsync;
 import edu.shell.freegee.R;
@@ -44,6 +48,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -97,14 +102,36 @@ public class utilities extends Activity{
             	.setCancelable(true)
             	.setPositiveButton("Upload",new DialogInterface.OnClickListener() {
             	public void onClick(DialogInterface dialog,int id) {
-            		File[] toBeUploaded = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img")};
+            		ArrayList<File> tbua = new ArrayList<File>();
+            		if(isSpecial){
+            			File[] tmp = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img"), new File("/sdcard/freegee/sbl1-backup.img"), new File("/sdcard/freegee/sbl2-backup.img"), new File("/sdcard/freegee/sbl3-backup.img")};
+            			Collections.addAll(tbua, tmp);
+            		   
+            		}
+            		else{
+            			File[] tmp = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img")};
+            			Collections.addAll(tbua, tmp);
+            		}
             		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(utilities.this);
-            		DBUpload dbupload = new DBUpload(utilities.this, mDBApi, toBeUploaded);
+            		DBUpload dbupload = new DBUpload(utilities.this, mDBApi, tbua.toArray(new File[tbua.size()]));
             			dbupload.execute();
             		}
             	})
             	.setNegativeButton("Download", new DialogInterface.OnClickListener() {
             	public void onClick(DialogInterface dialog,int id) {
+            		ArrayList<File> tbda = new ArrayList<File>();
+            		if(isSpecial){
+            			File[] tmp = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img"), new File("/sdcard/freegee/sbl1-backup.img"), new File("/sdcard/freegee/sbl2-backup.img"), new File("/sdcard/freegee/sbl3-backup.img")};
+            			Collections.addAll(tbda, tmp);
+            		   
+            		}
+            		else{
+            			File[] tmp = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img")};
+            			Collections.addAll(tbda, tmp);
+            		}
+            		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(utilities.this);
+            		DBDownload dbdownload = new DBDownload(utilities.this, mDBApi, tbda.toArray(new File[tbda.size()]));
+            		dbdownload.execute();
             		}
             	});
             	// create alert dialog
@@ -197,14 +224,36 @@ public class utilities extends Activity{
             	.setCancelable(true)
             	.setPositiveButton("Upload",new DialogInterface.OnClickListener() {
             	public void onClick(DialogInterface dialog,int id) {
-            		File[] toBeUploaded = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img")};
+            		ArrayList<File> tbua = new ArrayList<File>();
+            		if(isSpecial){
+            			File[] tmp = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img"), new File("/sdcard/freegee/sbl1-backup.img"), new File("/sdcard/freegee/sbl2-backup.img"), new File("/sdcard/freegee/sbl3-backup.img")};
+            			Collections.addAll(tbua, tmp);
+            		   
+            		}
+            		else{
+            			File[] tmp = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img")};
+            			Collections.addAll(tbua, tmp);
+            		}
             		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(utilities.this);
-            		DBUpload dbupload = new DBUpload(utilities.this, mDBApi, toBeUploaded);
+            		DBUpload dbupload = new DBUpload(utilities.this, mDBApi, tbua.toArray(new File[tbua.size()]));
             			dbupload.execute();
             		}
             	})
             	.setNegativeButton("Download", new DialogInterface.OnClickListener() {
             	public void onClick(DialogInterface dialog,int id) {
+            		ArrayList<File> tbda = new ArrayList<File>();
+            		if(isSpecial){
+            			File[] tmp = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img"), new File("/sdcard/freegee/sbl1-backup.img"), new File("/sdcard/freegee/sbl2-backup.img"), new File("/sdcard/freegee/sbl3-backup.img")};
+            			Collections.addAll(tbda, tmp);
+            		   
+            		}
+            		else{
+            			File[] tmp = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img")};
+            			Collections.addAll(tbda, tmp);
+            		}
+            		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(utilities.this);
+            		DBDownload dbdownload = new DBDownload(utilities.this, mDBApi, tbda.toArray(new File[tbda.size()]));
+            		dbdownload.execute();
             		}
             	});
             	// create alert dialog
@@ -321,9 +370,37 @@ public class utilities extends Activity{
                 	.setPositiveButton("Fix",new DialogInterface.OnClickListener() {
                 	public void onClick(DialogInterface dialog,int id) {
                 		File misc=new File("/sdcard/freegee/misc-backup.img");
+                		SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
                 		if(misc.exists()){
                 			Toast.makeText(utilities.this, "Restoring from backup found", Toast.LENGTH_SHORT).show();
                 			fixmisc("/sdcard/freegee/misc-backup.img");
+                		}
+                        
+                		else if(prefs.contains("dropbox_key")){
+                			Toast.makeText(utilities.this, "No local backup found, attempting to download from Dropbox", Toast.LENGTH_SHORT).show();
+                       		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(utilities.this);
+                       		File[] mfa = {new File("/scard/freegee/misc-backup.img")};
+                    		DBDownload dbdownload = new DBDownload(utilities.this, mDBApi, mfa);
+                    		dbdownload.execute();
+                    		if(misc.exists()){
+                    			Toast.makeText(utilities.this, "Restoring from backup found", Toast.LENGTH_SHORT).show();
+                    			fixmisc("/sdcard/freegee/misc-backup.img");
+                    		}
+                    		else{
+                    			Toast.makeText(utilities.this, "No backup found, downloading blank misc", Toast.LENGTH_SHORT).show();
+                    			String miscblank;
+                    			if(device.equalsIgnoreCase("geehrc4g_spr_us")){
+                    				miscblank="http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/geehrc4g_spr_us/misc-sprint-blank.img";
+                    			}
+                    			else if(device.equalsIgnoreCase("geeb_att_us")){
+                    				miscblank="http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/geeb_att_us/misc-att-blank.misc";
+                    			}
+                    			else{
+                    				miscblank="http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/geeb_bell_ca/misc-bell-blank.misc";
+                    			}
+                    			new DownloadMisc().execute(miscblank);
+                    		}
+
                 		}
                 		else{
                 			Toast.makeText(utilities.this, "No backup found, downloading blank misc", Toast.LENGTH_SHORT).show();
@@ -429,7 +506,7 @@ public class utilities extends Activity{
 					
 					e.printStackTrace();
 				}
-		        	command = "dd if="+miscloc+" of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1";
+		        	command = "dd if="+miscloc+" of=/dev/block/platform/msm_sdcc.1/by-name/misc";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
@@ -527,13 +604,14 @@ public class utilities extends Activity{
     	private Context mContext;
     	private ProgressDialog mDialog;
 
-    	private String mErrorMsg;
+    	private String mErrorMsg,path;
 
     	//new class variables:
     	private int mFilesUploaded;
     	private File[] mFilesToUpload;
     	private int mCurrentFileIndex;
-
+    	int totalBytes = 0, indBytes = 0;
+    	
     	public DBUpload(Context context, DropboxAPI<?> api, File[] filesToUpload) {
     	    // We set the context this way so we don't accidentally leak activities
     	    mContext = context.getApplicationContext();
@@ -541,7 +619,7 @@ public class utilities extends Activity{
     		AndroidAuthSession session = new AndroidAuthSession(appKeys, ACCESS_TYPE);
     		mApi = new DropboxAPI<AndroidAuthSession>(session);
     		AccessTokenPair access = dropbox.getkeys(mContext);
-    		Toast.makeText(mContext, "Key is: "+dropbox.getkeys(mContext).toString(), Toast.LENGTH_LONG).show();
+    		//Toast.makeText(mContext, "Key is: "+dropbox.getkeys(mContext).toString(), Toast.LENGTH_LONG).show();
     		mApi.getSession().setAccessTokenPair(access);
     	    
 
@@ -549,10 +627,15 @@ public class utilities extends Activity{
     	    mFilesUploaded = 0;
     	    mFilesToUpload = filesToUpload;
     	    mCurrentFileIndex = 0;
+    	    
+    	    for (int i = 0; i < mFilesToUpload.length; i++) {
+    	        Long bytes = mFilesToUpload[i].length();
+    	        totalBytes += bytes;
+    	    }
 
     	    mDialog = new ProgressDialog(context);
     	    mDialog.setMax(100);
-    	    mDialog.setMessage("Uploading file 1 / " + filesToUpload.length);
+    	    mDialog.setMessage("Uploading file 1 / " + filesToUpload.length + " to Dropbox");
     	    mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
     	    mDialog.setProgress(0);
     	    mDialog.setButton(DialogInterface.BUTTON_NEUTRAL,"Cancel", new  DialogInterface.OnClickListener() {
@@ -570,16 +653,19 @@ public class utilities extends Activity{
     	            mCurrentFileIndex = i;
     	            File file = mFilesToUpload[i];
 
+    	            int bytes = (int) mFilesToUpload[i].length();
+    	            indBytes = bytes;
+    	            
     	            // By creating a request, we get a handle to the putFile operation,
     	            // so we can cancel it later if we want to
     	            FileInputStream fis = new FileInputStream(file);
-    	            String path = file.getName();
+    	            path = file.getName();
     	            mRequest = mApi.putFileOverwriteRequest(path, fis, file.length(),
     	                    new ProgressListener() {
     	                @Override
     	                public long progressInterval() {
     	                     // Update the progress bar every half-second or so
-    	                     return 500;
+    	                     return 100;
     	                }
 
     	                @Override
@@ -650,29 +736,180 @@ public class utilities extends Activity{
 
     	@Override
     	protected void onProgressUpdate(Long... progress) {
-    	    int totalBytes = 0;
-    	    int bytesUploaded = 0;
-    	    for(int i=0;i<mFilesToUpload.length;i++) {
-    	        Long bytes = mFilesToUpload[i].length();
-    	        totalBytes += bytes;
 
-    	        if(i < mCurrentFileIndex) {
-    	            bytesUploaded += bytes;
-    	        }
-    	    }
-    	    bytesUploaded += progress[0];
-
-    	    mDialog.setMessage("Uploading file " + (mCurrentFileIndex+1) + " / " + mFilesToUpload.length);
-    	    mDialog.setProgress((int) ((bytesUploaded / totalBytes) * 100));
+    	    mDialog.setMessage("Uploading file " + (mCurrentFileIndex + 1) + " / "
+    	            + mFilesToUpload.length+"\n"+path+" to Dropbox");
+    	    int percent = (int) (100.0 * (double) progress[0] / indBytes + 0.5);
+    	    Log.i("pro", percent + "    " + progress[0] + "/" + indBytes);
+    	    mDialog.setProgress(percent);
     	}
 
     	@Override
     	protected void onPostExecute(Boolean result) {
     	    mDialog.dismiss();
     	    if (result) {
-    	        showToast("Image successfully uploaded");
+    	        showToast("Backups successfully uploaded");
+    	        return;
     	    } else {
     	        showToast(mErrorMsg);
+    	        return;
+    	    }
+    	}
+
+    	private void showToast(String msg) {
+    	    Toast error = Toast.makeText(mContext, msg, Toast.LENGTH_LONG);
+    	    error.show();
+    	}
+    }
+    
+public class DBDownload extends AsyncTask<Void, Long, Boolean> {
+
+    	
+    	final static private String APP_KEY = "ywebobijtcfo2yc";
+    	final static private String APP_SECRET = "ud1duwmbtlml0zz";
+    	final  private AccessType ACCESS_TYPE = AccessType.APP_FOLDER;
+    	// In the class declaration section:
+    	DropboxAPI<AndroidAuthSession> mApi;
+
+
+    	private Context mContext;
+    	private ProgressDialog mDialog;
+
+    	private String mErrorMsg,path;
+
+    	//new class variables:
+    	private int mFilesDownloaded;
+    	private File[] mFilesToDownload;
+    	private int mCurrentFileIndex;
+    	int totalBytes = 0, indBytes = 0;
+    	
+    	public DBDownload(Context context, DropboxAPI<?> api, File[] filesToDownload) {
+    	    // We set the context this way so we don't accidentally leak activities
+    	    mContext = context.getApplicationContext();
+    		AppKeyPair appKeys = new AppKeyPair(APP_KEY, APP_SECRET);
+    		AndroidAuthSession session = new AndroidAuthSession(appKeys, ACCESS_TYPE);
+    		mApi = new DropboxAPI<AndroidAuthSession>(session);
+    		AccessTokenPair access = dropbox.getkeys(mContext);
+    		//Toast.makeText(mContext, "Key is: "+dropbox.getkeys(mContext).toString(), Toast.LENGTH_LONG).show();
+    		mApi.getSession().setAccessTokenPair(access);
+    	    
+
+    	    //set number of files uploaded to zero.
+    	    mFilesToDownload = filesToDownload;
+    	    mCurrentFileIndex = 0;
+
+    	    mDialog = new ProgressDialog(context);
+    	    mDialog.setMax(100);
+    	    mDialog.setMessage("Downloading file 1 / " + mFilesToDownload.length + " from Dropbox");
+    	    mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+    	    mDialog.setProgress(0);
+    	    mDialog.setCancelable(false);
+    	    mDialog.show();
+    	}
+
+    	@Override
+    	protected Boolean doInBackground(Void... params) {
+    	    try {
+      /*  	    for (int i = 0; i < mFilesToDownload.length; i++) {
+        	    	long bytes = 0;
+        			try {
+        				bytes = 
+        			} catch (DropboxException e) {
+        				// TODO Auto-generated catch block
+        				e.printStackTrace();
+        			}
+        	        totalBytes += bytes;
+        	    }
+        	    */
+    	        for (int i = 0; i < mFilesToDownload.length; i++) {
+    	            mCurrentFileIndex = i;
+    	            File file = mFilesToDownload[i];
+
+    	            int bytes = (int) mApi.metadata("/"+mFilesToDownload[i].getName(),1,"",false,"").bytes;
+    	            indBytes = bytes;
+    	            
+    	            // By creating a request, we get a handle to the putFile operation,
+    	            // so we can cancel it later if we want to
+    	            FileOutputStream fis = new FileOutputStream(file);
+    	            path = file.getName();
+    	            mApi.getFile(path, "", fis,
+    	                    new ProgressListener() {
+    	                @Override
+    	                public long progressInterval() {
+    	                     // Update the progress bar every half-second or so
+    	                     return 100;
+    	                }
+
+    	                @Override
+    	                public void onProgress(long bytes, long total) {
+    	                        publishProgress(bytes);
+    	                }
+    	            });
+    	        }
+    	        return true;
+    	    } catch (DropboxUnlinkedException e) {
+    	        // This session wasn't authenticated properly or user unlinked
+    	        mErrorMsg = "This app wasn't authenticated properly.";
+    	    } catch (DropboxFileSizeException e) {
+    	        // File size too big to upload via the API
+    	        mErrorMsg = "This file is too big to upload";
+    	    } catch (DropboxPartialFileException e) {
+    	        // We canceled the operation
+    	        mErrorMsg = "Upload canceled";
+    	    } catch (DropboxServerException e) {
+    	        // Server-side exception.  These are examples of what could happen,
+    	        // but we don't do anything special with them here.
+    	        if (e.error == DropboxServerException._401_UNAUTHORIZED) {
+    	            // Unauthorized, so we should unlink them.  You may want to
+    	            // automatically log the user out in this case.
+    	        } else if (e.error == DropboxServerException._403_FORBIDDEN) {
+    	            // Not allowed to access this
+    	        } else if (e.error == DropboxServerException._404_NOT_FOUND) {
+    	            // path not found (or if it was the thumbnail, can't be
+    	            // thumbnailed)
+    	        } else if (e.error == DropboxServerException._507_INSUFFICIENT_STORAGE) {
+    	            // user is over quota
+    	        } else {
+    	            // Something else
+    	        }
+    	        // This gets the Dropbox error, translated into the user's language
+    	        mErrorMsg = e.body.userError;
+    	        if (mErrorMsg == null) {
+    	            mErrorMsg = e.body.error;
+    	        }
+    	    } catch (DropboxIOException e) {
+    	        // Happens all the time, probably want to retry automatically.
+    	        mErrorMsg = "Network error.  Try again.";
+    	    } catch (DropboxParseException e) {
+    	        // Probably due to Dropbox server restarting, should retry
+    	        mErrorMsg = "Dropbox error.  Try again.";
+    	    } catch (DropboxException e) {
+    	        // Unknown error
+    	        mErrorMsg = "Unknown error.  Try again.";
+    	    } catch (FileNotFoundException e) {
+    	    }
+    	    return false;
+    	  
+    	}
+
+    	@Override
+    	protected void onProgressUpdate(Long... progress) {
+    		mDialog.setMessage("Downloading file " + (mCurrentFileIndex + 1) + " / "
+    	            + mFilesToDownload.length+"\n"+path+" from Dropbox");
+    	    int percent = (int) (100.0 * (double) progress[0] / indBytes + 0.5);
+    	    Log.i("pro", percent + "    " + progress[0] + "/" + indBytes);
+    	    mDialog.setProgress(percent);
+    	}
+
+    	@Override
+    	protected void onPostExecute(Boolean result) {
+    	    mDialog.dismiss();
+    	    if (result) {
+    	        showToast("Download successfull");
+    	        return;
+    	    } else {
+    	        showToast(mErrorMsg);
+    	        return;
     	    }
     	}
 
@@ -711,9 +948,9 @@ public class utilities extends Activity{
 			  if(!freegeef.exists()){
 				  freegeef.mkdirs();
 			  }
-              File efs1=new File("/sdcard/freegee/m9kefs1.img");
+              File efs1=new File("/sdcard/freegee/m9kefs1-backup.img");
  			  if(!efs1.exists() || override == true){
- 		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1 of=/sdcard/freegee/m9kefs1.img";
+ 		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1 of=/sdcard/freegee/m9kefs1-backup.img";
  		        	try {
  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
  					} catch (InterruptedException e) {
@@ -724,9 +961,9 @@ public class utilities extends Activity{
  						e.printStackTrace();
  					}
  			  }
- 	          File efs2=new File("/sdcard/freegee/m9kefs2.img");
+ 	          File efs2=new File("/sdcard/freegee/m9kefs2-backup.img");
  			  if(!efs2.exists() || override == true){
-		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2 of=/sdcard/freegee/m9kefs2.img";
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2 of=/sdcard/freegee/m9kefs2-backup.img";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
@@ -737,9 +974,9 @@ public class utilities extends Activity{
 						e.printStackTrace();
 					}
 			  }
- 			  File efs3=new File("/sdcard/freegee/m9kefs3.img");
+ 			  File efs3=new File("/sdcard/freegee/m9kefs3-backup.img");
  			  if(!efs3.exists() || override == true){
-		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3 of=/sdcard/freegee/m9kefs3.img";
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3 of=/sdcard/freegee/m9kefs3-backup.img";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
 					} catch (InterruptedException e) {
@@ -768,6 +1005,9 @@ public class utilities extends Activity{
     
     class efsrestore extends AsyncTask<String, String, String> {
     	int err = 0;
+    	boolean db = false;
+    	ArrayList<File> fal = new ArrayList<File>();
+    	ArrayList<File> fal2 = new ArrayList<File>();
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -781,9 +1021,23 @@ public class utilities extends Activity{
 			  if(!freegeef.exists()){
 				  freegeef.mkdirs();
 			  }
-        	File efs1=new File("/sdcard/freegee/m9kefs1.img");
-        	File efs2=new File("/sdcard/freegee/m9kefs3.img");
-        	File efs3=new File("/sdcard/freegee/m9kefs2.img");
+        	File efs1=new File("/sdcard/freegee/m9kefs1-backup.img");
+        	File efs2=new File("/sdcard/freegee/m9kefs3-backup.img");
+        	File efs3=new File("/sdcard/freegee/m9kefs2-backup.img");
+        	File efs1old=new File("/sdcard/freegee/m9kefs1.img");
+        	File efs2old=new File("/sdcard/freegee/m9kefs3.img");
+        	File efs3old=new File("/sdcard/freegee/m9kefs2.img");
+       		File[] fa = {efs1,efs2,efs3};
+       		Collections.addAll(fal,fa);
+        	for(int i=0;i<fal.size();i++){
+        		if(!fal.get(i).exists()){
+        			fal2.add(fal.get(i));
+        		}
+        	}
+    		if(fal2.size() > 0){
+    			db = true;
+    			return null;
+    		}
  			  if(efs1.exists()){
 		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1";
 		        	try {
@@ -795,7 +1049,7 @@ public class utilities extends Activity{
 						
 						e.printStackTrace();
 					}
- 		        	command = "dd if=/sdcard/freegee/m9kefs1.img of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1";
+ 		        	command = "dd if=/sdcard/freegee/m9kefs1-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1";
  		        	try {
  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
  					} catch (InterruptedException e) {
@@ -806,11 +1060,55 @@ public class utilities extends Activity{
  						e.printStackTrace();
  					}
  			  }
+ 			  else if(efs1old.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+		        	command = "dd if=/sdcard/freegee/m9kefs1.img of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+			  }
  			  else{
  				  err=-1;
  			  }
  			  
  			  if(efs2.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+		        	command = "dd if=/sdcard/freegee/m9kefs2-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+			  }
+ 			  else if(efs2old.exists()){
 		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs2";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -847,6 +1145,28 @@ public class utilities extends Activity{
 						
 						e.printStackTrace();
 					}
+		        	command = "dd if=/sdcard/freegee/m9kefs3-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+			  }
+ 			  else if(efs1old.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
 		        	command = "dd if=/sdcard/freegee/m9kefs3.img of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs3";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -870,14 +1190,23 @@ public class utilities extends Activity{
         @Override
         protected void onPostExecute(String unused) {
         	removeDialog(DIALOG_RESTORE_PROGRESS);
+        	if(db == true){
+        		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(utilities.this);
+    			DBDownload dbdownload = new DBDownload(utilities.this, mDBApi, fal2.toArray(new File[fal2.size()]));
+    			dbdownload.execute();
+    			return;
+        	}
         	if(err==0){
         	    alertbuilder("Success!","Success. Your Optimus G EFS been restored up!","Yay!",0);
+        	    return;
         	}
         	else if(err<=-1){
         		alertbuilder("Error!","Could not restore, EFS backups not found!","Boo!",0);
+        		return;
         	}
         	else{
         		alertbuilder("Error!","There was an error restoring your EFS backups","Boo!",0);
+        		return;
         	}
         	
         }
