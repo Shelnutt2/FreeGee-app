@@ -1034,9 +1034,12 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
         			fal2.add(fal.get(i));
         		}
         	}
-    		if(fal2.size() > 0){
+    		SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
+    		if(prefs.contains("dropbox_key")){
+    		  if(fal2.size() > 0){
     			db = true;
     			return null;
+    	      }
     		}
  			  if(efs1.exists()){
 		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1";

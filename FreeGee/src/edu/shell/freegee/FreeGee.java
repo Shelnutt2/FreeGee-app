@@ -47,6 +47,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
@@ -70,6 +71,7 @@ public class FreeGee extends Activity {
     private Button startBtn;
     private Button restoreBtn;
     private Button utilBtn;
+    private boolean sblopen = false;
 
     private ProgressDialog mProgressDialog;
     public static boolean isSpecial;
@@ -78,8 +80,13 @@ public class FreeGee extends Activity {
     Date date = new Date();
     private String now = dateFormat.format(date);
     
-
-    
+    @Override
+    public void onResume(){
+    	super.onResume();
+    	if(sblopen){
+    		sblalert();
+    	}
+    }
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -399,9 +406,12 @@ class restore extends AsyncTask<String, String, String> {
     			fal2.add(fal.get(i));
     		}
     	}
-		if(fal2.size() > 0){
+		SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
+		if(prefs.contains("dropbox_key")){
+		  if(fal2.size() > 0){
 			db = true;
 			return null;
+		  }
 		}
 		
 			  if(boot.exists()){
@@ -639,17 +649,24 @@ class restore extends AsyncTask<String, String, String> {
     protected void onPostExecute(String unused) {
     	removeDialog(DIALOG_RESTORE_PROGRESS);
     	if(db == true){
-    		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(FreeGee.this);
-			DBDownload dbdownload = new DBDownload(FreeGee.this, mDBApi, fal2.toArray(new File[fal2.size()]));
-			dbdownload.execute();
-			return;
+    		SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
+    		if(prefs.contains("dropbox_key")){
+    		   DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(FreeGee.this);
+			   DBDownload dbdownload = new DBDownload(FreeGee.this, mDBApi, fal2.toArray(new File[fal2.size()]));
+			   dbdownload.execute();
+			   return;
+    		}
+    		else{
+    			alertbuilder("Error!","Could not restore, backups not found! Do not reboot!","Boo!",0);
+    			return;
+    		}
     	}
     	if(err==0){
     	    alertbuilder("Success!","Success. Your Optimus G been restored up!","Yay!",0);
     	    return;
     	}
     	else if(err<=-1){
-    		alertbuilder("Error!","Could not restore, backups not found! Do not reboot!","Boo!",0);
+    		alertbuilder("Error!","Could not restore, backups not found!","Boo!",0);
     		return;
     	}
     	else{
@@ -867,6 +884,7 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
     	}
     
     public void sblalert(){
+    	sblopen=true;
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
     	    
     	// set title
@@ -875,7 +893,7 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
 
     	// set dialog message
     	alertDialogBuilder
-    	.setMessage("This is the special SBL unlock need for a select few devices. Due to the hard brick risk, please enter the code given to you by Shelnutt2")
+    	.setMessage("This is the special SBL unlock need for a select few devices. Due to the hard brick risk, please enter the code you were given.")
     	.setCancelable(true)
     	.setView(input)
     	.setPositiveButton("ok",new DialogInterface.OnClickListener() {
@@ -888,7 +906,13 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
 					editor.putInt("Special", 3);
 					editor.putInt("Special-always", 3);
 					editor.commit();
+					alertbuilder("Success!","Sbl unlock now enabled!","Ok",0);
 				}
+				else{
+					alertbuilder("Error!","Wrong code entered, sbl unlock not enabled.","Ok",0);
+				}
+				sblopen = false;
+				return;
 			} catch (NoSuchAlgorithmException e) {
 				alertbuilder("Error!","Failed to sha1!","Boo!",0);
 				e.printStackTrace();
@@ -897,11 +921,18 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
 			}
     	}
     	})
+    	.setNeutralButton("Get Unlock Code", new DialogInterface.OnClickListener() {
+    		public void onClick(DialogInterface dialog,int id) {
+    		    Uri uriUrl = Uri.parse("http://shelnutt2.codefi.re/freegee/index.php");  
+    		    Intent launchBrowser = new Intent(Intent.ACTION_VIEW, uriUrl);
+    		    startActivity(launchBrowser); 
+    		}
+    	})
         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 
             public void onClick(DialogInterface dialog, int which) {
-                
-                return;   
+                sblopen = false;
+                return;
             }
         });
 
