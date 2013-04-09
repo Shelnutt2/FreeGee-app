@@ -1,3 +1,8 @@
+/** @author Seth Shelnutt
+ * @License GPLv3 or later
+ * All source code is released free and openly by Seth Shelnutt under the terms of GPLv3 or later, 2013 
+ * */
+
 package edu.shell.freegee;
 
 import java.io.BufferedInputStream;
