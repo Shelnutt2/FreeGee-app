@@ -424,6 +424,25 @@ public class utilities extends Activity{
                 	}
 
                 	})
+                	.setNeutralButton("Flash Blank",new DialogInterface.OnClickListener() {
+                	public void onClick(DialogInterface dialog,int id) {
+
+                			Toast.makeText(utilities.this, "No backup found, downloading blank misc", Toast.LENGTH_SHORT).show();
+                			String miscblank;
+                			if(device.equalsIgnoreCase("geehrc4g_spr_us")){
+                				miscblank="http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/geehrc4g_spr_us/misc-sprint-blank.img";
+                			}
+                			else if(device.equalsIgnoreCase("geeb_att_us")){
+                				miscblank="http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/geeb_att_us/misc-att-blank.misc";
+                			}
+                			else{
+                				miscblank="http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/geeb_bell_ca/misc-bell-blank.misc";
+                			}
+                			new DownloadMisc().execute(miscblank);
+                		
+                	}
+
+                	})
                 	.setNegativeButton("Abort",new DialogInterface.OnClickListener() {
                 	public void onClick(DialogInterface dialog,int id) {
 	

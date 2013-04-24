@@ -105,6 +105,7 @@ public class install extends Activity {
 	private String sbl1 = "sbl1-freegee";
 	private String sbl2 = "sbl2-freegee";
 	private String sbl3 = "sbl3-freegee";
+	private boolean yay = false;
 	
     /** Called when the activity is first created. */
     @Override
@@ -1029,12 +1030,13 @@ public class install extends Activity {
                		File[] toBeUploaded = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img"), new File("/sdcard/freegee/misc-backup.img")};
                		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(install.this);
                		DBUpload dbupload = new DBUpload(install.this, mDBApi, toBeUploaded);
+               		yay = true;
                			dbupload.execute();
         			   return;
         		   }
         		   else {
                        alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated!","Yay!",0);
-                       new File("/sdcard/freegee/working").delete();
+                       
                        return;
         		   }
            }
@@ -1287,6 +1289,7 @@ public class install extends Activity {
 				
 				e.printStackTrace();
 			}
+     	if(err == 0){
     	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/sbl2 of=/sdcard/freegee/working/sbl2_after.img";
      	try {
 				err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -1297,6 +1300,8 @@ public class install extends Activity {
 				
 				e.printStackTrace();
 			}
+     	}
+     	if(err == 0){
     	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/sbl3 of=/sdcard/freegee/working/sbl3_after.img";
      	try {
 				err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -1307,21 +1312,23 @@ public class install extends Activity {
 				
 				e.printStackTrace();
 			}
-
-		if(checkmd5sum("/sdcard/freegee/working/sbl1_after.img",sbl1_after_md5sum)){		
-		  if(checkmd5sum("/sdcard/freegee/working/sbl2_after.img",sbl2_after_md5sum)){
-		    if(checkmd5sum("/sdcard/freegee/working/sbl3_after.img",sbl3_after_md5sum)){
+     	}
+     	if(err == 0){
+		if(new File("/sdcard/freegee/working/sbl1_after.img").exists() && checkmd5sum("/sdcard/freegee/working/sbl1_after.img",sbl1_after_md5sum)){		
+		  if(new File("/sdcard/freegee/working/sbl2_after.img").exists() && checkmd5sum("/sdcard/freegee/working/sbl2_after.img",sbl2_after_md5sum)){
+		    if(new File("/sdcard/freegee/working/sbl3_after.img").exists() && checkmd5sum("/sdcard/freegee/working/sbl3_after.img",sbl3_after_md5sum)){
     		    SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
     	        if(prefs.contains("dropbox_key")){
            		File[] toBeUploaded = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img"), new File("/sdcard/freegee/misc-backup.img"), new File("/sdcard/freegee/sbl1-backup.img"),new File("/sdcard/freegee/sbl2-backup.img"),new File("/sdcard/freegee/sbl3-backup.img")};
            		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(install.this);
            		DBUpload dbupload = new DBUpload(install.this, mDBApi, toBeUploaded);
+           		yay = true;
            			dbupload.execute();
     			   return;
     		   }
     		   else {
 		    	alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated!","Yay!",0);
-                new File("/sdcard/freegee/working").delete();
+                
     		   }
 		    }
 		    else{
@@ -1338,6 +1345,40 @@ public class install extends Activity {
      	   alertbuilder("Error!","sbl1 md5sum did not match after flashing. Attempting to restore original sbls. Do not reboot until finished","Ok",0);
      	   new restore().execute();
 	    }
+     	}
+		else{
+			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+    	    
+	    	// set title
+	    	alertDialogBuilder.setTitle("Unabled to Verify");
+
+	    	// set dialog message
+	    	alertDialogBuilder
+	    	.setMessage("Unable to check images to verify sbl stack was flashed okay. Do you want to restore your original sbl stack, or hope the new one flashed okay?")
+	    	.setCancelable(false)
+	    	.setPositiveButton("Restore old",new DialogInterface.OnClickListener() {
+	    	public void onClick(DialogInterface dialog,int id) {
+	        	   alertbuilder("Error!","Attempting to restore original sbls. Do not reboot until finished","Ok",0);
+	        	   new restore().execute();
+	    	}
+	    	})
+	    	.setNegativeButton("Continue with new", new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated! (This does not indicate your sbls went okay, only a reboot can tell)","Yay!",0);
+	                
+					
+				}
+			});
+
+	    	// create alert dialog
+	    	AlertDialog alertDialog = alertDialogBuilder.create();
+
+	    	// show it
+	    	alertDialog.show();
+
+		}
 		    	
 	}
     
@@ -1500,9 +1541,15 @@ public class install extends Activity {
     	    mDialog.dismiss();
     	    if (result) {
     	        showToast("Backups successfully uploaded");
+    	        if(yay){
+    	        	alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated!","Yay!",0);
+    	        }
     	        return;
     	    } else {
     	        showToast(mErrorMsg);
+    	        if(yay){
+    	        	alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated!","Yay!",0);
+    	        }
     	        return;
     	    }
     	}
