@@ -202,7 +202,7 @@ public class install extends Activity {
           		  if(!freegeefw.exists()){
           			  freegeefw.mkdirs();
           		  }
-          		if(!isSpecial && aversion.equals("4.1.2") && !device.equals("geehrc4g_spr_us")){
+          		if(!isSpecial && aversion.equals("4.1.2")){
           			//alertbuilderu("Sorry!","Sorry you are running a varient with jellybean which requires the sbl unlock. You must read and accept the warning first disabled on this activity.","Ok",0);
           			AlertDialog alertDialog;
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(install.this);
