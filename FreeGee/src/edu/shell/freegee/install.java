@@ -106,6 +106,7 @@ public class install extends Activity {
 	private String sbl2 = "sbl2-freegee";
 	private String sbl3 = "sbl3-freegee";
 	private boolean yay = false;
+	private boolean disable_lge_security = false;
 	
     /** Called when the activity is first created. */
     @Override
@@ -178,10 +179,50 @@ public class install extends Activity {
     String[] lStr = new String[]{"Device Name: "+device,"Software Version: "+version};
     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
 
-    String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/supported.xml";
-    saveloc="/sdcard/freegee/supported.xml";
-    dfname = "supported device list";
-    new DownloadFileAsync().execute(url);
+    if(device.contains("geefhd")){
+		AlertDialog alertDialog;
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(install.this);
+	    
+    	// set title
+    	alertDialogBuilder.setTitle("Disable LGE Security?");
+
+    	// set dialog message
+    	alertDialogBuilder
+    	.setMessage("Do you want to disable lge security? This will allow you to remove system apps on the stock rom without the security error.")
+    	.setCancelable(false)
+    	.setPositiveButton("Yes",new DialogInterface.OnClickListener() {
+    	public void onClick(DialogInterface dialog,int id) {
+    		disable_lge_security = true;
+            String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/supported.xml";
+            saveloc="/sdcard/freegee/supported.xml";
+            dfname = "supported device list";
+            new DownloadFileAsync().execute(url);
+    	}
+    	})
+    	.setNegativeButton("I do not", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				disable_lge_security = false;
+		        String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/supported.xml";
+		        saveloc="/sdcard/freegee/supported.xml";
+		        dfname = "supported device list";
+		        new DownloadFileAsync().execute(url);
+			}
+		});
+
+    	// create alert dialog
+    	alertDialog = alertDialogBuilder.create();
+    	
+
+    	// show it
+    	alertDialog.show();
+		}
+    else{
+        String url = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/supported.xml";
+        saveloc="/sdcard/freegee/supported.xml";
+        dfname = "supported device list";
+        new DownloadFileAsync().execute(url);
+    }
     
     recoveryBtn = (Button)findViewById(R.id.recoveryBtn);
     recoveryBtn.setOnClickListener(new OnClickListener(){
@@ -202,7 +243,7 @@ public class install extends Activity {
           		  if(!freegeefw.exists()){
           			  freegeefw.mkdirs();
           		  }
-          		if(!isSpecial && aversion.equals("4.1.2")){
+          		if(!isSpecial && aversion.equals("4.1.2") && !device.contains("geefhd")){
           			//alertbuilderu("Sorry!","Sorry you are running a varient with jellybean which requires the sbl unlock. You must read and accept the warning first disabled on this activity.","Ok",0);
           			AlertDialog alertDialog;
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(install.this);
@@ -253,6 +294,23 @@ public class install extends Activity {
 	    	    	// show it
 	    	    	alertDialog.show();
           		}
+          		else if(device.contains("geefhd")){
+          			if(disable_lge_security){
+	                	step=2;
+	            		saveloc="/sdcard/freegee/working/boot-freegee.img";
+	            		dfname="Boot image";
+	            		new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+boot);
+	    	    	}
+          			else{
+	    	           	step=3;
+	    	        	saveloc="/sdcard/freegee/working/recovery-freegee.img";
+	    	        	dfname="Recovery Image";
+	    	        	Spinner spinner = (Spinner) findViewById(R.id.recoveryspinner);
+	    	        	recovery = RSmap.get(spinner.getSelectedItem().toString())[0];
+	    	        	recovery_md5sum = RSmap.get(spinner.getSelectedItem().toString())[1];
+	    	        	new DownloadFileAsync().execute("http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/"+recovery);	    					
+	    				}
+          			}
           		  else{
           		    step=1;
           		    dfname="Bootloader";
@@ -510,7 +568,7 @@ public class install extends Activity {
     
     private boolean isSpecial(){
         if(prefs.contains("Special")){
-           if(prefs.getInt("Special", 2) == 3){
+           if(prefs.getInt("Special", 2) == 3 && !device.contains("geefhd")){
     	      return true;
     	   }
         }    	
@@ -521,8 +579,10 @@ public class install extends Activity {
     	int err = 0;
     	HashMap<String,String> files = new HashMap<String, String>();
     	files.put("recovery",recovery_md5sum);
-    	files.put("aboot",aboot_md5sum);
-    	files.put("boot",boot_md5sum);
+        if(!device.contains("geefhd"))
+    	   files.put("aboot",aboot_md5sum);
+        if(!device.contains("geefhd") || disable_lge_security)
+           files.put("boot",boot_md5sum);
     	if(isSpecial){
     		files.put("sbl1",sbl1_md5sum);
     		files.put("sbl2",sbl2_md5sum);
@@ -717,7 +777,7 @@ public class install extends Activity {
 					}
 	 			 }
 		      	
-		      	if(err==0){
+		      	if(err==0 && !device.contains("geefhd")){
 		         	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/aboot of=/sdcard/freegee/aboot-backup.img";
  		        	try {
  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -844,50 +904,53 @@ public class install extends Activity {
     	String command;
     	if (err == 0){
     		publishProgress(0);
-   		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
-        	try {
-				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-			} catch (InterruptedException e) {
+    		if(!device.contains("geefhd")){
+   		       command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+        	   try {
+				   Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			   } catch (InterruptedException e) {
 				
-				e.printStackTrace();
-			} catch (IOException e) {
+				   e.printStackTrace();
+			   } catch (IOException e) {
 				
-				e.printStackTrace();
-			}
-        	command = "dd if=/sdcard/freegee/working/aboot-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
+				   e.printStackTrace();
+			   }
+        	   command = "dd if=/sdcard/freegee/working/aboot-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
+	        	   try {
+					   err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+				   } catch (InterruptedException e) {
 					
-					e.printStackTrace();
-				} catch (IOException e) {
+					   e.printStackTrace();
+				   } catch (IOException e) {
 					
-					e.printStackTrace();
-				}
-
+					   e.printStackTrace();
+				   }
+    		   }
       	if(err==0){
-      		publishProgress(1);
-   		    command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
-        	try {
-				Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-			} catch (InterruptedException e) {
+      		if(disable_lge_security || !device.contains("geefhd")){
+      		   publishProgress(1);
+   		       command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+        	   try {
+				   Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			   } catch (InterruptedException e) {
 				
-				e.printStackTrace();
-			} catch (IOException e) {
+				   e.printStackTrace();
+			   } catch (IOException e) {
 				
-				e.printStackTrace();
-			}
-        	command = "dd if=/sdcard/freegee/working/boot-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
-        	try {
-				err2 = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-			} catch (InterruptedException e) {
+				   e.printStackTrace();
+			   }
+        	   command = "dd if=/sdcard/freegee/working/boot-freegee.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
+        	   try {
+				   err2 = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+			   } catch (InterruptedException e) {
 				
-				e.printStackTrace();
-			} catch (IOException e) {
+				   e.printStackTrace();
+			   } catch (IOException e) {
 				
-				e.printStackTrace();
-			}
-			 }
+				   e.printStackTrace();
+			   }
+		   }
+      	}
       	
       	if(err2==0){
       		publishProgress(2);
@@ -1027,15 +1090,26 @@ public class install extends Activity {
         	   else{
         		    SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
         	        if(prefs.contains("dropbox_key")){
-               		File[] toBeUploaded = {new File("/sdcard/freegee/boot-backup.img"),new File("/sdcard/freegee/aboot-backup.img"),new File("/sdcard/freegee/recovery-backup.img"),new File("/sdcard/freegee/m9kefs1-backup.img"),new File("/sdcard/freegee/m9kefs2-backup.img"),new File("/sdcard/freegee/m9kefs3-backup.img"), new File("/sdcard/freegee/misc-backup.img")};
+        	        	ArrayList<File> arraytoBeUploaded = new ArrayList<File>();
+            		    arraytoBeUploaded.add(new File("/sdcard/freegee/recovery-backup.img"));
+            		    arraytoBeUploaded.add(new File("/sdcard/freegee/m9kefs1-backup.img"));
+            		    arraytoBeUploaded.add(new File("/sdcard/freegee/m9kefs2-backup.img"));
+            		    arraytoBeUploaded.add(new File("/sdcard/freegee/m9kefs3-backup.img"));
+            		    arraytoBeUploaded.add(new File("/sdcard/freegee/misc-backup.img"));
+        	        	if(!device.contains("geefhd")){
+                		    arraytoBeUploaded.add(new File("/sdcard/freegee/aboot-backup.img"));
+        	        	}
+        	        	if(!device.contains("geefhd") || disable_lge_security){
+                		    arraytoBeUploaded.add(new File("/sdcard/freegee/boot-backup.img"));
+        	        	}
                		DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(install.this);
-               		DBUpload dbupload = new DBUpload(install.this, mDBApi, toBeUploaded);
+               		DBUpload dbupload = new DBUpload(install.this, mDBApi, arraytoBeUploaded.toArray(new File[arraytoBeUploaded.size()]));
                		yay = true;
                			dbupload.execute();
         			   return;
         		   }
         		   else {
-                       alertbuilder("Success!","Success. Your "+device+" Optimus G has been liberated!","Yay!",0);
+                       alertbuilder("Success!","Success. Your "+device+" has been liberated!","Yay!",0);
                        
                        return;
         		   }
@@ -1064,7 +1138,7 @@ public class install extends Activity {
         	File boot=new File("/sdcard/freegee/boot-backup.img");
         	File recovery=new File("/sdcard/freegee/recovery-backup.img");
         	File aboot=new File("/sdcard/freegee/aboot-backup.img");
- 			  if(boot.exists()){
+ 			  if(boot.exists() && (!device.contains("geefhd") || disable_lge_security)){
 		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -1090,7 +1164,7 @@ public class install extends Activity {
  				  err=-1;
  			  }
  			  
- 			  if(aboot.exists()){
+ 			  if(aboot.exists() && !device.contains("geefhd")){
 		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
 		        	try {
 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -1233,7 +1307,7 @@ public class install extends Activity {
         protected void onPostExecute(String unused) {
         	removeDialog(DIALOG_RESTORE_PROGRESS);
         	if(err==0){
-        	    alertbuilder("Success!","Success. Your Optimus G been restored!","Yay!",0);
+        	    alertbuilder("Success!","Success. Your "+device+" been restored!","Yay!",0);
         	    return;
         	}
         	else if(err<=-1){
@@ -1638,9 +1712,15 @@ public class install extends Activity {
 	    	            }
 	    	          }
 	    			 }
-	    			else{
+	    			else if(device.contains("geefhd") && disable_lge_security){
+	    				alertbuilderu("Sorry!","Sorry your sw version is not currently supported for disabling lge security, will attempt to upload boot image for support.","Ok",0);
+	    			}
+	    			else if(!device.contains("geefhd")){
 	    				alertbuilderu("Sorry!","Sorry your varient is not currently supported, will attempt to upload boot image for support.","Ok",0);
 	    			 }
+	    			}
+	    			else if(device.contains("geefhd")){
+	    				alertbuilder("Sorry!","Sorry your varient is not currently supported","Ok",1);
 	    			}
 	    			else{
 	    				alertbuilderu("Sorry!","Sorry your varient is not currently supported, will attempt to upload boot image for support.","Ok",0);
@@ -1648,10 +1728,12 @@ public class install extends Activity {
 	    		    }
 	    	       }
 	        	}
-    			else{
+    			else if(!device.contains("geefhd")){
     				alertbuilderu("Sorry!","Sorry your varient is not currently supported, will attempt to upload boot image for support.","Ok",0);
     			}
-	    	
+    			else if(device.contains("geefhd")){
+    				alertbuilder("Sorry!","Sorry your varient is not currently supported","Ok",1);
+    			}
 	    	
 	    	Spinner spinner = (Spinner) findViewById(R.id.recoveryspinner);
 	        // Create an ArrayAdapter using the string array and a default spinner layout
@@ -1665,8 +1747,10 @@ public class install extends Activity {
 	    	   boot_md5sum = BSmap.get(version.toUpperCase(Locale.US))[1];
 
 	    	}
-	    	else
-    		 alertbuilderu("Sorry!","Sorry your software version is not currently supported, will attempt to upload boot image for support.","Ok",0);
+	    	else if(!device.contains("geefhd"))
+    		    alertbuilderu("Sorry!","Sorry your software version is not currently supported, will attempt to upload boot image for support.","Ok",0);
+	    	else if(device.contains("geefhd") && disable_lge_security)
+				alertbuilderu("Sorry!","Sorry your sw version is not currently supported for disabling lge security, will attempt to upload boot image for support. You can choose to not disable lge security and install only a recovery while you wait for support to be added.","Ok",0);
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }

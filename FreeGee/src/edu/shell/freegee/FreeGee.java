@@ -402,6 +402,10 @@ class restore extends AsyncTask<String, String, String> {
     		File[] fa = {boot,recovery,aboot,sbl1,sbl2,sbl3};
     		Collections.addAll(fal,fa);
     	}
+    	else if(device.contains("geefhd")){
+    		File[] fa = {boot,recovery};
+    		Collections.addAll(fal,fa);
+    	}
     	else{
     		File[] fa = {boot,recovery,aboot};
     		Collections.addAll(fal,fa);
@@ -464,6 +468,8 @@ class restore extends AsyncTask<String, String, String> {
 						}
 				  
 			  }
+			  else if(device.contains("geefhd"))
+				  err=1;
 			  else{
 				  err=-1;
 			  }
@@ -513,9 +519,8 @@ class restore extends AsyncTask<String, String, String> {
 						}
 				  
 			  }
-			  else{
+			  else if(!device.contains("geefhd"))
 				  err=-2;
-			  }
 			  
 			  if(recovery.exists()){
 	        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
@@ -562,8 +567,10 @@ class restore extends AsyncTask<String, String, String> {
 						}
 				  
 			  }
+			  else if(device.contains("geefhd"))
+				  err=3;
 			  else {
-				  err = -3;
+				  err=-3;
 			  }
 			 if(isSpecial()){
 			   if(sbl1.exists()){
@@ -674,6 +681,15 @@ class restore extends AsyncTask<String, String, String> {
     		alertbuilder("Error!","Could not restore, backups not found!","Boo!",0);
     		return;
     	}
+    	else if(err==1){
+    		alertbuilder("Error!","Could not restore boot, backup not found! If you didn't disable lge security then ignore this.","Boo!",0);
+    		return;
+    	}
+    	else if(err==3){
+    		alertbuilder("Error!","Could not restore recovery, backup not found!","Boo!",0);
+    		return;
+    	}
+
     	else{
     		alertbuilder("Error!","There was an error restoring your backups Do not reboot!","Boo!",0);
     		return;
