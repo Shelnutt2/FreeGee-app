@@ -5,17 +5,12 @@
 
 package edu.shell.freegee;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
@@ -26,7 +21,6 @@ import java.util.Date;
 import java.util.Properties;
 
 import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.DropboxAPI.UploadRequest;
 import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.exception.DropboxException;
@@ -39,9 +33,9 @@ import com.dropbox.client2.exception.DropboxUnlinkedException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
+import com.stericson.RootTools.RootTools;
 
 import edu.shell.freegee.R;
-import edu.shell.freegee.utilities.DBDownload;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -62,12 +56,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.Toast;
 
 @SuppressLint("SdCardPath")
-public class FreeGee extends Activity {
+public class FreeGee extends Activity implements OnClickListener {
    
     public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
     public static final int DIALOG_INSTALL_PROGRESS = 1;
@@ -80,6 +77,7 @@ public class FreeGee extends Activity {
 
     private ProgressDialog mProgressDialog;
     public static boolean isSpecial;
+    private ArrayList<Object> mButtons = new ArrayList<Object>();
 
     DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     Date date = new Date();
@@ -96,113 +94,90 @@ public class FreeGee extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_free_gee);
+        setContentView(R.layout.activity_freegee);
     	File freegeef=new File("/sdcard/freegee");
 		  if(!freegeef.exists()){
 			  freegeef.mkdirs();
 		  }
-        startBtn = (Button)findViewById(R.id.startBtn);
-        startBtn.setOnClickListener(new OnClickListener(){
-            public void onClick(View v) {
-            	IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            	Intent batteryStatus = FreeGee.this.registerReceiver(null, ifilter);
-            	int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            	int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            	float batteryPct = level / (float)scale;
-            	if(batteryPct < 0.10){
-            		alertbuilder("Battery Too Low","Your battery is too low. For safety please charge it before attempting unlock","ok",1);
-            	}
-            	else{
-            		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
-            	    
-                	// set title
-                	alertDialogBuilder.setTitle("Warning");
+		if (!RootTools.isAccessGiven()) {
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		if(getBatteryLevel() < 15.0)
+			alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
+		Button cb = null;
 
-                	// set dialog message
-                	alertDialogBuilder
-                	.setMessage("By Pressing Okay you are acknowledging that you are voiding you are voiding you warrenty and no one from team codefire can be held responsible.")
-                	.setCancelable(false)
-                	.setPositiveButton("I agree",new DialogInterface.OnClickListener() {
-                	public void onClick(DialogInterface dialog,int id) {
-                	
-                		Intent newActivity = new Intent(getBaseContext(), install.class);
-                        startActivity(newActivity);
-                	}
-                	})
-                	.setNegativeButton("I disagree",new DialogInterface.OnClickListener() {
-                	public void onClick(DialogInterface dialog,int id) {
-                	// if this button is clicked, close
-                	// current activity
-                		
-                			FreeGee.this.finish();
-                			
-                	}
-                	});
+		for (int i =0; i<12; i++) {
+		cb = new Button(this);
+		cb.setText(Integer.toString(i));
+		//cb.setBackgroundResource(R.drawable.fancy_button_selector);
+		cb.setOnClickListener(this);
+		cb.setId(i);
+		mButtons.add(cb);
+		}
+		
+		GridView gridView = (GridView) findViewById(R.id.main_gridview);
+		gridView.setAdapter(new ButtonAdapter(mButtons));
+    }
+    
+    @Override
+    public void onClick(View v) {
+     Button selection = (Button)v;
+     Toast.makeText(getBaseContext(), selection.getText()+ " was pressed!", Toast.LENGTH_SHORT).show();
+    }
+    
+    public class ButtonAdapter extends BaseAdapter {  
+    	private ArrayList<Object> mButtons = null;
 
-                	// create alert dialog
-                	AlertDialog alertDialog = alertDialogBuilder.create();
+    	public ButtonAdapter(ArrayList<Object> b) {
+    	 mButtons = b;
+    	} 
+         
+        // Total number of things contained within the adapter  
+        public int getCount() {  
+         return mButtons.size();  
+        }  
+         
+         // Require for structure, not really used in my code.  
+        public Object getItem(int position) {  
+         return (Object) mButtons.get(position);
+        }  
+         
+        // Require for structure, not really used in my code. Can  
+        // be used to get the id of an item in the adapter for   
+        // manual control.   
+        public long getItemId(int position) {  
+         return position;  
+        }  
 
-                	// show it
-                	alertDialog.show();
-            		
-                   
-                }
-            }
-        });
-        
-        restoreBtn = (Button)findViewById(R.id.restoreBtn);
-        restoreBtn.setOnClickListener(new OnClickListener(){
-            public void onClick(View v) {
-            	IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            	Intent batteryStatus = FreeGee.this.registerReceiver(null, ifilter);
-            	int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            	int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            	float batteryPct = level / (float)scale;
-            	if(batteryPct < 0.10){
-            		alertbuilder("Battery Too Low","Your battery is too low. For safety please charge it before attempting unlock","ok",1);
-            	}
-            	else{
-            		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
-            	    
-                	// set title
-                	alertDialogBuilder.setTitle("Warning");
+       @Override
+       public View getView(int position, View convertView, ViewGroup parent) {
+        Button button;
+        if (convertView == null) {
+         button = (Button) mButtons.get(position);
+        } else {
+         button = (Button) convertView;
+        }
+         return button;
+        }
+       }
+    
+    public String[] filesnames = {   
+            "File 1",   
+            "File 2",  
+            "Roflcopters"  
+            };
+    
+    public float getBatteryLevel() {
+        Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
-                	// set dialog message
-                	alertDialogBuilder
-                	.setMessage("By Pressing Okay you are acknowledging that you are returning to a locked state by using the backups made while unlocking.")
-                	.setCancelable(true)
-                	.setPositiveButton("I agree",new DialogInterface.OnClickListener() {
-                	public void onClick(DialogInterface dialog,int id) {
-                   		 new restore().execute();
-           			  
-                	}
-                	})
-                	.setNegativeButton("I disagree",new DialogInterface.OnClickListener() {
-                	public void onClick(DialogInterface dialog,int id) {
- 
-                	}
-                	});
+        // Error checking that probably isn't needed but I added just in case.
+        if(level == -1 || scale == -1) {
+            return 50.0f;
+        }
 
-                	// create alert dialog
-                	AlertDialog alertDialog = alertDialogBuilder.create();
-
-                	// show it
-                	alertDialog.show();
-            		
-                   
-                }
-            }
-        });
-        
-        utilBtn = (Button)findViewById(R.id.utilBtn);
-        utilBtn.setOnClickListener(new OnClickListener(){
-            public void onClick(View v) {
-            	Intent newActivity = new Intent(getBaseContext(), utilities.class);
-                startActivity(newActivity);
-   
-                }
-            
-        });
+        return ((float)level / (float)scale) * 100.0f; 
     }
     
     @Override
