@@ -5,47 +5,47 @@
 
 package edu.shell.freegee;
 
+import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.Properties;
+import java.util.concurrent.TimeoutException;
 
-import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.ProgressListener;
-import com.dropbox.client2.android.AndroidAuthSession;
-import com.dropbox.client2.exception.DropboxException;
-import com.dropbox.client2.exception.DropboxFileSizeException;
-import com.dropbox.client2.exception.DropboxIOException;
-import com.dropbox.client2.exception.DropboxParseException;
-import com.dropbox.client2.exception.DropboxPartialFileException;
-import com.dropbox.client2.exception.DropboxServerException;
-import com.dropbox.client2.exception.DropboxUnlinkedException;
-import com.dropbox.client2.session.AccessTokenPair;
-import com.dropbox.client2.session.AppKeyPair;
-import com.dropbox.client2.session.Session.AccessType;
+import com.octo.android.robospice.JacksonSpringAndroidSpiceService;
+import com.octo.android.robospice.SpiceManager;
+import com.octo.android.robospice.persistence.DurationInMillis;
+import com.octo.android.robospice.persistence.exception.SpiceException;
+import com.octo.android.robospice.request.listener.RequestListener;
 import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.exceptions.RootDeniedException;
+import com.stericson.RootTools.execution.CommandCapture;
 
 import edu.shell.freegee.R;
+import edu.shell.freegee.install.DownloadFileAsync;
+import edu.shell.freegee.install.DownloadSBLFileAsync;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.LightingColorFilter;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
@@ -61,7 +61,9 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.Spinner;
 import android.widget.Toast;
+import android.graphics.PorterDuff;
 
 @SuppressLint("SdCardPath")
 public class FreeGee extends Activity implements OnClickListener {
@@ -74,10 +76,13 @@ public class FreeGee extends Activity implements OnClickListener {
     private Button restoreBtn;
     private Button utilBtn;
     private boolean sblopen = false;
-
-    private ProgressDialog mProgressDialog;
+    private Device myDevice;
+    private String saveloc;
+    
+    private static ProgressDialog mProgressDialog;
     public static boolean isSpecial;
     private ArrayList<Object> mButtons = new ArrayList<Object>();
+    private static final String JSON_CACHE_KEY = "freegee_json";
 
     DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     Date date = new Date();
@@ -104,25 +109,115 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
 		if(getBatteryLevel() < 15.0)
 			alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
-		Button cb = null;
-
-		for (int i =0; i<12; i++) {
-		cb = new Button(this);
-		cb.setText(Integer.toString(i));
-		//cb.setBackgroundResource(R.drawable.fancy_button_selector);
-		cb.setOnClickListener(this);
-		cb.setId(i);
-		mButtons.add(cb);
+		
+		if(!new File("/data/data/edu.shell.freegee/edifier").exists()){
+		  InputStream in = null;
+		  OutputStream out = null;
+		  try {
+			// read this file into InputStream
+			in = getAssets().open("edifier");
+	 
+			// write the inputStream to a FileOutputStream
+			out = new FileOutputStream(new File("/data/data/edu.shell.freegee/edifier"));
+			int read = 0;
+			byte[] bytes = new byte[50468];
+	 
+			while ((read = in.read(bytes)) != -1) {
+				out.write(bytes, 0, read);
+			}	 
+		  } catch (IOException e) {
+			Log.e("Freegee","Edifier not found in assets");
+			e.printStackTrace();
+		  } finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			if (out != null) {
+				try {
+					// outputStream.flush();
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+	 
+			  }
+		  }
 		}
 		
+		CommandCapture command = new CommandCapture(0,"chmod 744 /data/data/edu.shell.freegee/edifier");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			Log.e("Freegee","Edifier not found in assets");
+			e.printStackTrace();
+		} catch (TimeoutException e) {
+			Log.e("Freegee","Chmod timed out");
+			e.printStackTrace();
+		} catch (RootDeniedException e) {
+			Log.e("Freegee","No root access!");
+			e.printStackTrace();
+		}
+		if(!spiceManager.isStarted())
+           spiceManager.start( this );
+        
+		myDevice = new Device();
+		myDevice.setName("LG Optimus G");
+		ArrayList<Action> actions = new ArrayList<Action>();
+		Action unlock = new Action();
+		unlock.setName("unlock");
+		actions.add(unlock);
+		
+		Action recovery = new Action();
+		recovery.setName("recovery");
+		actions.add(recovery);
+		
+		myDevice.setActions(actions);
+		updateGridView(myDevice);
 		GridView gridView = (GridView) findViewById(R.id.main_gridview);
 		gridView.setAdapter(new ButtonAdapter(mButtons));
+    }
+    
+    public void updateGridView(Device device){
+        for(int i = 0; i < device.getActions().size();i++){
+    		Button cb = new Button(this);
+  		    cb.setText(device.getActions().get(i).getName());
+  		    if(i % 2 == 1){
+  		      cb.getBackground().setColorFilter(Color.parseColor("#f47321"), PorterDuff.Mode.DARKEN);
+  		      cb.setTextColor(Color.parseColor("#005030"));
+            }
+  		    else{
+  		      cb.getBackground().setColorFilter(Color.parseColor("#005030"), PorterDuff.Mode.DARKEN);
+  		      cb.setTextColor(Color.parseColor("#f47321"));
+            }
+  		    cb.setTypeface(null, Typeface.BOLD);
+  		    cb.setPadding(100, 100, 100, 100);
+  		    cb.setOnClickListener(this);
+  		    cb.setId(i);
+  		    mButtons.add(cb);
+        }
     }
     
     @Override
     public void onClick(View v) {
      Button selection = (Button)v;
      Toast.makeText(getBaseContext(), selection.getText()+ " was pressed!", Toast.LENGTH_SHORT).show();
+     Action b;
+     for(Action a:myDevice.getActions()){
+    	 if(a.getName().equals(selection.getText())){
+    		 b = a;
+    	     new helper().process(b);
+    		 break;
+    	 }
+    	 else{
+    		 Log.e("Freegee","Confused by action pressed");
+    	     alertbuilder("Error","Can't find the action to perform you requested","uh oh",0);
+    	 }
+     }
+     //Toast.makeText(getBaseContext(), "Result is: "+result, Toast.LENGTH_SHORT).show();
     }
     
     public class ButtonAdapter extends BaseAdapter {  
@@ -161,11 +256,39 @@ public class FreeGee extends Activity implements OnClickListener {
         }
        }
     
-    public String[] filesnames = {   
-            "File 1",   
-            "File 2",  
-            "Roflcopters"  
-            };
+    protected SpiceManager spiceManager = new SpiceManager( JacksonSpringAndroidSpiceService.class );
+    
+    private class FreegeeRequestListener implements RequestListener< Device >{
+
+        @Override
+        public void onRequestFailure( SpiceException spiceException ) {
+          //update your UI
+        }
+
+        @Override
+        public void onRequestSuccess( Device device ) {
+        	updateGridView(device);
+        }
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+		if(!spiceManager.isStarted())
+	        spiceManager.start( this );
+    }
+
+    @Override
+    protected void onStop() {
+    	if(spiceManager.isStarted())
+           spiceManager.shouldStop();
+        super.onStop();
+    }
+
+    public void refreshSupported() {
+        spiceManager.execute( new FreegeeJsonRequest(), JSON_CACHE_KEY, DurationInMillis.ALWAYS_EXPIRED, new FreegeeRequestListener() );
+    }
     
     public float getBatteryLevel() {
         Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
@@ -212,35 +335,85 @@ public class FreeGee extends Activity implements OnClickListener {
     protected Dialog onCreateDialog(int id) {
         switch (id) {
             case DIALOG_DOWNLOAD_PROGRESS:
-                mProgressDialog = new ProgressDialog(this);
-                mProgressDialog.setMessage("Downloading file..");
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.show();
-                return mProgressDialog;
+                setmProgressDialog(new ProgressDialog(this));
+                getmProgressDialog().setMessage("Downloading file..");
+                getmProgressDialog().setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                getmProgressDialog().setCancelable(false);
+                getmProgressDialog().show();
+                return getmProgressDialog();
 		case DIALOG_INSTALL_PROGRESS:
-                mProgressDialog = new ProgressDialog(this);
-                mProgressDialog.setMessage("Installing..");
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                mProgressDialog.setCancelable(false);
-                mProgressDialog.show();
-                return mProgressDialog;
+                setmProgressDialog(new ProgressDialog(this));
+                getmProgressDialog().setMessage("Installing..");
+                getmProgressDialog().setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                getmProgressDialog().setCancelable(false);
+                getmProgressDialog().show();
+                return getmProgressDialog();
 		case DIALOG_BACKUP_PROGRESS:
-            mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setMessage("Backing Up..");
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressDialog.setCancelable(false);
-            mProgressDialog.show();
-            return mProgressDialog;
+            setmProgressDialog(new ProgressDialog(this));
+            getmProgressDialog().setMessage("Backing Up..");
+            getmProgressDialog().setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            getmProgressDialog().setCancelable(false);
+            getmProgressDialog().show();
+            return getmProgressDialog();
 		case DIALOG_RESTORE_PROGRESS:
-			mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setMessage("Restoring..");
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressDialog.setCancelable(false);
-            mProgressDialog.show();
-            return mProgressDialog;
+			setmProgressDialog(new ProgressDialog(this));
+            getmProgressDialog().setMessage("Restoring..");
+            getmProgressDialog().setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            getmProgressDialog().setCancelable(false);
+            getmProgressDialog().show();
+            return getmProgressDialog();
 		default:
                 return null;
+        }
+    }
+    
+    class DownloadFileAsync extends AsyncTask<String, String, String> {
+        int err;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            showDialog(DIALOG_DOWNLOAD_PROGRESS);
+        }
+
+        @Override
+        protected String doInBackground(String... aurl) {
+            int count;
+            try {
+                URL url = new URL(aurl[0]);
+                URLConnection conexion = url.openConnection();
+                conexion.connect();
+                int lenghtOfFile = conexion.getContentLength();
+                InputStream input = new BufferedInputStream(url.openStream());
+                OutputStream output = new FileOutputStream(saveloc);
+
+                byte data[] = new byte[1024];
+                long total = 0;
+
+                while ((count = input.read(data)) != -1) {
+                    total += count;
+                    publishProgress(""+(int)((total*100)/lenghtOfFile));
+                    output.write(data, 0, count);
+                }
+
+                output.flush();
+                output.close();
+                input.close();
+            } catch (Exception e) {
+            	err = -1;
+            }
+            
+            return null;
+
+        }
+        protected void onProgressUpdate(String... progress) {
+             getmProgressDialog().setProgress(Integer.parseInt(progress[0]));
+        }
+
+        @Override
+        protected void onPostExecute(String unused) {
+        	removeDialog(DIALOG_DOWNLOAD_PROGRESS);
+        	
+
         }
     }
 
@@ -257,580 +430,6 @@ public class FreeGee extends Activity implements OnClickListener {
     	}
     }    
     
-class restore extends AsyncTask<String, String, String> {
-	int err = 0;
-	boolean db = false;
-	ArrayList<File> fal = new ArrayList<File>();
-	ArrayList<File> fal2 = new ArrayList<File>();
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-        showDialog(DIALOG_RESTORE_PROGRESS);
-    }
-
-    @Override
-    protected String doInBackground(String... aurl) {
-    	String command;
-    	File freegeef=new File("/sdcard/freegee");
-		  if(!freegeef.exists()){
-			  freegeef.mkdirs();
-		  }
-		  String varient = "";
-			File file = new File("/system/build.prop");
-			FileInputStream fis = null;
-			try {
-				fis = new FileInputStream(file);
-			} catch (FileNotFoundException f) {
-		        int err;
-				command = "mount -o remount,rw /system";
-		    	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-				command = "chmod 644 /system/build.prop";
-		    	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-				command = "mount -o remount,ro /system";
-		    	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-			}
-
-			Properties prop = new Properties();
-			// feed the property with the file
-			try {
-				prop.load(fis);
-			} catch (IOException e) {
-				alertbuilder("Error!","Can't load build.prop make sure you have root and perms are set correctly","Ok",0);
-				e.printStackTrace();
-			}
-			try {
-				fis.close();
-			} catch (IOException e) {
-				alertbuilder("Error!","Can't close build.prop, something went wrong.","Ok",0);
-				e.printStackTrace();
-			}
-			String device = prop.getProperty("ro.product.name");
-			if(device.equalsIgnoreCase("geehrc4g_spr_us")){
-				varient = "sprint";
-		        }
-				else if(device.equalsIgnoreCase("geeb_att_us")){
-				varient = "att";
-				}
-				else if(device.equalsIgnoreCase("geeb_bell_ca")){
-				varient = "bell";
-				}
-				else if(device.equalsIgnoreCase("geeb_rgs_ca")){
-				varient = "rogers";
-				}
-				else if(device.equalsIgnoreCase("geeb_tls_ca")){
-				varient = "telus";
-				}
-				else if(device.equalsIgnoreCase("geehrc_kt_kr")){
-				varient = "korean_k";
-				}
-				else if(device.equalsIgnoreCase("geehrc4g_lgu_kr")){
-				varient = "korean_l";
-				}
-				else if(device.equalsIgnoreCase("geehrc_skt_kr")){
-				varient = "korean_s";
-				}
-				else if(device.equalsIgnoreCase("geehrc_open_hk")){
-				varient = "e975";
-				}	
-				else if(device.equalsIgnoreCase("geehrc_open_tw")){
-				varient = "e975";
-				}
-				else if(device.equalsIgnoreCase("geehrc_open_eu")){
-				varient = "e975";
-				}
-				else if(device.equalsIgnoreCase("geehrc_shb_sg")){
-				varient = "e975";
-				}
-			
-    	File boot=new File("/sdcard/freegee/boot-backup.img");
-    	File recovery=new File("/sdcard/freegee/recovery-backup.img");
-    	File aboot=new File("/sdcard/freegee/aboot-backup.img");
-		File sbl1=new File("/sdcard/freegee/sbl1-backup.img");
-    	File sbl2=new File("/sdcard/freegee/sbl2-backup.img");
-    	File sbl3=new File("/sdcard/freegee/sbl3-backup.img");
-
-    	if(isSpecial){
-    		File[] fa = {boot,recovery,aboot,sbl1,sbl2,sbl3};
-    		Collections.addAll(fal,fa);
-    	}
-    	else if(device.contains("geefhd")){
-    		File[] fa = {boot,recovery};
-    		Collections.addAll(fal,fa);
-    	}
-    	else{
-    		File[] fa = {boot,recovery,aboot};
-    		Collections.addAll(fal,fa);
-    		}
-    	for(int i=0;i<fal.size();i++){
-    		if(!fal.get(i).exists()){
-    			fal2.add(fal.get(i));
-    		}
-    	}
-		SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
-		if(prefs.contains("dropbox_key")){
-		  if(fal2.size() > 0){
-			db = true;
-			return null;
-		  }
-		}
-		
-			  if(boot.exists()){
-	        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-		        	command = "dd if=/sdcard/freegee/boot-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
-		        	try {
-						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-					} catch (InterruptedException e) {
-						
-						e.printStackTrace();
-					} catch (IOException e) {
-						
-						e.printStackTrace();
-					}
-			  }
-			  else if(new File("/sdcard/freegee/boot-"+varient+"-backup.img").exists()){
-		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
-		        	try {
-						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-					} catch (InterruptedException e) {
-						
-						e.printStackTrace();
-					} catch (IOException e) {
-						
-						e.printStackTrace();
-					}
-			        	command = "dd if=/sdcard/freegee/boot-"+varient+"-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/boot";
-			        	try {
-							err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-						} catch (InterruptedException e) {
-							
-							e.printStackTrace();
-						} catch (IOException e) {
-							
-							e.printStackTrace();
-						}
-				  
-			  }
-			  else if(device.contains("geefhd"))
-				  err=1;
-			  else{
-				  err=-1;
-			  }
-			  
-			  if(aboot.exists()){
-	        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-	        	command = "dd if=/sdcard/freegee/aboot-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-		  }
-			  else if(new File("/sdcard/freegee/aboot-"+varient+"-backup.img").exists()){
-		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
-		        	try {
-						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-					} catch (InterruptedException e) {
-						
-						e.printStackTrace();
-					} catch (IOException e) {
-						
-						e.printStackTrace();
-					}
-			        	command = "dd if=/sdcard/freegee/aboot-"+varient+"-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/aboot";
-			        	try {
-							err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-						} catch (InterruptedException e) {
-							
-							e.printStackTrace();
-						} catch (IOException e) {
-							
-							e.printStackTrace();
-						}
-				  
-			  }
-			  else if(!device.contains("geefhd"))
-				  err=-2;
-			  
-			  if(recovery.exists()){
-	        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-	        	command = "dd if=/sdcard/freegee/recovery-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-		  }
-			  else if(new File("/sdcard/freegee/recovery-"+varient+"-backup.img").exists()){
-		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
-		        	try {
-						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-					} catch (InterruptedException e) {
-						
-						e.printStackTrace();
-					} catch (IOException e) {
-						
-						e.printStackTrace();
-					}
-			        	command = "dd if=/sdcard/freegee/recovery-"+varient+"-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/recovery";
-			        	try {
-							err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-						} catch (InterruptedException e) {
-							
-							e.printStackTrace();
-						} catch (IOException e) {
-							
-							e.printStackTrace();
-						}
-				  
-			  }
-			  else if(device.contains("geefhd"))
-				  err=3;
-			  else {
-				  err=-3;
-			  }
-			 if(isSpecial()){
-			   if(sbl1.exists()){
-	        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/sbl1";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-	        	command = "dd if=/sdcard/freegee/sbl1-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl1";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-		  }
-		  else{
-			  err=-1;
-		  }
-		  
-		  if(sbl2.exists()){
-	        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/sbl2";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-	        	command = "dd if=/sdcard/freegee/sbl2-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl2";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-		  }
-		  else{
-			  err=-2;
-		  }
-		  
-		  if(sbl3.exists()){
-	        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/sbl3";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-	        	command = "dd if=/sdcard/freegee/sbl3-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/sbl3";
-	        	try {
-					err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
-				} catch (InterruptedException e) {
-					
-					e.printStackTrace();
-				} catch (IOException e) {
-					
-					e.printStackTrace();
-				}
-		    }
-		    else {
-			  err = -3;
-		    }
-		  }
-		return null;
-    }
-    protected void onProgressUpdate(String... progress) {
-       //  mProgressDialog.setProgress(Integer.parseInt(progress[0]));
-    }
-
-    @Override
-    protected void onPostExecute(String unused) {
-    	removeDialog(DIALOG_RESTORE_PROGRESS);
-    	if(db == true){
-    		SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
-    		if(prefs.contains("dropbox_key")){
-    		   DropboxAPI<AndroidAuthSession> mDBApi = dropbox.newSession(FreeGee.this);
-			   DBDownload dbdownload = new DBDownload(FreeGee.this, mDBApi, fal2.toArray(new File[fal2.size()]));
-			   dbdownload.execute();
-			   return;
-    		}
-    		else{
-    			alertbuilder("Error!","Could not restore, backups not found! Do not reboot!","Boo!",0);
-    			return;
-    		}
-    	}
-    	if(err==0){
-    	    alertbuilder("Success!","Success. Your Optimus G been restored up!","Yay!",0);
-    	    return;
-    	}
-    	else if(err<=-1){
-    		alertbuilder("Error!","Could not restore, backups not found!","Boo!",0);
-    		return;
-    	}
-    	else if(err==1){
-    		alertbuilder("Error!","Could not restore boot, backup not found! If you didn't disable lge security then ignore this.","Boo!",0);
-    		return;
-    	}
-    	else if(err==3){
-    		alertbuilder("Error!","Could not restore recovery, backup not found!","Boo!",0);
-    		return;
-    	}
-
-    	else{
-    		alertbuilder("Error!","There was an error restoring your backups Do not reboot!","Boo!",0);
-    		return;
-    	}
-    	
-       }
-    }
-
-public class DBDownload extends AsyncTask<Void, Long, Boolean> {
-
-	
-	final static private String APP_KEY = "ywebobijtcfo2yc";
-	final static private String APP_SECRET = "ud1duwmbtlml0zz";
-	final  private AccessType ACCESS_TYPE = AccessType.APP_FOLDER;
-	// In the class declaration section:
-	DropboxAPI<AndroidAuthSession> mApi;
-
-
-	private Context mContext;
-	private ProgressDialog mDialog;
-
-	private String mErrorMsg,path;
-
-	//new class variables:
-	private int mFilesDownloaded;
-	private File[] mFilesToDownload;
-	private int mCurrentFileIndex;
-	int totalBytes = 0, indBytes = 0;
-	
-	public DBDownload(Context context, DropboxAPI<?> api, File[] filesToDownload) {
-	    // We set the context this way so we don't accidentally leak activities
-	    mContext = context.getApplicationContext();
-		AppKeyPair appKeys = new AppKeyPair(APP_KEY, APP_SECRET);
-		AndroidAuthSession session = new AndroidAuthSession(appKeys, ACCESS_TYPE);
-		mApi = new DropboxAPI<AndroidAuthSession>(session);
-		AccessTokenPair access = dropbox.getkeys(mContext);
-		//Toast.makeText(mContext, "Key is: "+dropbox.getkeys(mContext).toString(), Toast.LENGTH_LONG).show();
-		mApi.getSession().setAccessTokenPair(access);
-	    
-
-	    //set number of files uploaded to zero.
-	    mFilesToDownload = filesToDownload;
-	    mCurrentFileIndex = 0;
-	    
-/*	    for (int i = 0; i < mFilesToDownload.length; i++) {
-	    	long bytes = 0;
-			try {
-				bytes = mApi.metadata(mFilesToDownload[i].getName(),1,"",false,"").bytes;
-			} catch (DropboxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-	        totalBytes += bytes;
-	    }*/
-	    
-
-	    mDialog = new ProgressDialog(context);
-	    mDialog.setMax(100);
-	    mDialog.setMessage("Downloading file 1 / " + mFilesToDownload.length + " from Dropbox");
-	    mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-	    mDialog.setProgress(0);
-	    mDialog.setCancelable(false);
-	    mDialog.show();
-	}
-
-	@Override
-	protected Boolean doInBackground(Void... params) {
-	    try {
-	        for (int i = 0; i < mFilesToDownload.length; i++) {
-	            mCurrentFileIndex = i;
-	            File file = mFilesToDownload[i];
-
-	            int bytes = (int) mApi.metadata("/"+mFilesToDownload[i].getName(),1,"",false,"").bytes;
-	            indBytes = bytes;
-	            
-	            // By creating a request, we get a handle to the putFile operation,
-	            // so we can cancel it later if we want to
-	            FileOutputStream fis = new FileOutputStream(file);
-	            path = file.getName();
-	            mApi.getFile(path, "", fis,
-	                    new ProgressListener() {
-	                @Override
-	                public long progressInterval() {
-	                     // Update the progress bar every half-second or so
-	                     return 100;
-	                }
-
-	                @Override
-	                public void onProgress(long bytes, long total) {
-	                        publishProgress(bytes);
-	                }
-	            });
-	        }
-	        return true;
-	    } catch (DropboxUnlinkedException e) {
-	        // This session wasn't authenticated properly or user unlinked
-	        mErrorMsg = "This app wasn't authenticated properly.";
-	    } catch (DropboxFileSizeException e) {
-	        // File size too big to upload via the API
-	        mErrorMsg = "This file is too big to upload";
-	    } catch (DropboxPartialFileException e) {
-	        // We canceled the operation
-	        mErrorMsg = "Upload canceled";
-	    } catch (DropboxServerException e) {
-	        // Server-side exception.  These are examples of what could happen,
-	        // but we don't do anything special with them here.
-	        if (e.error == DropboxServerException._401_UNAUTHORIZED) {
-	            // Unauthorized, so we should unlink them.  You may want to
-	            // automatically log the user out in this case.
-	        } else if (e.error == DropboxServerException._403_FORBIDDEN) {
-	            // Not allowed to access this
-	        } else if (e.error == DropboxServerException._404_NOT_FOUND) {
-	            // path not found (or if it was the thumbnail, can't be
-	            // thumbnailed)
-	        } else if (e.error == DropboxServerException._507_INSUFFICIENT_STORAGE) {
-	            // user is over quota
-	        } else {
-	            // Something else
-	        }
-	        // This gets the Dropbox error, translated into the user's language
-	        mErrorMsg = e.body.userError;
-	        if (mErrorMsg == null) {
-	            mErrorMsg = e.body.error;
-	        }
-	    } catch (DropboxIOException e) {
-	        // Happens all the time, probably want to retry automatically.
-	        mErrorMsg = "Network error.  Try again.";
-	    } catch (DropboxParseException e) {
-	        // Probably due to Dropbox server restarting, should retry
-	        mErrorMsg = "Dropbox error.  Try again.";
-	    } catch (DropboxException e) {
-	        // Unknown error
-	        mErrorMsg = "Unknown error.  Try again.";
-	    } catch (FileNotFoundException e) {
-	    }
-	    return false;
-	  
-	}
-
-	@Override
-	protected void onProgressUpdate(Long... progress) {
-		mDialog.setMessage("Downloading file " + (mCurrentFileIndex + 1) + " / "
-	            + mFilesToDownload.length+"\n"+path+" from Dropbox");
-	    int percent = (int) (100.0 * (double) progress[0] / indBytes + 0.5);
-	    Log.i("pro", percent + "    " + progress[0] + "/" + indBytes);
-	    mDialog.setProgress(percent);
-	}
-
-	@Override
-	protected void onPostExecute(Boolean result) {
-	    mDialog.dismiss();
-	    if (result) {
-	        showToast("Download successfull");
-	        new restore().execute();
-	        return;
-	    } else {
-	        showToast(mErrorMsg);
-	        return;
-	    }
-	}
-
-	private void showToast(String msg) {
-	    Toast error = Toast.makeText(mContext, msg, Toast.LENGTH_LONG);
-	    error.show();
-	}
-}
     String secret = "letshopeitdoesn'tbrick-";
     private static String convertToHex(byte[] data) {
         StringBuilder buf = new StringBuilder();
@@ -976,4 +575,10 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
     	alertDialog.show();
 
     	}
+	public static ProgressDialog getmProgressDialog() {
+		return mProgressDialog;
+	}
+	public void setmProgressDialog(ProgressDialog mProgressDialog) {
+		this.mProgressDialog = mProgressDialog;
+	}
 }

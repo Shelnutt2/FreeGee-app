@@ -35,7 +35,7 @@ import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
 
-import edu.shell.freegee.FreeGee.DBDownload;
+
 import edu.shell.freegee.install.DownloadFileAsync;
 import edu.shell.freegee.install.DownloadSBLFileAsync;
 import edu.shell.freegee.R;

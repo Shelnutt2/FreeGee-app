@@ -58,7 +58,6 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -67,7 +66,6 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 import edu.shell.freegee.R;
-import edu.shell.freegee.utilities.DBUpload;
 
 
 @SuppressLint("SdCardPath")
@@ -118,8 +116,7 @@ public class install extends Activity {
         
         String command;
         
-    isSpecial = isSpecial();//FreeGee.isSpecial;
-	// read the property text  file
+    // read the property text  file
 	File file = new File("/system/build.prop");
 	FileInputStream fis = null;
 	try {
@@ -173,11 +170,18 @@ public class install extends Activity {
 		e.printStackTrace();
 	}
 	device = prop.getProperty("ro.product.name");
+	if (device == null)
+		device = "";
 	version = prop.getProperty("ro.lge.swversion");
+	if (version == null)
+		version = "";
 	aversion = prop.getProperty("ro.build.version.release");
+	if (aversion == null)
+		aversion = "";
 	ListView lv = (ListView) findViewById(R.id.install_list_view);
     String[] lStr = new String[]{"Device Name: "+device,"Software Version: "+version};
     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
+    isSpecial = isSpecial();//FreeGee.isSpecial;
 
     if(device.contains("geefhd")){
 		AlertDialog alertDialog;
@@ -980,7 +984,7 @@ public class install extends Activity {
     			
                 err=-10;
     			}
-    	if(isSpecial && err != -10){
+    	if(isSpecial && err != -10 && !device.contains("geefhd")){
     		
     	
         	if (err == 0){
