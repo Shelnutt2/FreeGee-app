@@ -117,8 +117,6 @@ public class install extends Activity {
         prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
         
         String command;
-        
-    isSpecial = isSpecial();//FreeGee.isSpecial;
 	// read the property text  file
 	File file = new File("/system/build.prop");
 	FileInputStream fis = null;
@@ -178,7 +176,7 @@ public class install extends Activity {
 	ListView lv = (ListView) findViewById(R.id.install_list_view);
     String[] lStr = new String[]{"Device Name: "+device,"Software Version: "+version};
     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
-
+    isSpecial = isSpecial();//FreeGee.isSpecial;
     if(device.contains("geefhd") || device.contains("g2")){
 		AlertDialog alertDialog;
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(install.this);
