@@ -423,7 +423,7 @@ class restore extends AsyncTask<String, String, String> {
     		File[] fa = {boot,recovery,aboot,sbl1,sbl2,sbl3};
     		Collections.addAll(fal,fa);
     	}
-    	else if(device.contains("geefhd")){
+    	else if(device.contains("geefhd") || !device.contains("g2")){
     		File[] fa = {boot,recovery};
     		Collections.addAll(fal,fa);
     	}
@@ -489,7 +489,7 @@ class restore extends AsyncTask<String, String, String> {
 						}
 				  
 			  }
-			  else if(device.contains("geefhd"))
+			  else if(device.contains("geefhd") || !device.contains("g2"))
 				  err=1;
 			  else{
 				  err=-1;
@@ -540,7 +540,7 @@ class restore extends AsyncTask<String, String, String> {
 						}
 				  
 			  }
-			  else if(!device.contains("geefhd"))
+			  else if(!device.contains("geefhd") || !device.contains("g2"))
 				  err=-2;
 			  
 			  if(recovery.exists()){
@@ -588,7 +588,7 @@ class restore extends AsyncTask<String, String, String> {
 						}
 				  
 			  }
-			  else if(device.contains("geefhd"))
+			  else if(device.contains("geefhd") || !device.contains("g2"))
 				  err=3;
 			  else {
 				  err=-3;
