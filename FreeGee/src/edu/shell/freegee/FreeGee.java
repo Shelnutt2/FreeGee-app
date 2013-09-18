@@ -32,8 +32,6 @@ import com.stericson.RootTools.exceptions.RootDeniedException;
 import com.stericson.RootTools.execution.CommandCapture;
 
 import edu.shell.freegee.R;
-import edu.shell.freegee.install.DownloadFileAsync;
-import edu.shell.freegee.install.DownloadSBLFileAsync;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -44,7 +42,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.LightingColorFilter;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -61,7 +58,6 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
-import android.widget.Spinner;
 import android.widget.Toast;
 import android.graphics.PorterDuff;
 
