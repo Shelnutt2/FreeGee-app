@@ -39,6 +39,7 @@ import com.dropbox.client2.exception.DropboxUnlinkedException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
+import com.stericson.RootTools.RootTools;
 
 import edu.shell.freegee.R;
 import edu.shell.freegee.utilities.DBDownload;
@@ -101,6 +102,11 @@ public class FreeGee extends Activity {
 		  if(!freegeef.exists()){
 			  freegeef.mkdirs();
 		  }
+			if (!RootTools.isAccessGiven()) {
+				alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+			}
+			if(getBatteryLevel() < 15.0)
+				alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
         startBtn = (Button)findViewById(R.id.startBtn);
         startBtn.setOnClickListener(new OnClickListener(){
             public void onClick(View v) {
@@ -112,6 +118,7 @@ public class FreeGee extends Activity {
             	if(batteryPct < 0.10){
             		alertbuilder("Battery Too Low","Your battery is too low. For safety please charge it before attempting unlock","ok",1);
             	}
+            	
             	else{
             		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(FreeGee.this);
             	    
@@ -204,6 +211,20 @@ public class FreeGee extends Activity {
             
         });
     }
+    
+    public float getBatteryLevel() {
+        Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        // Error checking that probably isn't needed but I added just in case.
+        if(level == -1 || scale == -1) {
+            return 50.0f;
+        }
+
+        return ((float)level / (float)scale) * 100.0f; 
+    }
+    
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
