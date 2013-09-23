@@ -11,6 +11,8 @@ import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
+import com.google.ads.AdRequest;
+import com.google.ads.AdView;
 
 import edu.shell.freegee.R;
 import android.app.Activity;
@@ -65,6 +67,11 @@ protected void onResume() {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settings);
+        if(FreeGee.getfree()){
+        AdView adView = (AdView)this.findViewById(R.id.adView_settings);
+        adView.loadAd(new AdRequest());
+        }
+        
         dbcheck = (CheckBox)findViewById(R.id.DropBoxCheckBox);
     	final SharedPreferences prefs = getApplicationContext().getSharedPreferences("FreeGee",MODE_PRIVATE);
         if(prefs.contains("dropbox_key")){

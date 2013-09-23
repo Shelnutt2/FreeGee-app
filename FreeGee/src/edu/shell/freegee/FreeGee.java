@@ -39,6 +39,8 @@ import com.dropbox.client2.exception.DropboxUnlinkedException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
+import com.google.ads.AdRequest;
+import com.google.ads.AdView;
 import com.stericson.RootTools.RootTools;
 
 import edu.shell.freegee.R;
@@ -65,6 +67,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 @SuppressLint("SdCardPath")
@@ -81,11 +84,17 @@ public class FreeGee extends Activity {
 
     private ProgressDialog mProgressDialog;
     public static boolean isSpecial;
+    
+    private AdView adView;
+    private static boolean free = true;
 
     DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     Date date = new Date();
     private String now = dateFormat.format(date);
     
+    public static boolean getfree(){
+    	return free;
+    }
     @Override
     public void onResume(){
     	super.onResume();
@@ -98,6 +107,15 @@ public class FreeGee extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_free_gee);
+        
+        if(getfree()){
+        AdView adView = (AdView)this.findViewById(R.id.adView);
+        adView.loadAd(new AdRequest());
+
+        AdView adView2 = (AdView)this.findViewById(R.id.adView2);
+        adView2.loadAd(new AdRequest());
+        }
+        
     	File freegeef=new File("/sdcard/freegee");
 		  if(!freegeef.exists()){
 			  freegeef.mkdirs();
@@ -127,7 +145,7 @@ public class FreeGee extends Activity {
 
                 	// set dialog message
                 	alertDialogBuilder
-                	.setMessage("By Pressing Okay you are acknowledging that you are voiding you are voiding you warrenty and no one from team codefire can be held responsible.")
+                	.setMessage("By Pressing Okay you are acknowledging that you are voiding you warrenty and no one from team codefire can be held responsible.")
                 	.setCancelable(false)
                 	.setPositiveButton("I agree",new DialogInterface.OnClickListener() {
                 	public void onClick(DialogInterface dialog,int id) {

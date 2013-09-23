@@ -34,6 +34,8 @@ import com.dropbox.client2.exception.DropboxUnlinkedException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
+import com.google.ads.AdRequest;
+import com.google.ads.AdView;
 
 import edu.shell.freegee.FreeGee.DBDownload;
 import edu.shell.freegee.install.DownloadFileAsync;
@@ -156,6 +158,11 @@ public class utilities extends Activity{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_utilities);
+        
+        if(FreeGee.getfree()){
+        AdView adView = (AdView)this.findViewById(R.id.adView_util);
+        adView.loadAd(new AdRequest());
+        }
         
         DbBtn = (Button)findViewById(R.id.DbBtn);
         SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);

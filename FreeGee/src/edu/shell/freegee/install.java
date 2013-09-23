@@ -45,6 +45,8 @@ import com.dropbox.client2.exception.DropboxUnlinkedException;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
+import com.google.ads.AdRequest;
+import com.google.ads.AdView;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -113,6 +115,11 @@ public class install extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_install);
+        
+        if(FreeGee.getfree()){
+        AdView adView = (AdView)this.findViewById(R.id.adView_install);
+        adView.loadAd(new AdRequest());
+        }
         
         prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
         
@@ -1740,7 +1747,7 @@ public class install extends Activity {
 	    	adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    	// Apply the adapter to the spinner
 	    	spinner.setAdapter(adapter);
-	    	if(BSmap.containsKey(version.toUpperCase(Locale.US))){
+	    	if(BSmap != null && BSmap.containsKey(version.toUpperCase(Locale.US))){
 	    	   boot = BSmap.get(version.toUpperCase(Locale.US))[0];
 	    	   boot_md5sum = BSmap.get(version.toUpperCase(Locale.US))[1];
 

@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/lib/com.google.ads"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
+     <com.google.ads.AdView android:id="@+id/adView"
+                         android:layout_width="wrap_content"
+                         android:layout_height="wrap_content"
+                         ads:adUnitId="ca-app-pub-3002935119119150/3959509489"
+                         ads:adSize="SMART_BANNER"
+                         ads:testDevices="TEST_EMULATOR, TEST_DEVICE_ID"
+                         ads:loadAdOnCreate="false"/>
+    
 
     <Button
         android:id="@+id/restoreBtn"
@@ -31,5 +40,17 @@
         android:layout_alignParentTop="true"
         android:layout_marginTop="65dp"
         android:text="@string/BtnText" />
+
+     <com.google.ads.AdView
+         android:id="@+id/adView2"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:layout_alignParentBottom="true"
+         android:layout_alignParentLeft="true"
+         ads:adSize="SMART_BANNER"
+         ads:adUnitId="ca-app-pub-3002935119119150/3959509489"
+         ads:loadAdOnCreate="false"
+         ads:testDevices="TEST_EMULATOR, TEST_DEVICE_ID" >
+     </com.google.ads.AdView>
 
 </RelativeLayout>

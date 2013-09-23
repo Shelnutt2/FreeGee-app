@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:ads="http://schemas.android.com/apk/lib/com.google.ads"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
@@ -16,5 +17,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/DropBoxToggle" />
+    
+         <com.google.ads.AdView
+         android:id="@+id/adView_settings"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         ads:adSize="SMART_BANNER"
+         ads:adUnitId="ca-app-pub-3002935119119150/3959509489"
+         ads:loadAdOnCreate="false"
+         ads:testDevices="TEST_EMULATOR, TEST_DEVICE_ID" >
+
+     </com.google.ads.AdView>
 
 </LinearLayout>
