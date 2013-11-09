@@ -86,7 +86,7 @@ public class FreeGee extends Activity {
     public static boolean isSpecial;
     
     private AdView adView;
-    private static boolean free = true;
+    private static boolean free = false;
 
     DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     Date date = new Date();
@@ -949,44 +949,19 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
     	    
     	// set title
     	alertDialogBuilder.setTitle("Special Unlock");
-    	final EditText input = new EditText(this); 
-
     	// set dialog message
     	alertDialogBuilder
-    	.setMessage("This is the special SBL unlock need for a select few devices. Due to the hard brick risk, please enter the code you were given.")
+    	.setMessage("This is the mako sbl stack for optimus g. There is a slight hard brick risk, but no different than standard jb unlock for optimus g.")
     	.setCancelable(true)
-    	.setView(input)
     	.setPositiveButton("ok",new DialogInterface.OnClickListener() {
     	public void onClick(DialogInterface dialog,int id) {
-    		String value = input.getText().toString();
-    		try {
-				if(value.equals(computeSum(secret+now).substring(0, Math.min(value.length(), 5)))){
-					SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
-					SharedPreferences.Editor editor = prefs.edit();
-					editor.putInt("Special", 3);
-					editor.putInt("Special-always", 3);
-					editor.commit();
-					alertbuilder("Success!","Sbl unlock now enabled!","Ok",0);
-				}
-				else{
-					alertbuilder("Error!","Wrong code entered, sbl unlock not enabled.","Ok",0);
-				}
-				sblopen = false;
-				return;
-			} catch (NoSuchAlgorithmException e) {
-				alertbuilder("Error!","Failed to sha1!","Boo!",0);
-				e.printStackTrace();
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
+			SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
+			SharedPreferences.Editor editor = prefs.edit();
+			editor.putInt("Special", 3);
+			editor.putInt("Special-always", 3);
+			editor.commit();
+			alertbuilder("Success!","Sbl unlock now enabled!","Ok",0);
     	}
-    	})
-    	.setNeutralButton("Get Unlock Code", new DialogInterface.OnClickListener() {
-    		public void onClick(DialogInterface dialog,int id) {
-    		    Uri uriUrl = Uri.parse("http://shelnutt2.codefi.re/freegee/index.php");  
-    		    Intent launchBrowser = new Intent(Intent.ACTION_VIEW, uriUrl);
-    		    startActivity(launchBrowser); 
-    		}
     	})
         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 

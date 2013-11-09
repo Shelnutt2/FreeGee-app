@@ -306,7 +306,9 @@ public class utilities extends Activity{
                 		File efs1=new File("/sdcard/freegee/m9kefs1.img");
                 		File efs2=new File("/sdcard/freegee/m9kefs2.img");
                 		File efs3=new File("/sdcard/freegee/m9kefs3.img");
-                		if(efs1.exists() || efs2.exists() || efs3.exists()){
+                		File modemst1=new File("/sdcard/freegee/modemst1.img");
+                		File modemst2=new File("/sdcard/freegee/modemst2.img");
+                		if(efs1.exists() || efs2.exists() || efs3.exists() || modemst1.exists() || modemst2.exists()){
                 			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(utilities.this);
                     	    
                         	// set title
@@ -979,6 +981,7 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
 			  if(!freegeef.exists()){
 				  freegeef.mkdirs();
 			  }
+			  if(!device.contains("g2")){
               File efs1=new File("/sdcard/freegee/m9kefs1-backup.img");
  			  if(!efs1.exists() || override == true){
  		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1 of=/sdcard/freegee/m9kefs1-backup.img";
@@ -1018,6 +1021,36 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
 						e.printStackTrace();
 					}
 			  }
+			  }
+			  else{
+				  File modemst1=new File("/sdcard/freegee/modemst1-backup.img");
+	 			  if(!modemst1.exists() || override == true){
+	 		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/modemst1 of=/sdcard/freegee/modemst1-backup.img";
+	 		        	try {
+	 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+	 					} catch (InterruptedException e) {
+	 						
+	 						e.printStackTrace();
+	 					} catch (IOException e) {
+	 						
+	 						e.printStackTrace();
+	 					}
+	 			  }
+	 	          File modemst2=new File("/sdcard/freegee/modemst2-backup.img");
+	 			  if(!modemst2.exists() || override == true){
+			        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/modemst2 of=/sdcard/freegee/modemst2-backup.img";
+			        	try {
+							err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+						} catch (InterruptedException e) {
+							
+							e.printStackTrace();
+						} catch (IOException e) {
+							
+							e.printStackTrace();
+						}
+				  }
+				  
+			  }
 			return null;
         }
         protected void onProgressUpdate(String... progress) {
@@ -1052,6 +1085,8 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
 			  if(!freegeef.exists()){
 				  freegeef.mkdirs();
 			  }
+			  
+			if(!device.contains("g2")){
         	File efs1=new File("/sdcard/freegee/m9kefs1-backup.img");
         	File efs2=new File("/sdcard/freegee/m9kefs3-backup.img");
         	File efs3=new File("/sdcard/freegee/m9kefs2-backup.img");
@@ -1215,6 +1250,78 @@ public class DBDownload extends AsyncTask<Void, Long, Boolean> {
  			  else {
  				  err = -3;
  			  }
+			}
+			
+			else{
+	        	File modemst1=new File("/sdcard/freegee/modemst1-backup.img");
+	        	File modemst2=new File("/sdcard/freegee/modemst2-backup.img");
+	       		File[] fa = {modemst1,modemst2};
+	       		Collections.addAll(fal,fa);
+	        	for(int i=0;i<fal.size();i++){
+	        		if(!fal.get(i).exists()){
+	        			fal2.add(fal.get(i));
+	        		}
+	        	}
+	    		SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
+	    		if(prefs.contains("dropbox_key")){
+	    		  if(fal2.size() > 0){
+	    			db = true;
+	    			return null;
+	    	      }
+	    		}
+	    		if(modemst1.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/modemst1";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+ 		        	command = "dd if=/sdcard/freegee/modemst1-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/modemst1";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						
+ 						e.printStackTrace();
+ 					}
+ 			  }
+ 			  else{
+ 				  err=-1;
+ 			  }
+ 			  
+ 			  if(modemst2.exists()){
+		        	command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/modemst2";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+		        	command = "dd if=/sdcard/freegee/modemst2-backup.img of=/dev/block/platform/msm_sdcc.1/by-name/modemst2";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+			  }
+ 			  else{
+ 				  err=-2;
+ 			  }
+			}
+			
 			return null;
         }
         protected void onProgressUpdate(String... progress) {

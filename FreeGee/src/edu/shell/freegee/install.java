@@ -299,7 +299,7 @@ public class install extends Activity {
 	    	    	// show it
 	    	    	alertDialog.show();
           		}
-          		else if(device.contains("geefhd") || !device.contains("g2")){
+          		else if(device.contains("geefhd") || device.contains("g2")){
           			if(disable_lge_security){
 	                	step=2;
 	            		saveloc="/sdcard/freegee/working/boot-freegee.img";
@@ -605,8 +605,7 @@ public class install extends Activity {
 				try {
 					fis = new FileInputStream("/sdcard/freegee/working/"+f+"-freegee.img");
 				} catch (FileNotFoundException e1) {
-					
-					e1.printStackTrace();
+					alertbuilder("File not found!","Could not find "+f+" to check md5sum's on ","Ok",0);
 				}
     		    byte[] dataBytes = new byte[1024];
     		    int nread = 0; 
@@ -615,8 +614,7 @@ public class install extends Activity {
     				  md.update(dataBytes, 0, nread);
     				}
     			} catch (IOException e) {
-    				
-    				e.printStackTrace();
+    				alertbuilder("Could not open!","Could not open "+f+" to check md5sum's on ","Ok",0);
     			};
     		    byte[] mdbytes = md.digest();
 
@@ -706,6 +704,7 @@ public class install extends Activity {
 			  if(!freegeef.exists()){
 				  freegeef.mkdirs();
 			  }
+			  if(!device.contains("g2")){
  		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/m9kefs1 of=/sdcard/freegee/m9kefs1-"+df+"-backup.img";
  		        	try {
  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -781,8 +780,59 @@ public class install extends Activity {
 						e.printStackTrace();
 					}
 	 			 }
+			  }
+			  else{
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/modemst1 of=/sdcard/freegee/modemst1-"+df+"-backup.img";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						
+ 						e.printStackTrace();
+ 					}
+ 		        	
+ 			  if(err==0){
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/modemst2 of=/sdcard/freegee/modemst2-"+df+"-backup.img";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+ 			  }
+		      	if(err==0){
+		         	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/modemst1 of=/sdcard/freegee/modemst1-backup.img";
+ 		        	try {
+ 						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+ 					} catch (InterruptedException e) {
+ 						
+ 						e.printStackTrace();
+ 					} catch (IOException e) {
+ 						
+ 						e.printStackTrace();
+ 					}
+	 			 }
 		      	
-		      	if(err==0 && !device.contains("geefhd") && !device.contains("g2")){
+		      	if(err==0){
+		        	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/modemst2 of=/sdcard/freegee/modemst2-backup.img";
+		        	try {
+						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
+					} catch (InterruptedException e) {
+						
+						e.printStackTrace();
+					} catch (IOException e) {
+						
+						e.printStackTrace();
+					}
+	 			 }
+	 			 
+			  }
+		      	if(err==0 && (!device.contains("geefhd") || !device.contains("g2"))){
 		         	command = "dd if=/dev/block/platform/msm_sdcc.1/by-name/aboot of=/sdcard/freegee/aboot-backup.img";
  		        	try {
  						err = Runtime.getRuntime().exec(new String[] { "su", "-c", command }).waitFor();
@@ -932,7 +982,7 @@ public class install extends Activity {
 				   }
     		   }
       	if(err==0){
-      		if(disable_lge_security || !device.contains("geefhd") || !device.contains("g2")){
+      		if(disable_lge_security || (!device.contains("geefhd") && !device.contains("g2"))){
       		   publishProgress(1);
    		       command = "dd if=/dev/zero of=/dev/block/platform/msm_sdcc.1/by-name/boot";
         	   try {
@@ -1083,7 +1133,7 @@ public class install extends Activity {
        protected void onPostExecute(String unused) {
            dismissDialog(DIALOG_INSTALL_PROGRESS);
            if(err==-10){
-        	   alertbuilder("Error!","Error encountared attempting to restore backups","Ok",0);
+        	   alertbuilder("Error!","Error encountered attempting to restore backups","Ok",0);
         	   new restore().execute();
         	   return;
            }
@@ -1717,14 +1767,14 @@ public class install extends Activity {
 	    	            }
 	    	          }
 	    			 }
-	    			else if((device.contains("geefhd") || !device.contains("g2") ) && disable_lge_security){
+	    			else if((device.contains("geefhd") || device.contains("g2")) && disable_lge_security){
 	    				alertbuilderu("Sorry!","Sorry your sw version is not currently supported for disabling lge security, will attempt to upload boot image for support.","Ok",0);
 	    			}
-	    			else if(!device.contains("geefhd") || !device.contains("g2")){
+	    			else if(!device.contains("geefhd") && !device.contains("g2")){
 	    				alertbuilderu("Sorry!","Sorry your varient is not currently supported, will attempt to upload boot image for support.","Ok",0);
 	    			 }
 	    			}
-	    			else if(device.contains("geefhd") ||  !device.contains("g2")){
+	    			else if(device.contains("geefhd") ||  device.contains("g2")){
 	    				alertbuilder("Sorry!","Sorry your varient is not currently supported","Ok",1);
 	    			}
 	    			else{
@@ -1736,7 +1786,7 @@ public class install extends Activity {
     			else if(!device.contains("geefhd") || !device.contains("g2")){
     				alertbuilderu("Sorry!","Sorry your varient is not currently supported, will attempt to upload boot image for support.","Ok",0);
     			}
-    			else if(device.contains("geefhd") || !device.contains("g2")){
+    			else if(device.contains("geefhd") || device.contains("g2")){
     				alertbuilder("Sorry!","Sorry your varient is not currently supported","Ok",1);
     			}
 	    	
@@ -1747,14 +1797,14 @@ public class install extends Activity {
 	    	adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    	// Apply the adapter to the spinner
 	    	spinner.setAdapter(adapter);
-	    	if(BSmap != null && BSmap.containsKey(version.toUpperCase(Locale.US))){
+	    	if(!BSmap.isEmpty() && BSmap.containsKey(version.toUpperCase(Locale.US))){
 	    	   boot = BSmap.get(version.toUpperCase(Locale.US))[0];
 	    	   boot_md5sum = BSmap.get(version.toUpperCase(Locale.US))[1];
 
 	    	}
-	    	else if(!device.contains("geefhd") || !device.contains("g2"))
+	    	else if(!device.contains("geefhd") && !device.contains("g2"))
     		    alertbuilderu("Sorry!","Sorry your software version is not currently supported, will attempt to upload boot image for support.","Ok",0);
-	    	else if((device.contains("geefhd") || !device.contains("g2")) && disable_lge_security)
+	    	else if((device.contains("geefhd") || device.contains("g2")) && disable_lge_security)
 				alertbuilderu("Sorry!","Sorry your sw version is not currently supported for disabling lge security, will attempt to upload boot image for support. You can choose to not disable lge security and install only a recovery while you wait for support to be added.","Ok",0);
 	    } catch (Exception e) {
 		e.printStackTrace();
