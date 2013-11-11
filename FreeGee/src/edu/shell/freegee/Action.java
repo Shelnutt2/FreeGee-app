@@ -1,15 +1,35 @@
 package edu.shell.freegee;
 
+
 import java.util.ArrayList;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+
 public class Action {
+	@Element
 	private String name;
+	@Element
     private String version;
+	@Element
     private String zipfile;
+	@Element
     private String zipfilelocation;
+	@Element
     private String md5sum;
+    @ElementList(required=false)
     private ArrayList<Action> dependencies;
 
+    public Action(String name, String version, String zipfile, String zipfilelocation, String md5sum){
+    	this.name = name;
+    	this.version = version;
+    	this.zipfile = zipfile;
+    	this.zipfilelocation = zipfilelocation;
+    	this.md5sum = md5sum;
+    }
+    
+    public Action(){}
+    
     public String getName(){
     	return name;
     }

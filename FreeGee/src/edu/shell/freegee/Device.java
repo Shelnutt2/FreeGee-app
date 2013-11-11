@@ -1,23 +1,43 @@
 package edu.shell.freegee;
 
+
 import java.util.ArrayList;
 
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
 
+@Root
 public class Device {
-
+	@Element
     private String name;
-    private String carrier;
+	@ElementList
+    private ArrayList<String> carrier;
+	@Element
     private String model;
-    private String firmware;
+	@ElementList
+    private ArrayList<String> firmware;
+	@Element
     private String prop_id;
+    @ElementList
     private ArrayList< Action > actions;
     
+    public Device(String name, ArrayList<String> carrier, String model, ArrayList<String> firmware, String prop_id, ArrayList< Action > actions){
+    	this.name = name;
+    	this.carrier = carrier;
+    	this.model = model;
+    	this.firmware = firmware;
+    	this.prop_id = prop_id;
+    	this.actions = actions;
+    }
    
-    public String getName(){
+    public Device() {}
+
+	public String getName(){
     	return name;
     }
     
-    public String getCarrier(){
+    public ArrayList<String> getCarrier(){
     	return carrier;
     }
     
@@ -25,7 +45,7 @@ public class Device {
     	return model;
     }
     
-    public String getFirmware(){
+    public ArrayList<String> getFirmware(){
     	return firmware;
     }
     
@@ -41,7 +61,7 @@ public class Device {
     	this.name = name;
     }
     
-    public void setCarrier(String carrier){
+    public void setCarrier(ArrayList<String> carrier){
     	this.carrier = carrier;
     }
     
@@ -49,7 +69,7 @@ public class Device {
     	this.model = model;
     }
     
-    public void setFirmware(String firmware){
+    public void setFirmware(ArrayList<String> firmware){
     	this.firmware = firmware;
     }
     
