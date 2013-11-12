@@ -32,7 +32,7 @@
 
 #define ASSUMED_UPDATE_BINARY_NAME  "META-INF/com/google/android/update-binary"
 #define ASSUMED_UPDATE_SCRIPT_NAME  "META-INF/com/google/android/update-script"
-#define PUBLIC_KEYS_FILE "/sdcard/freegee/keys"
+#define PUBLIC_KEYS_FILE "/data/data/edu.shell.freegee/keys"
 
 // The update binary ask us to install a firmware file on reboot.  Set
 // that up.  Takes ownership of type and filename.
