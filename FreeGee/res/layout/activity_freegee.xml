@@ -6,7 +6,5 @@
     android:layout_height="fill_parent"
     android:columnCount="2"
     android:numColumns="auto_fit"
-    android:orientation="vertical"
-    android:verticalSpacing="35dp" >
-
+    android:orientation="vertical">
 </GridView>

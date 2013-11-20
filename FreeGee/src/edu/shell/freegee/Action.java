@@ -8,6 +8,10 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
 public class Action  implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 628757196911001590L;
 	@Element
 	private String name;
 	@Element

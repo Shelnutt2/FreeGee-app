@@ -1078,7 +1078,8 @@ public class install extends Activity {
                 }
        }
 
-       @Override
+       @SuppressWarnings("deprecation")
+	@Override
        protected void onPostExecute(String unused) {
            dismissDialog(DIALOG_INSTALL_PROGRESS);
            if(err==-10){

@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.Properties;
 
 import com.dropbox.client2.DropboxAPI;
-import com.dropbox.client2.DropboxAPI.DropboxFileInfo;
 import com.dropbox.client2.ProgressListener;
 import com.dropbox.client2.DropboxAPI.UploadRequest;
 import com.dropbox.client2.android.AndroidAuthSession;
@@ -36,8 +35,6 @@ import com.dropbox.client2.session.AppKeyPair;
 import com.dropbox.client2.session.Session.AccessType;
 
 
-import edu.shell.freegee.install.DownloadFileAsync;
-import edu.shell.freegee.install.DownloadSBLFileAsync;
 import edu.shell.freegee.R;
 
 import android.annotation.SuppressLint;
@@ -60,7 +57,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 @SuppressLint("SdCardPath")

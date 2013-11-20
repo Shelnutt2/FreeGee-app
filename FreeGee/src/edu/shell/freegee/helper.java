@@ -9,15 +9,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeoutException;
 
-import android.content.Intent;
-import android.os.Environment;
+import android.annotation.SuppressLint;
 import android.util.Log;
-import android.widget.Toast;
-
 import com.octo.android.robospice.JacksonSpringAndroidSpiceService;
 import com.octo.android.robospice.SpiceManager;
 import com.octo.android.robospice.exception.RequestCancelledException;
-import com.octo.android.robospice.notification.SpiceNotificationService;
 import com.octo.android.robospice.persistence.DurationInMillis;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
@@ -28,6 +24,7 @@ import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootDeniedException;
 import com.stericson.RootTools.execution.CommandCapture;
 
+@SuppressLint("SdCardPath")
 public class helper {
 	
     private SpiceManager spiceManager = new SpiceManager(JacksonSpringAndroidSpiceService.class);

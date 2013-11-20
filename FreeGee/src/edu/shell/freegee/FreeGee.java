@@ -5,21 +5,14 @@
 
 package edu.shell.freegee;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,11 +28,6 @@ import org.simpleframework.xml.core.Persister;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;*/
 
-import com.octo.android.robospice.JacksonSpringAndroidSpiceService;
-import com.octo.android.robospice.SpiceManager;
-import com.octo.android.robospice.persistence.DurationInMillis;
-import com.octo.android.robospice.persistence.exception.SpiceException;
-import com.octo.android.robospice.request.listener.RequestListener;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootDeniedException;
 import com.stericson.RootTools.execution.Command;
@@ -51,22 +39,14 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DownloadManager;
-import android.app.DownloadManager.Request;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Parcelable;
-import android.provider.SyncStateContract.Constants;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -76,32 +56,20 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Toast;
 import android.graphics.PorterDuff;
 
+@SuppressLint("SdCardPath")
 public class FreeGee extends Activity implements OnClickListener {
    
-    public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
-    public static final int DIALOG_INSTALL_PROGRESS = 1;
-    public static final int DIALOG_RESTORE_PROGRESS = 2;
-    public static final int DIALOG_BACKUP_PROGRESS = 3;
-    private Button startBtn;
-    private Button restoreBtn;
-    private Button utilBtn;
-    private boolean sblopen = false;
+    public static final int DIALOG_ACTION_PROGRESS = 0;
+
     private Device myDevice;
-    private String saveloc;
-    
     private String DEVICE_XML =   "/sdcard/" +"freegee/devices.xml";
-    private String DEVICES_SERVER = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/devices.xml";
-    
     private static ProgressDialog mProgressDialog;
     public static boolean isSpecial;
     private ArrayList<Object> mButtons = new ArrayList<Object>();
-    private static final String JSON_CACHE_KEY = "freegee_json";
-
     private ArrayList<Device> DeviceList;
     
     DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
@@ -477,26 +445,9 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 
-		
-		/*if(!spiceManager.isStarted())
-           spiceManager.start( this );*/
         getDevices();
        
         checkForDownloadCompleted(getIntent());
-        
-/*		myDevice = new Device();
-		myDevice.setName("LG Optimus G");
-		ArrayList<Action> actions = new ArrayList<Action>();
-		Action unlock = new Action();
-		unlock.setName("unlock");
-		actions.add(unlock);
-		
-		Action recovery = new Action();
-		recovery.setName("recovery");
-		actions.add(recovery);
-		
-		myDevice.setActions(actions);
-		updateGridView(myDevice);*/
 		GridView gridView = (GridView) findViewById(R.id.main_gridview);
 		gridView.setAdapter(new ButtonAdapter(mButtons));
     }
@@ -506,16 +457,27 @@ public class FreeGee extends Activity implements OnClickListener {
         for(int i = 0; i < device.getActions().size();i++){
     		Button cb = new Button(this);
   		    cb.setText(device.getActions().get(i).getName());
-  		    if(i % 2 == 1){
-  		      cb.getBackground().setColorFilter(Color.parseColor("#f47321"), PorterDuff.Mode.DARKEN);
-  		      cb.setTextColor(Color.parseColor("#005030"));
-            }
-  		    else{
+  		    
+  		    if(i % 4 == 0){
   		      cb.getBackground().setColorFilter(Color.parseColor("#005030"), PorterDuff.Mode.DARKEN);
   		      cb.setTextColor(Color.parseColor("#f47321"));
             }
+  		    else if(i % 4 == 1){
+    		      cb.getBackground().setColorFilter(Color.parseColor("#f47321"), PorterDuff.Mode.DARKEN);
+    		      cb.setTextColor(Color.parseColor("#005030"));
+              }
+  		    else if(i % 4 == 2){
+    		      cb.getBackground().setColorFilter(Color.parseColor("#f47321"), PorterDuff.Mode.DARKEN);
+    		      cb.setTextColor(Color.parseColor("#005030"));
+              }
+  		    else if(i % 4 == 3){
+    		      cb.getBackground().setColorFilter(Color.parseColor("#005030"), PorterDuff.Mode.DARKEN);
+    		      cb.setTextColor(Color.parseColor("#f47321"));
+              }
   		    cb.setTypeface(null, Typeface.BOLD);
-  		    cb.setPadding(100, 100, 100, 100);
+  		    cb.setMinHeight(333);
+  		    cb.setMinWidth(100);
+  		    //cb.setPadding(100, 100, 100, 100);
   		    cb.setOnClickListener(this);
   		    cb.setId(i);
   		    mButtons.add(cb);
@@ -535,31 +497,6 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Could not unserialize devices from xml","Ok",1);
 		}
     }
-    /*public void unMarshDevices() {
-    	JAXBContext jcontext = null;
-		try {
-			jcontext = JAXBContext.newInstance(FreeGee.class);
-		} catch (JAXBException e) {
-			Log.e(LOG_TAG,"Could not get JAXB context");
-			alertbuilder("Error!","Could not get JAXB context","Ok",1);
-		}
-    	Unmarshaller um = null;
-		try {
-			um = jcontext.createUnmarshaller();
-		} catch (JAXBException e) {
-			Log.e(LOG_TAG,"Could not create unmarshaller for xml reading");
-			alertbuilder("Error!","Could not create unmarshaller for xml reading ","Ok",1);
-		}
-        try {
-			DeviceList = (ArrayList<Device>) um.unmarshal(new FileReader(DEVICE_XML));
-		} catch (FileNotFoundException e) {
-			Log.e(LOG_TAG,"Could open Devices file");
-			alertbuilder("Error!","Could not open Devices.xml","Ok",1);
-		} catch (JAXBException e) {
-			Log.e(LOG_TAG,"Could not get JAXB");
-			alertbuilder("Error!","Could not get JAXB","Ok",1);
-		}
-    }*/
     
     @Override
     public void onClick(View v) {
@@ -580,6 +517,10 @@ public class FreeGee extends Activity implements OnClickListener {
     	    	public void onClick(DialogInterface dialog,int id) {
     	    		 mainAction = a;
     	    	     processAction(a);
+    	    	     mProgressDialog = new ProgressDialog(FreeGee.this);      
+    	    	     mProgressDialog.setIndeterminate(true);
+    	    	     mProgressDialog.setMessage("Performing action " + a.getName() + " ...");
+    	    	     mProgressDialog.show();
     	    	}
     	    	})
     	    	.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
@@ -635,34 +576,14 @@ public class FreeGee extends Activity implements OnClickListener {
         }
        }
     
-   // protected SpiceManager spiceManager = new SpiceManager( JacksonSpringAndroidSpiceService.class );
-    
-/*    private class FreegeeRequestListener implements RequestListener< Device >{
-
-        @Override
-        public void onRequestFailure( SpiceException spiceException ) {
-          //update your UI
-        }
-
-        @Override
-        public void onRequestSuccess( Device device ) {
-        	updateGridView(device);
-        }
-    }*/
-
-
     @Override
     protected void onStart() {
         super.onStart();
         mMainActivityActive = true;
-/*		if(!spiceManager.isStarted())
-	        spiceManager.start( this );*/
     }
 
     @Override
     protected void onStop() {
-/*    	if(spiceManager.isStarted())
-           spiceManager.shouldStop();*/
         mMainActivityActive = false;
         super.onStop();
     }
@@ -677,10 +598,6 @@ public class FreeGee extends Activity implements OnClickListener {
         }*/
         checkForDownloadCompleted(intent);
     }
-
-/*    public void refreshSupported() {
-        spiceManager.execute( new FreegeeJsonRequest(), JSON_CACHE_KEY, DurationInMillis.ALWAYS_EXPIRED, new FreegeeRequestListener() );
-    }*/
     
     private void checkForDownloadCompleted(Intent intent) {
     	//Toast.makeText(this, "Checking for Completed Downloads", Toast.LENGTH_SHORT).show();
@@ -702,16 +619,11 @@ public class FreeGee extends Activity implements OnClickListener {
 
         String fileName = new File(fullPathName).getName();
         if(fileName.equalsIgnoreCase("devices.xml")){
-        	//Toast.makeText(this, "Found XML", Toast.LENGTH_LONG).show();
-        	//unMarshDevices();
         	unSerializeDevices();
         	matchDevice();
         }
-        	
-        // Find the matching preference so we can retrieve the UpdateInfo
-        //UpdatePreference pref = (UpdatePreference) mUpdatesList.findPreference(fileName);
+
         ArrayList<Action> actions = myDevice.getActions();
-        Action thisAction;
         for(Action i:actions){
         	if (i.getZipFile().equalsIgnoreCase(fileName))
             	doAction(i,fullPathName);
@@ -719,7 +631,6 @@ public class FreeGee extends Activity implements OnClickListener {
     }
     
     public void matchDevice(){
-    	//Toast.makeText(this, "Matching Device", Toast.LENGTH_LONG).show();
     	for(Device device:DeviceList){
     		String prop = buildProp.getProperty(device.getProp_id());
     		String prop2 = buildProp.getProperty(device.getProp_id().toLowerCase(Locale.US));
@@ -765,6 +676,7 @@ public class FreeGee extends Activity implements OnClickListener {
 					actionsleft--;
 					Log.v(LOG_TAG,"actionsleft is: " + actionsleft);
 					if(actionsleft == 0)
+						mProgressDialog.dismiss();
 						alertbuilder("Done","The requested action of " + mainAction.getName() +" is complete","Ok",0);
 					return true;
 				}
@@ -844,7 +756,6 @@ public class FreeGee extends Activity implements OnClickListener {
     }
     
     public void getDevices(){
-    	//Toast.makeText(this, "Getting Supported Devices", Toast.LENGTH_LONG).show();
         Action dAction = new Action();
         dAction.setName("devices.xml");
         dAction.setZipFile("devices.xml");
@@ -880,34 +791,13 @@ public class FreeGee extends Activity implements OnClickListener {
     @Override
     protected Dialog onCreateDialog(int id) {
         switch (id) {
-            case DIALOG_DOWNLOAD_PROGRESS:
+		case DIALOG_ACTION_PROGRESS:
                 setmProgressDialog(new ProgressDialog(this));
-                getmProgressDialog().setMessage("Downloading file..");
-                getmProgressDialog().setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                getmProgressDialog().setCancelable(false);
-                getmProgressDialog().show();
-                return getmProgressDialog();
-		case DIALOG_INSTALL_PROGRESS:
-                setmProgressDialog(new ProgressDialog(this));
-                getmProgressDialog().setMessage("Installing..");
+                getmProgressDialog().setMessage("Performing Action ..");
                 getmProgressDialog().setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 getmProgressDialog().setCancelable(false);
                 getmProgressDialog().show();
                 return getmProgressDialog();
-		case DIALOG_BACKUP_PROGRESS:
-            setmProgressDialog(new ProgressDialog(this));
-            getmProgressDialog().setMessage("Backing Up..");
-            getmProgressDialog().setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            getmProgressDialog().setCancelable(false);
-            getmProgressDialog().show();
-            return getmProgressDialog();
-		case DIALOG_RESTORE_PROGRESS:
-			setmProgressDialog(new ProgressDialog(this));
-            getmProgressDialog().setMessage("Restoring..");
-            getmProgressDialog().setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            getmProgressDialog().setCancelable(false);
-            getmProgressDialog().show();
-            return getmProgressDialog();
 		default:
                 return null;
         }
