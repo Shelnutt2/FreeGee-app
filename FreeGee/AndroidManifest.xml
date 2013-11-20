@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="edu.shell.freegee"
-    android:versionCode="43"
-    android:versionName="1.5.1" android:installLocation="auto">
+    android:versionCode="50"
+    android:versionName="1.9.1" android:installLocation="auto">
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS"/>
     <uses-permission android:name="android.permission.ACCESS_SUPERUSER"/>
+    <uses-permission android:name="android.premission.WRITE_MEDIA_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -47,6 +48,12 @@
       <service
           android:name="com.octo.android.robospice.JacksonSpringAndroidSpiceService"
           android:exported="false" />
+      <receiver android:enabled="true" android:name="edu.shell.freegee.DownloadReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.DOWNLOAD_COMPLETE"/>
+                <action android:name="edu.shell.freegee.action.START_DOWNLOAD"/>
+            </intent-filter>
+      </receiver>
     </application>
 
 </manifest>

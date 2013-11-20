@@ -2,6 +2,7 @@
 LOCAL_PATH := $(call my-dir)
 
 updater_src_files := \
+        edifier.c \
         install.c \
         sha1.c \
         verifier.c \
@@ -16,8 +17,8 @@ LOCAL_CFLAGS := -DINTERNAL_SHA1 -DCONFIG_CRYPTO_INTERNAL -DCONFIG_NO_T_PRF -DCON
 
 LOCAL_STATIC_LIBRARIES := libedify libminzip libmincrypt libz libselinux
 
-LOCAL_MODULE := libedifier
+LOCAL_MODULE := edifier
 
-include $(BUILD_STATIC_LIBRARY)
+include $(BUILD_EXECUTABLE)
 
 include $(call all-subdir-makefiles)

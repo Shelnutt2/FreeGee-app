@@ -36,7 +36,7 @@ int verify_file(const char* path, const RSAPublicKey *pKeys, unsigned int numKey
 	LOGE("Opening zip");
     FILE* f = fopen(path, "rb");
     if (f == NULL) {
-        LOGE("failed to open %s (%s)\n", path);
+        LOGE("failed to open %s (%s)\n", path, strerror(errno));
         return VERIFY_FAILURE;
     }
 
@@ -52,14 +52,14 @@ int verify_file(const char* path, const RSAPublicKey *pKeys, unsigned int numKey
 #define FOOTER_SIZE 6
 
     if (fseek(f, -FOOTER_SIZE, SEEK_END) != 0) {
-        LOGE("failed to seek in %s \n", path);
+        LOGE("failed to seek in %s (%s)\n", path, strerror(errno));
         fclose(f);
         return VERIFY_FAILURE;
     }
 
     unsigned char footer[FOOTER_SIZE];
     if (fread(footer, 1, FOOTER_SIZE, f) != FOOTER_SIZE) {
-        LOGE("failed to read footer from %s \n", path);
+        LOGE("failed to read footer from %s (%s)\n", path, strerror(errno));
         fclose(f);
         return VERIFY_FAILURE;
     }
@@ -88,7 +88,7 @@ int verify_file(const char* path, const RSAPublicKey *pKeys, unsigned int numKey
     size_t eocd_size = comment_size + EOCD_HEADER_SIZE;
 
     if (fseek(f, -eocd_size, SEEK_END) != 0) {
-        LOGE("failed to seek in %s (%s)\n", path);
+        LOGE("failed to seek in %s (%s)\n", path, strerror(errno));
         fclose(f);
         return VERIFY_FAILURE;
     }
@@ -106,7 +106,7 @@ int verify_file(const char* path, const RSAPublicKey *pKeys, unsigned int numKey
         return VERIFY_FAILURE;
     }
     if (fread(eocd, 1, eocd_size, f) != eocd_size) {
-        LOGE("failed to read eocd from %s (%s)\n", path);
+        LOGE("failed to read eocd from %s (%s)\n", path, strerror(errno));
         fclose(f);
         return VERIFY_FAILURE;
     }
@@ -152,7 +152,7 @@ int verify_file(const char* path, const RSAPublicKey *pKeys, unsigned int numKey
         unsigned int size = BUFFER_SIZE;
         if (signed_len - so_far < size) size = signed_len - so_far;
         if (fread(buffer, 1, size, f) != size) {
-            LOGE("failed to read data from %s (%s)\n", path);
+            LOGE("failed to read data from %s (%s)\n", path, strerror(errno));
             fclose(f);
             return VERIFY_FAILURE;
         }
@@ -211,7 +211,7 @@ load_keys(const char* filename, int* numKeys) {
 
     FILE* f = fopen(filename, "r");
     if (f == NULL) {
-        LOGE("opening %s: %s\n", filename);
+        LOGE("opening %s: %s\n", filename, strerror(errno));
         goto exit;
     }
 

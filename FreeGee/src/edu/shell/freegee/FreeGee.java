@@ -7,10 +7,14 @@ package edu.shell.freegee;
 
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -20,7 +24,16 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
+import java.util.Properties;
 import java.util.concurrent.TimeoutException;
+
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
+
+/*import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;*/
 
 import com.octo.android.robospice.JacksonSpringAndroidSpiceService;
 import com.octo.android.robospice.SpiceManager;
@@ -29,13 +42,17 @@ import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootDeniedException;
+import com.stericson.RootTools.execution.Command;
 import com.stericson.RootTools.execution.CommandCapture;
+import com.stericson.RootTools.execution.Shell;
 
 import edu.shell.freegee.R;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DownloadManager;
+import android.app.DownloadManager.Request;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -47,6 +64,9 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Parcelable;
+import android.provider.SyncStateContract.Constants;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -61,7 +81,6 @@ import android.widget.GridView;
 import android.widget.Toast;
 import android.graphics.PorterDuff;
 
-@SuppressLint("SdCardPath")
 public class FreeGee extends Activity implements OnClickListener {
    
     public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
@@ -75,28 +94,45 @@ public class FreeGee extends Activity implements OnClickListener {
     private Device myDevice;
     private String saveloc;
     
+    private String DEVICE_XML =   "/sdcard/" +"freegee/devices.xml";
+    private String DEVICES_SERVER = "http://downloads.codefi.re/direct.php?file=shelnutt2/optimusg/freegee/devices.xml";
+    
     private static ProgressDialog mProgressDialog;
     public static boolean isSpecial;
     private ArrayList<Object> mButtons = new ArrayList<Object>();
     private static final String JSON_CACHE_KEY = "freegee_json";
 
+    private ArrayList<Device> DeviceList;
+    
     DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     Date date = new Date();
     private String now = dateFormat.format(date);
     
+    private static boolean mMainActivityActive;
+    public static final String EXTRA_FINISHED_DOWNLOAD_ID = "download_id";
+    public static final String EXTRA_FINISHED_DOWNLOAD_PATH = "download_path";
+    
+    private Properties buildProp = new Properties();
+    
+    private int actionsleft = 0;
+    private Action mainAction;
+    
+    private String LOG_TAG = "Freegee";
+    
+    
     @Override
     public void onResume(){
     	super.onResume();
-    	if(sblopen){
-    		sblalert();
-    	}
+        mMainActivityActive = true;
+    	checkForDownloadCompleted(getIntent());
     }
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mMainActivityActive = false;
         setContentView(R.layout.activity_freegee);
-    	File freegeef=new File("/sdcard/freegee");
+    	File freegeef=new File( "/sdcard"+"/freegee");
 		  if(!freegeef.exists()){
 			  freegeef.mkdirs();
 		  }
@@ -105,6 +141,67 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
 		if(getBatteryLevel() < 15.0)
 			alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
+		
+	    // read the property text  file
+		File file = new File("/system/build.prop");
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(file);
+		} catch (FileNotFoundException f) {
+			CommandCapture command = new CommandCapture(0,"mount -o remount,rw /system");
+			try {
+				RootTools.getShell(true).add(command).isFinished();
+			} catch (IOException e) {
+				Log.e(LOG_TAG,"Can't remount /system");
+				alertbuilder("Error!","Can't remount /system","Ok",1);
+			} catch (TimeoutException e) {
+				Log.e(LOG_TAG,"Chmod timed out");
+				alertbuilder("Error!","remount timed out","Ok",1);
+			} catch (RootDeniedException e) {
+				Log.e(LOG_TAG,"No root access!");
+				alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+			}
+			command = new CommandCapture(0,"chmod 644 /system/build.prop");
+			try {
+				RootTools.getShell(true).add(command).isFinished();
+			} catch (IOException e) {
+				Log.e(LOG_TAG,"");
+				alertbuilder("Error!","Can't chmod build.prop","Ok",1);
+			} catch (TimeoutException e) {
+				Log.e(LOG_TAG,"Chmod timed out");
+				alertbuilder("Error!","Chmod timed out","Ok",1);
+			} catch (RootDeniedException e) {
+				Log.e(LOG_TAG,"No root access!");
+				alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+			}
+			command = new CommandCapture(0,"mount -o remount,ro /system");
+			try {
+				RootTools.getShell(true).add(command).isFinished();
+			} catch (IOException e) {
+				Log.e(LOG_TAG,"Can't remount /system");
+				alertbuilder("Error!","Can't remount /system","Ok",1);
+			} catch (TimeoutException e) {
+				Log.e(LOG_TAG,"remount timed out");
+				alertbuilder("Error!","remount timed out","Ok",1);
+			} catch (RootDeniedException e) {
+				Log.e(LOG_TAG,"No root access!");
+				alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+			}
+		}
+
+		// feed the property with the file
+		try {
+			buildProp.load(fis);
+		} catch (IOException e) {
+			alertbuilder("Error!","Can't load build.prop make sure you have root and perms are set correctly","Ok",0);
+			e.printStackTrace();
+		}
+		try {
+			fis.close();
+		} catch (IOException e) {
+			alertbuilder("Error!","Can't close build.prop, something went wrong.","Ok",0);
+			e.printStackTrace();
+		}
 		
 		if(!new File("/data/data/edu.shell.freegee/edifier").exists()){
 		  InputStream in = null;
@@ -122,7 +219,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				out.write(bytes, 0, read);
 			}	 
 		  } catch (IOException e) {
-			Log.e("Freegee","Edifier not found in assets");
+			Log.e(LOG_TAG,"Edifier not found in assets");
 			e.printStackTrace();
 		  } finally {
 			if (in != null) {
@@ -144,23 +241,250 @@ public class FreeGee extends Activity implements OnClickListener {
 		  }
 		}
 		
-		CommandCapture command = new CommandCapture(0,"chmod 744 /data/data/edu.shell.freegee/edifier");
+		if(!new File("/data/data/edu.shell.freegee/keys").exists()){
+			  InputStream in = null;
+			  OutputStream out = null;
+			  try {
+				// read this file into InputStream
+				in = getAssets().open("keys");
+		 
+				// write the inputStream to a FileOutputStream
+				out = new FileOutputStream(new File("/data/data/edu.shell.freegee/keys"));
+				int read = 0;
+				byte[] bytes = new byte[50468];
+		 
+				while ((read = in.read(bytes)) != -1) {
+					out.write(bytes, 0, read);
+				}	 
+			  } catch (IOException e) {
+				Log.e(LOG_TAG,"Keys not found in assets");
+				e.printStackTrace();
+			  } finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (out != null) {
+					try {
+						// outputStream.flush();
+						out.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		 
+				  }
+			  }
+			}
+		
+		if(!new File("/data/data/edu.shell.freegee/mkbootimg").exists()){
+			  InputStream in = null;
+			  OutputStream out = null;
+			  try {
+				// read this file into InputStream
+				in = getAssets().open("mkbootimg");
+		 
+				// write the inputStream to a FileOutputStream
+				out = new FileOutputStream(new File("/data/data/edu.shell.freegee/mkbootimg"));
+				int read = 0;
+				byte[] bytes = new byte[50468];
+		 
+				while ((read = in.read(bytes)) != -1) {
+					out.write(bytes, 0, read);
+				}	 
+			  } catch (IOException e) {
+				Log.e(LOG_TAG,"mkbootimg not found in assets");
+				e.printStackTrace();
+			  } finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (out != null) {
+					try {
+						// outputStream.flush();
+						out.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		 
+				  }
+			  }
+			}
+		
+		if(!new File("/data/data/edu.shell.freegee/unpackbootimg").exists()){
+			  InputStream in = null;
+			  OutputStream out = null;
+			  try {
+				// read this file into InputStream
+				in = getAssets().open("unpackbootimg");
+		 
+				// write the inputStream to a FileOutputStream
+				out = new FileOutputStream(new File("/data/data/edu.shell.freegee/unpackbootimg"));
+				int read = 0;
+				byte[] bytes = new byte[50468];
+		 
+				while ((read = in.read(bytes)) != -1) {
+					out.write(bytes, 0, read);
+				}	 
+			  } catch (IOException e) {
+				Log.e(LOG_TAG,"unpackbootimg not found in assets");
+				e.printStackTrace();
+			  } finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (out != null) {
+					try {
+						// outputStream.flush();
+						out.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		 
+				  }
+			  }
+			}
+		
+		if(!new File("/data/data/edu.shell.freegee/busybox").exists()){
+			  InputStream in = null;
+			  OutputStream out = null;
+			  try {
+				// read this file into InputStream
+				in = getAssets().open("busybox");
+		 
+				// write the inputStream to a FileOutputStream
+				out = new FileOutputStream(new File("/data/data/edu.shell.freegee/busybox"));
+				int read = 0;
+				byte[] bytes = new byte[50468];
+		 
+				while ((read = in.read(bytes)) != -1) {
+					out.write(bytes, 0, read);
+				}	 
+			  } catch (IOException e) {
+				Log.e(LOG_TAG,"busybox not found in assets");
+				e.printStackTrace();
+			  } finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (out != null) {
+					try {
+						// outputStream.flush();
+						out.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		 
+				  }
+			  }
+			}
+		
+		CommandCapture command = new CommandCapture(0,"chmod 755 /data/data/edu.shell.freegee/edifier");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
-			Log.e("Freegee","Edifier not found in assets");
-			e.printStackTrace();
+			Log.e(LOG_TAG,"Edifier not found in assets");
+			alertbuilder("Error!","Can't open edifier","Ok",1);
 		} catch (TimeoutException e) {
-			Log.e("Freegee","Chmod timed out");
-			e.printStackTrace();
+			Log.e(LOG_TAG,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
 		} catch (RootDeniedException e) {
-			Log.e("Freegee","No root access!");
-			e.printStackTrace();
+			Log.e(LOG_TAG,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
-		if(!spiceManager.isStarted())
-           spiceManager.start( this );
+		
+		command = new CommandCapture(0,"chmod 644 /data/data/edu.shell.freegee/keys");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			Log.e(LOG_TAG,"keys not found in assets");
+			alertbuilder("Error!","Can't open keys","Ok",1);
+		} catch (TimeoutException e) {
+			Log.e(LOG_TAG,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			Log.e(LOG_TAG,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		
+		command = new CommandCapture(0,"chmod 755 /data/data/edu.shell.freegee/mkbootimg");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			Log.e(LOG_TAG,"mkbootimg not found in assets");
+			alertbuilder("Error!","Can't open mkbootimg","Ok",1);
+		} catch (TimeoutException e) {
+			Log.e(LOG_TAG,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			Log.e(LOG_TAG,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		
+		command = new CommandCapture(0,"chmod 755 /data/data/edu.shell.freegee/unpackbootimg");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			Log.e(LOG_TAG,"unpackbootimg not found in assets");
+			alertbuilder("Error!","Can't open unpackbootimg","Ok",1);
+		} catch (TimeoutException e) {
+			Log.e(LOG_TAG,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			Log.e(LOG_TAG,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		
+		command = new CommandCapture(0,"chmod 755 /data/data/edu.shell.freegee/busybox");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			Log.e(LOG_TAG,"busybox not found in assets");
+			alertbuilder("Error!","Can't open busybox","Ok",1);
+		} catch (TimeoutException e) {
+			Log.e(LOG_TAG,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			Log.e(LOG_TAG,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		
+		command = new CommandCapture(0,"chmod 755 /data/data/edu.shell.freegee/edifier");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			Log.e(LOG_TAG,"Edifier not found in assets");
+			alertbuilder("Error!","Can't open edifier","Ok",1);
+		} catch (TimeoutException e) {
+			Log.e(LOG_TAG,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			Log.e(LOG_TAG,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+
+		
+		/*if(!spiceManager.isStarted())
+           spiceManager.start( this );*/
+        getDevices();
+       
+        checkForDownloadCompleted(getIntent());
         
-		myDevice = new Device();
+/*		myDevice = new Device();
 		myDevice.setName("LG Optimus G");
 		ArrayList<Action> actions = new ArrayList<Action>();
 		Action unlock = new Action();
@@ -172,12 +496,13 @@ public class FreeGee extends Activity implements OnClickListener {
 		actions.add(recovery);
 		
 		myDevice.setActions(actions);
-		updateGridView(myDevice);
+		updateGridView(myDevice);*/
 		GridView gridView = (GridView) findViewById(R.id.main_gridview);
 		gridView.setAdapter(new ButtonAdapter(mButtons));
     }
     
     public void updateGridView(Device device){
+    	//Toast.makeText(this, "Updating Grid View", Toast.LENGTH_LONG).show();
         for(int i = 0; i < device.getActions().size();i++){
     		Button cb = new Button(this);
   		    cb.setText(device.getActions().get(i).getName());
@@ -195,22 +520,80 @@ public class FreeGee extends Activity implements OnClickListener {
   		    cb.setId(i);
   		    mButtons.add(cb);
         }
+		GridView gridView = (GridView) findViewById(R.id.main_gridview);
+		gridView.setAdapter(new ButtonAdapter(mButtons));
     }
+    
+    public void unSerializeDevices(){
+    	//Toast.makeText(this, "Unserializing Devices", Toast.LENGTH_LONG).show();
+    	Serializer serializer = new Persister();
+    	File source = new File(DEVICE_XML);
+    	try {
+			DeviceList = serializer.read(Devices.class, source).getDevices();
+		} catch (Exception e) {
+			Log.e(LOG_TAG,"Could not unserialize");
+			alertbuilder("Error!","Could not unserialize devices from xml","Ok",1);
+		}
+    }
+    /*public void unMarshDevices() {
+    	JAXBContext jcontext = null;
+		try {
+			jcontext = JAXBContext.newInstance(FreeGee.class);
+		} catch (JAXBException e) {
+			Log.e(LOG_TAG,"Could not get JAXB context");
+			alertbuilder("Error!","Could not get JAXB context","Ok",1);
+		}
+    	Unmarshaller um = null;
+		try {
+			um = jcontext.createUnmarshaller();
+		} catch (JAXBException e) {
+			Log.e(LOG_TAG,"Could not create unmarshaller for xml reading");
+			alertbuilder("Error!","Could not create unmarshaller for xml reading ","Ok",1);
+		}
+        try {
+			DeviceList = (ArrayList<Device>) um.unmarshal(new FileReader(DEVICE_XML));
+		} catch (FileNotFoundException e) {
+			Log.e(LOG_TAG,"Could open Devices file");
+			alertbuilder("Error!","Could not open Devices.xml","Ok",1);
+		} catch (JAXBException e) {
+			Log.e(LOG_TAG,"Could not get JAXB");
+			alertbuilder("Error!","Could not get JAXB","Ok",1);
+		}
+    }*/
     
     @Override
     public void onClick(View v) {
      Button selection = (Button)v;
-     Toast.makeText(getBaseContext(), selection.getText()+ " was pressed!", Toast.LENGTH_SHORT).show();
-     Action b;
-     for(Action a:myDevice.getActions()){
+     //Toast.makeText(getBaseContext(), selection.getText()+ " was pressed!", Toast.LENGTH_SHORT).show();
+     for(final Action a:myDevice.getActions()){
     	 if(a.getName().equals(selection.getText())){
-    		 b = a;
-    	     new helper().process(b);
-    		 break;
-    	 }
-    	 else{
-    		 Log.e("Freegee","Confused by action pressed");
-    	     alertbuilder("Error","Can't find the action to perform you requested","uh oh",0);
+    	    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        	    
+    	    	// set title
+    	    	alertDialogBuilder.setTitle(a.getName());
+
+    	    	// set dialog message
+    	    	alertDialogBuilder
+    	    	.setMessage(a.getDescription())
+    	    	.setCancelable(false)
+    	    	.setPositiveButton("Proceed",new DialogInterface.OnClickListener() {
+    	    	public void onClick(DialogInterface dialog,int id) {
+    	    		 mainAction = a;
+    	    	     processAction(a);
+    	    	}
+    	    	})
+    	    	.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
+        	    	public void onClick(DialogInterface dialog,int id) {
+        	    		Toast.makeText(getBaseContext(), "Action" + a.getName() + " was cancelled", Toast.LENGTH_SHORT).show();
+       	    	}
+    	    	});
+
+    	    	// create alert dialog
+    	    	AlertDialog alertDialog = alertDialogBuilder.create();
+
+    	    	// show it
+    	    	alertDialog.show();
+    	    	break;
     	 }
      }
      //Toast.makeText(getBaseContext(), "Result is: "+result, Toast.LENGTH_SHORT).show();
@@ -252,9 +635,9 @@ public class FreeGee extends Activity implements OnClickListener {
         }
        }
     
-    protected SpiceManager spiceManager = new SpiceManager( JacksonSpringAndroidSpiceService.class );
+   // protected SpiceManager spiceManager = new SpiceManager( JacksonSpringAndroidSpiceService.class );
     
-    private class FreegeeRequestListener implements RequestListener< Device >{
+/*    private class FreegeeRequestListener implements RequestListener< Device >{
 
         @Override
         public void onRequestFailure( SpiceException spiceException ) {
@@ -265,25 +648,169 @@ public class FreeGee extends Activity implements OnClickListener {
         public void onRequestSuccess( Device device ) {
         	updateGridView(device);
         }
-    }
+    }*/
 
 
     @Override
     protected void onStart() {
         super.onStart();
-		if(!spiceManager.isStarted())
-	        spiceManager.start( this );
+        mMainActivityActive = true;
+/*		if(!spiceManager.isStarted())
+	        spiceManager.start( this );*/
     }
 
     @Override
     protected void onStop() {
-    	if(spiceManager.isStarted())
-           spiceManager.shouldStop();
+/*    	if(spiceManager.isStarted())
+           spiceManager.shouldStop();*/
+        mMainActivityActive = false;
         super.onStop();
     }
+    
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
 
-    public void refreshSupported() {
+        // Check if we need to refresh the screen to show new updates
+/*        if (intent.getBooleanExtra(EXTRA_UPDATE_LIST_UPDATED, false)) {
+            updateLayout();
+        }*/
+        checkForDownloadCompleted(intent);
+    }
+
+/*    public void refreshSupported() {
         spiceManager.execute( new FreegeeJsonRequest(), JSON_CACHE_KEY, DurationInMillis.ALWAYS_EXPIRED, new FreegeeRequestListener() );
+    }*/
+    
+    private void checkForDownloadCompleted(Intent intent) {
+    	//Toast.makeText(this, "Checking for Completed Downloads", Toast.LENGTH_SHORT).show();
+        if (intent == null) {
+            return;
+        }
+
+        long downloadId = intent.getLongExtra(EXTRA_FINISHED_DOWNLOAD_ID, -1);
+        if (downloadId < 0) {
+        //	Toast.makeText(this, "Not download", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String fullPathName = intent.getStringExtra(EXTRA_FINISHED_DOWNLOAD_PATH);
+        if (fullPathName == null) {
+       // 	Toast.makeText(this, "No path given", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String fileName = new File(fullPathName).getName();
+        if(fileName.equalsIgnoreCase("devices.xml")){
+        	//Toast.makeText(this, "Found XML", Toast.LENGTH_LONG).show();
+        	//unMarshDevices();
+        	unSerializeDevices();
+        	matchDevice();
+        }
+        	
+        // Find the matching preference so we can retrieve the UpdateInfo
+        //UpdatePreference pref = (UpdatePreference) mUpdatesList.findPreference(fileName);
+        ArrayList<Action> actions = myDevice.getActions();
+        Action thisAction;
+        for(Action i:actions){
+        	if (i.getZipFile().equalsIgnoreCase(fileName))
+            	doAction(i,fullPathName);
+        }
+    }
+    
+    public void matchDevice(){
+    	//Toast.makeText(this, "Matching Device", Toast.LENGTH_LONG).show();
+    	for(Device device:DeviceList){
+    		String prop = buildProp.getProperty(device.getProp_id());
+    		String prop2 = buildProp.getProperty(device.getProp_id().toLowerCase(Locale.US));
+    		String model = device.getModel();
+    		if(prop != null){
+    			if(prop.equalsIgnoreCase(model)){
+    				myDevice = device;
+    				break;
+    			}
+    		}
+    		if(prop2 != null){
+    			if(prop2.equalsIgnoreCase(model)){
+    				myDevice = device;
+    				break;
+    			}
+    		}
+    	}
+    	if(myDevice != null){
+    		updateGridView(myDevice);
+    	}
+    	else{
+    		alertbuilder("Unsupported", "Your devices is not currently supported", "ok", 1);
+    	}
+    }
+    
+    public boolean doAction(Action i, String fullPathName){
+
+		 CommandCapture command = new CommandCapture(0,"/data/data/edu.shell.freegee/edifier "+ "/sdcard/freegee/"+i.getZipFile()){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	            RootTools.log(LOG_TAG, line);
+	        }
+		 };
+			try {
+				RootTools.debugMode = true; //ON
+				Shell shell = RootTools.getShell(true);
+				shell.add(command);
+				commandWait(command);
+				int err = command.getExitCode();
+				Log.v(LOG_TAG,"Exit code is: " + err);
+				if(err == 0){
+					actionsleft--;
+					Log.v(LOG_TAG,"actionsleft is: " + actionsleft);
+					if(actionsleft == 0)
+						alertbuilder("Done","The requested action of " + mainAction.getName() +" is complete","Ok",0);
+					return true;
+				}
+				else{
+					Toast.makeText(this, "Erroe code is: " + err, Toast.LENGTH_LONG).show();
+					actionsleft--;
+					alertbuilder("Error","There was an error running action " + i.getName(),"ok",0);
+					return false;
+				}
+				
+			} catch (IOException e) {
+				Log.e(LOG_TAG,"Edifier not found");
+				alertbuilder("Error","Edifier not found.","ok",0);
+			} catch (TimeoutException e) {
+				Log.e(LOG_TAG,"command timed out");
+				alertbuilder("Error","Edifier "+i.getName() + " command timed out","ok",0);
+			} catch (RootDeniedException e) {
+				Log.e(LOG_TAG,"No root access!");
+				alertbuilder("Error","Please check root access","ok",0);
+			} catch (Exception e) {
+				Log.e(LOG_TAG,"Exception thrown waiting for command to finish");
+				alertbuilder("Error","Exception thrown waiting for command to finish","ok",0);
+			}
+			return false;
+    }
+    
+    private void commandWait(Command cmd) throws Exception {
+        int waitTill = 50;
+        int waitTillMultiplier = 2;
+        int waitTillLimit = 3200; //7 tries, 6350 msec
+
+        while (!cmd.isFinished() && waitTill<=waitTillLimit) {
+            synchronized (cmd) {
+                try {
+                    if (!cmd.isFinished()) {
+                        cmd.wait(waitTill);
+                        waitTill *= waitTillMultiplier;
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        if (!cmd.isFinished()){
+            Log.e(LOG_TAG, "Could not finish root command in " + (waitTill/waitTillMultiplier));
+        }
     }
     
     public float getBatteryLevel() {
@@ -299,6 +826,37 @@ public class FreeGee extends Activity implements OnClickListener {
         return ((float)level / (float)scale) * 100.0f; 
     }
     
+    public void processAction(Action action){
+		actionsleft++;
+    	if(action.getDependencies() != null && !action.getDependencies().isEmpty()){
+    		for(Action i:action.getDependencies()){
+    			processAction(i);
+    		}
+    	}
+    	startDownload(action);
+    }
+    
+    public void startDownload(Action action){
+        Intent intent = new Intent(this, DownloadReceiver.class);
+        intent.setAction(DownloadReceiver.ACTION_START_DOWNLOAD);
+        intent.putExtra(DownloadReceiver.DEVICE_ACTION, (Serializable) action);
+        sendBroadcast(intent);    	
+    }
+    
+    public void getDevices(){
+    	//Toast.makeText(this, "Getting Supported Devices", Toast.LENGTH_LONG).show();
+        Action dAction = new Action();
+        dAction.setName("devices.xml");
+        dAction.setZipFile("devices.xml");
+        dAction.setZipFileLocation("devices.xml");
+        dAction.setMd5sum("nono");
+        File devicesXML = new File(DEVICE_XML);
+        if(devicesXML.exists()){
+        	devicesXML.delete();
+        }
+        startDownload(dAction);
+    }
+    
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -310,14 +868,6 @@ public class FreeGee extends Activity implements OnClickListener {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case R.id.sbl_ul:
-            	SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
-            	if(prefs.getInt("Special-always", 2) ==3){
-            		sbltoggle();
-            	}
-            	else
-            	  sblalert();
-                return true;
             case R.id.menu_settings:
         		Intent newActivity = new Intent(this, settings.class);
                 startActivity(newActivity);
@@ -362,90 +912,7 @@ public class FreeGee extends Activity implements OnClickListener {
                 return null;
         }
     }
-    
-    class DownloadFileAsync extends AsyncTask<String, String, String> {
-        int err;
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            showDialog(DIALOG_DOWNLOAD_PROGRESS);
-        }
 
-        @Override
-        protected String doInBackground(String... aurl) {
-            int count;
-            try {
-                URL url = new URL(aurl[0]);
-                URLConnection conexion = url.openConnection();
-                conexion.connect();
-                int lenghtOfFile = conexion.getContentLength();
-                InputStream input = new BufferedInputStream(url.openStream());
-                OutputStream output = new FileOutputStream(saveloc);
-
-                byte data[] = new byte[1024];
-                long total = 0;
-
-                while ((count = input.read(data)) != -1) {
-                    total += count;
-                    publishProgress(""+(int)((total*100)/lenghtOfFile));
-                    output.write(data, 0, count);
-                }
-
-                output.flush();
-                output.close();
-                input.close();
-            } catch (Exception e) {
-            	err = -1;
-            }
-            
-            return null;
-
-        }
-        protected void onProgressUpdate(String... progress) {
-             getmProgressDialog().setProgress(Integer.parseInt(progress[0]));
-        }
-
-        @Override
-        protected void onPostExecute(String unused) {
-        	removeDialog(DIALOG_DOWNLOAD_PROGRESS);
-        	
-
-        }
-    }
-
-    
-    public boolean isSpecial(){
-    	SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE); 
-    	if(prefs.getInt("Special", 2) ==3){
-    		isSpecial = true;
-    	   return true;
-    	}
-    	else{
-    		isSpecial = false;
-    	   return false;
-    	}
-    }    
-    
-    String secret = "letshopeitdoesn'tbrick-";
-    private static String convertToHex(byte[] data) {
-        StringBuilder buf = new StringBuilder();
-        for (byte b : data) {
-            int halfbyte = (b >>> 4) & 0x0F;
-            int two_halfs = 0;
-            do {
-                buf.append((0 <= halfbyte) && (halfbyte <= 9) ? (char) ('0' + halfbyte) : (char) ('a' + (halfbyte - 10)));
-                halfbyte = b & 0x0F;
-            } while (two_halfs++ < 1);
-        }
-        return buf.toString();
-    }
-
-    public static String computeSum(String text) throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        MessageDigest md = MessageDigest.getInstance("SHA-1");
-        md.update(text.getBytes("iso-8859-1"), 0, text.length());
-        byte[] sha1hash = md.digest();
-        return convertToHex(sha1hash);
-    }
     public void alertbuilder(String title, String text, String Button, final int exits){
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
     	    
@@ -473,108 +940,15 @@ public class FreeGee extends Activity implements OnClickListener {
     	alertDialog.show();
 
     	}
-    
-    public void sblalert(){
-    	sblopen=true;
-    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-    	    
-    	// set title
-    	alertDialogBuilder.setTitle("Special Unlock");
-    	final EditText input = new EditText(this); 
 
-    	// set dialog message
-    	alertDialogBuilder
-    	.setMessage("This is the special SBL unlock need for a select few devices. Due to the hard brick risk, please enter the code you were given.")
-    	.setCancelable(true)
-    	.setView(input)
-    	.setPositiveButton("ok",new DialogInterface.OnClickListener() {
-    	public void onClick(DialogInterface dialog,int id) {
-    		String value = input.getText().toString();
-    		try {
-				if(value.equals(computeSum(secret+now).substring(0, Math.min(value.length(), 5)))){
-					SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
-					SharedPreferences.Editor editor = prefs.edit();
-					editor.putInt("Special", 3);
-					editor.putInt("Special-always", 3);
-					editor.commit();
-					alertbuilder("Success!","Sbl unlock now enabled!","Ok",0);
-				}
-				else{
-					alertbuilder("Error!","Wrong code entered, sbl unlock not enabled.","Ok",0);
-				}
-				sblopen = false;
-				return;
-			} catch (NoSuchAlgorithmException e) {
-				alertbuilder("Error!","Failed to sha1!","Boo!",0);
-				e.printStackTrace();
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-    	}
-    	})
-    	.setNeutralButton("Get Unlock Code", new DialogInterface.OnClickListener() {
-    		public void onClick(DialogInterface dialog,int id) {
-    		    Uri uriUrl = Uri.parse("http://shelnutt2.codefi.re/freegee/index.php");  
-    		    Intent launchBrowser = new Intent(Intent.ACTION_VIEW, uriUrl);
-    		    startActivity(launchBrowser); 
-    		}
-    	})
-        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-
-            public void onClick(DialogInterface dialog, int which) {
-                sblopen = false;
-                return;
-            }
-        });
-
-    	// create alert dialog
-    	AlertDialog alertDialog = alertDialogBuilder.create();
-
-    	// show it
-    	alertDialog.show();
-
-    	}
-    
-    public void sbltoggle(){
-    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-    	    
-    	// set title
-    	alertDialogBuilder.setTitle("Special Unlock");
-
-    	// set dialog message
-    	alertDialogBuilder
-    	.setMessage("You have already Enabled the special sbl unlock process. Please select if you want to enable or disable it currently.")
-    	.setCancelable(true)
-    	.setPositiveButton("Enable",new DialogInterface.OnClickListener() {
-    	public void onClick(DialogInterface dialog,int id) {
-    		SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
-			SharedPreferences.Editor editor = prefs.edit();
-			editor.putInt("Special", 3);
-			editor.commit();
-    	}
-    	})
-        .setNegativeButton("Disable", new DialogInterface.OnClickListener() {
-
-            public void onClick(DialogInterface dialog, int which) {
-            	SharedPreferences prefs = getSharedPreferences("FreeGee",MODE_PRIVATE);
-				SharedPreferences.Editor editor = prefs.edit();
-				editor.putInt("Special", 2);
-				editor.commit();
-                return;   
-            }
-        });
-
-    	// create alert dialog
-    	AlertDialog alertDialog = alertDialogBuilder.create();
-
-    	// show it
-    	alertDialog.show();
-
-    	}
 	public static ProgressDialog getmProgressDialog() {
 		return mProgressDialog;
 	}
 	public void setmProgressDialog(ProgressDialog mProgressDialog) {
 		this.mProgressDialog = mProgressDialog;
+	}
+	public static boolean isMainActivityActive() {
+	    return mMainActivityActive;
+	    
 	}
 }

@@ -32,7 +32,7 @@ public class helper {
 	
     private SpiceManager spiceManager = new SpiceManager(JacksonSpringAndroidSpiceService.class);
     private BigBinaryRequest BinaryRequest;
-    private String SAVE_LOCATION = "/sdcard/freegee/working";
+    private String SAVE_LOCATION = "/sdcard/freegee/";
 
     public int process(Action b){
     	downloadAll(b);

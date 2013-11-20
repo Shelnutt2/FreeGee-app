@@ -1,14 +1,17 @@
 package edu.shell.freegee;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
-public class Action {
+public class Action  implements Serializable {
 	@Element
 	private String name;
+	@Element
+    private String description;
 	@Element
     private String version;
 	@Element
@@ -34,6 +37,10 @@ public class Action {
     	return name;
     }
     
+    public String getDescription(){
+    	return description;
+    }
+    
     public String getVersion() {
         return version;
     }
@@ -57,7 +64,11 @@ public class Action {
     public void setName(String name){
     	this.name = name;
     }
-    
+
+    public void setDescription(String description){
+    	this.description = description;
+    }
+
     public void setVersion( String version ) {
         this.version = version;
     }
@@ -78,4 +89,3 @@ public class Action {
         this.dependencies = dependencies;
     }
 }
-

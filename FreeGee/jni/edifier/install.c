@@ -89,7 +89,7 @@ handle_firmware_update(char* type, char* filename, ZipArchive* zip) {
     return INSTALL_SUCCESS;
 }
 
-static const char *LAST_INSTALL_FILE = "/scard/freegee/last_install";
+static const char *LAST_INSTALL_FILE = "/data/data/edu.shell.freegee/last_install";
 
 // If the package contains an update binary, extract it and run it.
 static int
@@ -110,7 +110,7 @@ try_update_binary(const char *path, ZipArchive *zip) {
         mzCloseZipArchive(zip);
         return INSTALL_UPDATE_BINARY_MISSING;
     }
-    char* binary = "/data/data/edu.shell.freegee/update_binary";
+    char* binary = "/data/local/tmp/update_binary";
     unlink(binary);
     int fd = creat(binary, 0755);
 
@@ -169,7 +169,7 @@ try_update_binary(const char *path, ZipArchive *zip) {
     args[0] = binary;
     args[1] = "2";   // defined in Android.mk
     args[2] = malloc(10);
-    LOGE("%s %d",args[2], pipefd[1]);
+    sprintf(args[2], "%d", pipefd[1]);
     args[3] = (char*)path;
     args[4] = NULL;
     pid_t pid = fork();
