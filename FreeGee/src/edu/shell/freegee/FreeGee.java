@@ -54,9 +54,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.ListView;
 import android.widget.Toast;
 import android.graphics.PorterDuff;
 
@@ -79,11 +81,14 @@ public class FreeGee extends Activity implements OnClickListener {
     private static boolean mMainActivityActive;
     public static final String EXTRA_FINISHED_DOWNLOAD_ID = "download_id";
     public static final String EXTRA_FINISHED_DOWNLOAD_PATH = "download_path";
+    public static final String DOWNLOAD_ERROR = "Error";
     
     private Properties buildProp = new Properties();
     
     private int actionsleft = 0;
     private Action mainAction;
+    
+    private String swprop;
     
     private String LOG_TAG = "Freegee";
     
@@ -454,23 +459,25 @@ public class FreeGee extends Activity implements OnClickListener {
     
     public void updateGridView(Device device){
     	//Toast.makeText(this, "Updating Grid View", Toast.LENGTH_LONG).show();
+    	int j = 0;
         for(int i = 0; i < device.getActions().size();i++){
+        	if((device.getActions().get(i).getStockOnly() && swprop != null ) || !device.getActions().get(i).getStockOnly()){
     		Button cb = new Button(this);
   		    cb.setText(device.getActions().get(i).getName());
   		    
-  		    if(i % 4 == 0){
+  		    if(j % 4 == 0){
   		      cb.getBackground().setColorFilter(Color.parseColor("#005030"), PorterDuff.Mode.DARKEN);
   		      cb.setTextColor(Color.parseColor("#f47321"));
             }
-  		    else if(i % 4 == 1){
+  		    else if(j % 4 == 1){
     		      cb.getBackground().setColorFilter(Color.parseColor("#f47321"), PorterDuff.Mode.DARKEN);
     		      cb.setTextColor(Color.parseColor("#005030"));
               }
-  		    else if(i % 4 == 2){
+  		    else if(j % 4 == 2){
     		      cb.getBackground().setColorFilter(Color.parseColor("#f47321"), PorterDuff.Mode.DARKEN);
     		      cb.setTextColor(Color.parseColor("#005030"));
               }
-  		    else if(i % 4 == 3){
+  		    else if(j % 4 == 3){
     		      cb.getBackground().setColorFilter(Color.parseColor("#005030"), PorterDuff.Mode.DARKEN);
     		      cb.setTextColor(Color.parseColor("#f47321"));
               }
@@ -481,6 +488,8 @@ public class FreeGee extends Activity implements OnClickListener {
   		    cb.setOnClickListener(this);
   		    cb.setId(i);
   		    mButtons.add(cb);
+  		    j++;
+        }
         }
 		GridView gridView = (GridView) findViewById(R.id.main_gridview);
 		gridView.setAdapter(new ButtonAdapter(mButtons));
@@ -580,6 +589,7 @@ public class FreeGee extends Activity implements OnClickListener {
     protected void onStart() {
         super.onStart();
         mMainActivityActive = true;
+        checkForDownloadCompleted(getIntent());
     }
 
     @Override
@@ -596,7 +606,12 @@ public class FreeGee extends Activity implements OnClickListener {
 /*        if (intent.getBooleanExtra(EXTRA_UPDATE_LIST_UPDATED, false)) {
             updateLayout();
         }*/
-        checkForDownloadCompleted(intent);
+        if(intent.hasExtra(DOWNLOAD_ERROR)){
+        	mProgressDialog.dismiss();
+        	alertbuilder("Error","There was an error downloading the necessary files","ok",0);
+        }
+        else
+            checkForDownloadCompleted(intent);
     }
     
     private void checkForDownloadCompleted(Intent intent) {
@@ -622,11 +637,12 @@ public class FreeGee extends Activity implements OnClickListener {
         	unSerializeDevices();
         	matchDevice();
         }
-
-        ArrayList<Action> actions = myDevice.getActions();
-        for(Action i:actions){
-        	if (i.getZipFile().equalsIgnoreCase(fileName))
-            	doAction(i,fullPathName);
+        else{
+            ArrayList<Action> actions = myDevice.getActions();
+            for(Action i:actions){
+        	    if (i.getZipFile().equalsIgnoreCase(fileName))
+            	    doAction(i,fullPathName);
+            }
         }
     }
     
@@ -634,6 +650,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	for(Device device:DeviceList){
     		String prop = buildProp.getProperty(device.getProp_id());
     		String prop2 = buildProp.getProperty(device.getProp_id().toLowerCase(Locale.US));
+    		swprop = buildProp.getProperty(device.getSW_Prop_id());
     		String model = device.getModel();
     		if(prop != null){
     			if(prop.equalsIgnoreCase(model)){
@@ -650,6 +667,15 @@ public class FreeGee extends Activity implements OnClickListener {
     	}
     	if(myDevice != null){
     		updateGridView(myDevice);
+    	     ListView lv = (ListView) findViewById(R.id.deviceInfo);
+    	     String[] lStr;
+    	     if(swprop == null){
+    	         lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel()};
+    	     }
+    	     else{
+    	    	 lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel(),"Software Version: "+swprop};
+    	     }
+    	     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
     	}
     	else{
     		alertbuilder("Unsupported", "Your devices is not currently supported", "ok", 1);
@@ -667,7 +693,7 @@ public class FreeGee extends Activity implements OnClickListener {
 		 };
 			try {
 				RootTools.debugMode = true; //ON
-				Shell shell = RootTools.getShell(true);
+				Shell shell = RootTools.getShell(true,60000);
 				shell.add(command);
 				commandWait(command);
 				int err = command.getExitCode();
@@ -675,14 +701,16 @@ public class FreeGee extends Activity implements OnClickListener {
 				if(err == 0){
 					actionsleft--;
 					Log.v(LOG_TAG,"actionsleft is: " + actionsleft);
-					if(actionsleft == 0)
+					if(actionsleft == 0){
 						mProgressDialog.dismiss();
 						alertbuilder("Done","The requested action of " + mainAction.getName() +" is complete","Ok",0);
+					}
 					return true;
 				}
 				else{
-					Toast.makeText(this, "Erroe code is: " + err, Toast.LENGTH_LONG).show();
+					Toast.makeText(this, "Error code is: " + err, Toast.LENGTH_LONG).show();
 					actionsleft--;
+					mProgressDialog.dismiss();
 					alertbuilder("Error","There was an error running action " + i.getName(),"ok",0);
 					return false;
 				}
@@ -706,7 +734,7 @@ public class FreeGee extends Activity implements OnClickListener {
     private void commandWait(Command cmd) throws Exception {
         int waitTill = 50;
         int waitTillMultiplier = 2;
-        int waitTillLimit = 3200; //7 tries, 6350 msec
+        int waitTillLimit = 60000; //7 tries, 6350 msec
 
         while (!cmd.isFinished() && waitTill<=waitTillLimit) {
             synchronized (cmd) {

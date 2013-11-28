@@ -36,6 +36,9 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 public class DownloadReceiver extends BroadcastReceiver{
     private static final String TAG = "DownloadReceiver";
@@ -105,9 +108,19 @@ public class DownloadReceiver extends BroadcastReceiver{
         long downloadId = dm.enqueue(request);
 
         // Store in shared preferences
+        Set<String> downloadIdSet = null;
+        downloadIdSet = prefs.getStringSet(DOWNLOAD_ID, downloadIdSet);
+        if(downloadIdSet == null)
+        	downloadIdSet = new HashSet<String>();
+        downloadIdSet.add(Long.toString(downloadId));
+        Set<String> getMd5sumSet = null;
+        getMd5sumSet = prefs.getStringSet(DOWNLOAD_ID, getMd5sumSet);
+        if(getMd5sumSet == null)
+        	getMd5sumSet = new HashSet<String>();
+        getMd5sumSet.add(action.getMd5sum());
         prefs.edit()
-                .putLong(DOWNLOAD_ID, downloadId)
-                .putString(DOWNLOAD_MD5, action.getMd5sum())
+                .putStringSet(DOWNLOAD_ID, downloadIdSet)
+                .putStringSet(DOWNLOAD_MD5, getMd5sumSet)
                 .apply();
         Log.v("Freegee","Download id from start is: "+Long.toString(downloadId));
         Intent intent = new Intent(ACTION_DOWNLOAD_STARTED);
@@ -116,9 +129,12 @@ public class DownloadReceiver extends BroadcastReceiver{
     }
 
     private void handleDownloadComplete(Context context, SharedPreferences prefs, long id) {
-        long enqueued = prefs.getLong(DOWNLOAD_ID, -1);
+        Set<String> downloadIdSet = null;
+        downloadIdSet = prefs.getStringSet(DOWNLOAD_ID, downloadIdSet);
+        
+        //long enqueued = prefs.getLong(DOWNLOAD_ID, -1);
 
-        if (enqueued < 0 || id < 0 || id != enqueued) {
+        if (downloadIdSet == null || downloadIdSet.size() <= 0 || id < 0 || !downloadIdSet.contains(Long.toString(id))) {
             return;
         }
 
@@ -156,15 +172,20 @@ public class DownloadReceiver extends BroadcastReceiver{
             updateFile = new File(completedFileFullPath);
             partialFile.renameTo(updateFile);
             
-            String downloadedMD5 = prefs.getString(DOWNLOAD_MD5, "");
+            //String downloadedMD5 = prefs.getString(DOWNLOAD_MD5, "");
+            
+            Set<String> getMd5sumSet = new HashSet<String>();
+            getMd5sumSet = prefs.getStringSet(DOWNLOAD_ID, getMd5sumSet);
 
             // Start the MD5 check of the downloaded file
-            if (downloadedMD5.equals("nono") || checkMD5(downloadedMD5, updateFile)) {
+ //           if (updateFile.getName().equalsIgnoreCase("devices.xml")){
+            	//|| getMd5sumSet.contains(calculateMD5(updateFile).toLowerCase(Locale.US))) {
+            
                 // We passed. Bring the main app to the foreground and trigger download completed
             	Log.v("Freegee","Download id from comp is: "+Long.toString(id));
                 updateIntent.putExtra(FreeGee.EXTRA_FINISHED_DOWNLOAD_ID, id);
                 updateIntent.putExtra(FreeGee.EXTRA_FINISHED_DOWNLOAD_PATH, completedFileFullPath);
-            } else {
+/*            } else {
                 // We failed. Clear the file and reset everything
                 dm.remove(id);
 
@@ -173,7 +194,7 @@ public class DownloadReceiver extends BroadcastReceiver{
                 }
 
                 failureMessageResId = R.string.md5_verification_failed;
-            }
+            }*/
 
         } else if (status == DownloadManager.STATUS_FAILED) {
             // The download failed, reset
@@ -183,10 +204,10 @@ public class DownloadReceiver extends BroadcastReceiver{
         }
 
         // Clear the shared prefs
-        prefs.edit()
+/*        prefs.edit()
         		.remove(DOWNLOAD_MD5)
                 .remove(DOWNLOAD_ID)
-                .apply();
+                .apply();*/
 
         c.close();
 
@@ -194,6 +215,12 @@ public class DownloadReceiver extends BroadcastReceiver{
         if (FreeGee.isMainActivityActive()) {
             if (failureMessageResId >= 0) {
                 Toast.makeText(context, failureMessageResId, Toast.LENGTH_LONG).show();
+/*                Intent failedIntent = new Intent(context, FreeGee.class);
+                updateIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP |
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+                failedIntent.putExtra(FreeGee.EXTRA_FINISHED_DOWNLOAD_ID, id);
+                failedIntent.putExtra(FreeGee.DOWNLOAD_ERROR, true);
+                context.startActivity(failedIntent);*/
             } else {
                 context.startActivity(updateIntent);
             }
