@@ -24,6 +24,8 @@ public class Action  implements Serializable {
     private String zipfilelocation;
 	@Element
     private String md5sum;
+	@Element(required=false)
+    private boolean stockOnly;
     @ElementList(required=false)
     private ArrayList<Action> dependencies;
 
@@ -61,6 +63,10 @@ public class Action  implements Serializable {
         return md5sum;
     }
     
+    public boolean getStockOnly(){
+    	return stockOnly;
+    }
+    
     public ArrayList<Action> getDependencies() {
         return dependencies;
     }
@@ -87,6 +93,10 @@ public class Action  implements Serializable {
     
     public void setMd5sum( String md5sum ) {
         this.md5sum = md5sum;
+    }
+    
+    public void setStockOnly( boolean stockOnly ){
+    	this.stockOnly = stockOnly;
     }
     
     public void setDependencies( ArrayList<Action> dependencies ) {
