@@ -19,6 +19,8 @@ public class Device {
     private ArrayList<String> firmware;
 	@Element
     private String prop_id;
+	@Element
+    private String sw_prop_id;
     @ElementList
     private ArrayList< Action > actions;
     
@@ -53,6 +55,10 @@ public class Device {
     	return prop_id;
     }
     
+    public String getSW_Prop_id(){
+    	return sw_prop_id;
+    }
+    
     public ArrayList< Action > getActions() {
         return actions;
     }
@@ -77,8 +83,11 @@ public class Device {
     	this.prop_id = prop_id;
     }
     
+    public void setSW_Prop_id(String sw_prop_id){
+    	this.sw_prop_id = sw_prop_id;
+    }
+    
     public void setActions( ArrayList< Action > actions ) {
         this.actions = actions;
     }
 }
-
