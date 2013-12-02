@@ -26,6 +26,8 @@ public class Action  implements Serializable {
     private String md5sum;
 	@Element(required=false)
     private boolean stockOnly;
+	@Element(required=false)
+    private boolean hidden;
     @ElementList(required=false)
     private ArrayList<Action> dependencies;
 
@@ -67,6 +69,10 @@ public class Action  implements Serializable {
     	return stockOnly;
     }
     
+    public boolean getHidden(){
+    	return hidden;
+    }
+    
     public ArrayList<Action> getDependencies() {
         return dependencies;
     }
@@ -97,6 +103,10 @@ public class Action  implements Serializable {
     
     public void setStockOnly( boolean stockOnly ){
     	this.stockOnly = stockOnly;
+    }
+    
+    public void setHidden( boolean hidden ){
+    	this.hidden = hidden;
     }
     
     public void setDependencies( ArrayList<Action> dependencies ) {

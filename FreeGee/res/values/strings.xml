@@ -18,4 +18,8 @@
     <string name="download_failed">"Could not download file"</string>
     <string name="download_success">Download was successful</string>
     <string name="md5_verification_failed">MD5sum check failed</string>
+    <string name="changelog_full_title">Change Log</string>
+    <string name="changelog_title">What\'s New</string>
+    <string name="changelog_ok_button">OK</string>
+    <string name="changelog_show_full">more...</string>
 </resources>

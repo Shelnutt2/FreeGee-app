@@ -34,5 +34,6 @@
 			<attribute name="javadoc_location" value="jar:file:/home/s.shelnutt/Downloads/RootTools-javadoc-3.3.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="src" path="/chgloglib"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

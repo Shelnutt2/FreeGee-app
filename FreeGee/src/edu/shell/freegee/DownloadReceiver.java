@@ -182,7 +182,7 @@ public class DownloadReceiver extends BroadcastReceiver{
             	//|| getMd5sumSet.contains(calculateMD5(updateFile).toLowerCase(Locale.US))) {
             
                 // We passed. Bring the main app to the foreground and trigger download completed
-            	Log.v("Freegee","Download id from comp is: "+Long.toString(id));
+            	Log.v("Freegee","Download id from completition is: "+Long.toString(id));
                 updateIntent.putExtra(FreeGee.EXTRA_FINISHED_DOWNLOAD_ID, id);
                 updateIntent.putExtra(FreeGee.EXTRA_FINISHED_DOWNLOAD_PATH, completedFileFullPath);
 /*            } else {

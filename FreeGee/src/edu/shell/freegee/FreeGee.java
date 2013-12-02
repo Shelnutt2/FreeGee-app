@@ -5,6 +5,8 @@
 
 package edu.shell.freegee;
 
+import it.gmariotti.changelibs.library.view.ChangeLogListView;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -43,11 +45,14 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -99,6 +104,13 @@ public class FreeGee extends Activity implements OnClickListener {
         mMainActivityActive = true;
     	checkForDownloadCompleted(getIntent());
     }
+
+    private void showChangeLog(){
+        ChangeLog cl = new ChangeLog(this);
+        if (cl.firstRun())
+            cl.getLogDialog().show();
+    }
+    
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -450,6 +462,8 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 
+		showChangeLog();
+		
         getDevices();
        
         checkForDownloadCompleted(getIntent());
@@ -461,7 +475,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	//Toast.makeText(this, "Updating Grid View", Toast.LENGTH_LONG).show();
     	int j = 0;
         for(int i = 0; i < device.getActions().size();i++){
-        	if((device.getActions().get(i).getStockOnly() && swprop != null ) || !device.getActions().get(i).getStockOnly()){
+        	if(((device.getActions().get(i).getStockOnly() && swprop != null ) || !device.getActions().get(i).getStockOnly()) && !device.getActions().get(i).getHidden()){
     		Button cb = new Button(this);
   		    cb.setText(device.getActions().get(i).getName());
   		    
@@ -528,13 +542,14 @@ public class FreeGee extends Activity implements OnClickListener {
     	    	     processAction(a);
     	    	     mProgressDialog = new ProgressDialog(FreeGee.this);      
     	    	     mProgressDialog.setIndeterminate(true);
+    	    	     mProgressDialog.setCancelable(false);
     	    	     mProgressDialog.setMessage("Performing action " + a.getName() + " ...");
     	    	     mProgressDialog.show();
     	    	}
     	    	})
     	    	.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
         	    	public void onClick(DialogInterface dialog,int id) {
-        	    		Toast.makeText(getBaseContext(), "Action" + a.getName() + " was cancelled", Toast.LENGTH_SHORT).show();
+        	    		Toast.makeText(getBaseContext(), "Action " + a.getName() + " was cancelled", Toast.LENGTH_SHORT).show();
        	    	}
     	    	});
 
@@ -602,10 +617,6 @@ public class FreeGee extends Activity implements OnClickListener {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        // Check if we need to refresh the screen to show new updates
-/*        if (intent.getBooleanExtra(EXTRA_UPDATE_LIST_UPDATED, false)) {
-            updateLayout();
-        }*/
         if(intent.hasExtra(DOWNLOAD_ERROR)){
         	mProgressDialog.dismiss();
         	alertbuilder("Error","There was an error downloading the necessary files","ok",0);
@@ -638,10 +649,12 @@ public class FreeGee extends Activity implements OnClickListener {
         	matchDevice();
         }
         else{
+        	Log.v(LOG_TAG,"Matching action");
             ArrayList<Action> actions = myDevice.getActions();
             for(Action i:actions){
-        	    if (i.getZipFile().equalsIgnoreCase(fileName))
+        	    if (i.getZipFile().equalsIgnoreCase(fileName)){
             	    doAction(i,fullPathName);
+        	    }
             }
         }
     }
@@ -767,13 +780,15 @@ public class FreeGee extends Activity implements OnClickListener {
     }
     
     public void processAction(Action action){
-		actionsleft++;
-    	if(action.getDependencies() != null && !action.getDependencies().isEmpty()){
-    		for(Action i:action.getDependencies()){
-    			processAction(i);
-    		}
-    	}
+    	if((action.getStockOnly() && swprop != null) || !action.getStockOnly()){
+    	    actionsleft++;
+    	    if(action.getDependencies() != null && !action.getDependencies().isEmpty()){
+    		    for(Action i:action.getDependencies()){
+    			    processAction(i);
+    		    }
+    	    }
     	startDownload(action);
+    	}
     }
     
     public void startDownload(Action action){
