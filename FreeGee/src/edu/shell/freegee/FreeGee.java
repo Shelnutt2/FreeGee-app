@@ -121,6 +121,10 @@ public class FreeGee extends Activity implements OnClickListener {
 		  if(!freegeef.exists()){
 			  freegeef.mkdirs();
 		  }
+	    	File freegeeft=new File( "/sdcard"+"/freegee"+"/tools ");
+			  if(!freegeeft.exists()){
+				  freegeeft.mkdirs();
+			  }
 		if (!RootTools.isAccessGiven()) {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
@@ -188,7 +192,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			e.printStackTrace();
 		}
 		
-		if(!new File("/data/data/edu.shell.freegee/edifier").exists()){
+		if(!new File("/sdcard/freegee/tools/edifier").exists()){
 		  InputStream in = null;
 		  OutputStream out = null;
 		  try {
@@ -196,7 +200,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			in = getAssets().open("edifier");
 	 
 			// write the inputStream to a FileOutputStream
-			out = new FileOutputStream(new File("/data/data/edu.shell.freegee/edifier"));
+			out = new FileOutputStream(new File("/sdcard/freegee/tools/edifier"));
 			int read = 0;
 			byte[] bytes = new byte[50468];
 	 
@@ -226,7 +230,7 @@ public class FreeGee extends Activity implements OnClickListener {
 		  }
 		}
 		
-		if(!new File("/data/data/edu.shell.freegee/keys").exists()){
+		if(!new File("/sdcard/freegee/tools/keys").exists()){
 			  InputStream in = null;
 			  OutputStream out = null;
 			  try {
@@ -234,7 +238,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				in = getAssets().open("keys");
 		 
 				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/data/data/edu.shell.freegee/keys"));
+				out = new FileOutputStream(new File("/sdcard/freegee/tools/keys"));
 				int read = 0;
 				byte[] bytes = new byte[50468];
 		 
@@ -264,7 +268,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			  }
 			}
 		
-		if(!new File("/data/data/edu.shell.freegee/mkbootimg").exists()){
+		if(!new File("/sdcard/freegee/tools/mkbootimg").exists()){
 			  InputStream in = null;
 			  OutputStream out = null;
 			  try {
@@ -272,7 +276,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				in = getAssets().open("mkbootimg");
 		 
 				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/data/data/edu.shell.freegee/mkbootimg"));
+				out = new FileOutputStream(new File("/sdcard/freegee/tools/mkbootimg"));
 				int read = 0;
 				byte[] bytes = new byte[50468];
 		 
@@ -302,7 +306,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			  }
 			}
 		
-		if(!new File("/data/data/edu.shell.freegee/unpackbootimg").exists()){
+		if(!new File("/sdcard/freegee/tools/unpackbootimg").exists()){
 			  InputStream in = null;
 			  OutputStream out = null;
 			  try {
@@ -310,7 +314,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				in = getAssets().open("unpackbootimg");
 		 
 				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/data/data/edu.shell.freegee/unpackbootimg"));
+				out = new FileOutputStream(new File("/sdcard/freegee/tools/unpackbootimg"));
 				int read = 0;
 				byte[] bytes = new byte[50468];
 		 
@@ -340,7 +344,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			  }
 			}
 		
-		if(!new File("/data/data/edu.shell.freegee/busybox").exists()){
+		if(!new File("/sdcard/freegee/tools/busybox").exists()){
 			  InputStream in = null;
 			  OutputStream out = null;
 			  try {
@@ -348,7 +352,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				in = getAssets().open("busybox");
 		 
 				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/data/data/edu.shell.freegee/busybox"));
+				out = new FileOutputStream(new File("/sdcard/freegee/tools/busybox"));
 				int read = 0;
 				byte[] bytes = new byte[50468];
 		 
@@ -378,7 +382,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			  }
 			}
 		
-		CommandCapture command = new CommandCapture(0,"chmod 755 /data/data/edu.shell.freegee/edifier");
+		CommandCapture command = new CommandCapture(0,"cp /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -392,7 +396,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"chmod 644 /data/data/edu.shell.freegee/keys");
+		command = new CommandCapture(0,"cp /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -406,7 +410,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"chmod 755 /data/data/edu.shell.freegee/mkbootimg");
+		command = new CommandCapture(0,"cp /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -420,7 +424,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"chmod 755 /data/data/edu.shell.freegee/unpackbootimg");
+		command = new CommandCapture(0,"cp /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -434,26 +438,12 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"chmod 755 /data/data/edu.shell.freegee/busybox");
+		command = new CommandCapture(0,"cp /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
 			Log.e(LOG_TAG,"busybox not found in assets");
 			alertbuilder("Error!","Can't open busybox","Ok",1);
-		} catch (TimeoutException e) {
-			Log.e(LOG_TAG,"Chmod timed out");
-			alertbuilder("Error!","Chmod timed out","Ok",1);
-		} catch (RootDeniedException e) {
-			Log.e(LOG_TAG,"No root access!");
-			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
-		}
-		
-		command = new CommandCapture(0,"chmod 755 /data/data/edu.shell.freegee/edifier");
-		try {
-			RootTools.getShell(true).add(command).isFinished();
-		} catch (IOException e) {
-			Log.e(LOG_TAG,"Edifier not found in assets");
-			alertbuilder("Error!","Can't open edifier","Ok",1);
 		} catch (TimeoutException e) {
 			Log.e(LOG_TAG,"Chmod timed out");
 			alertbuilder("Error!","Chmod timed out","Ok",1);
@@ -697,7 +687,7 @@ public class FreeGee extends Activity implements OnClickListener {
     
     public boolean doAction(Action i, String fullPathName){
 
-		 CommandCapture command = new CommandCapture(0,"/data/data/edu.shell.freegee/edifier "+ "/sdcard/freegee/"+i.getZipFile()){
+		 CommandCapture command = new CommandCapture(0,"/data/local/tmp/edifier "+ "/sdcard/freegee/"+i.getZipFile()){
 	        @Override
 	        public void output(int id, String line)
 	        {

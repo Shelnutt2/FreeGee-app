@@ -19,7 +19,12 @@
     </style>
   </head>
   <body>
-$ 2.1.1
+$ 1.9.5  
+  % Version 1.9.5
+  _ 2013-12-03
+    * Fixed minor bug which caused error 127 on JB 4.1 and 4.2 stock devicse
+    
+$ 1.9.4
   % Version 1.9.4
   _ 2013-12-02
     * Complete Rewrite

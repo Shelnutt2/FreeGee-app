@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="edu.shell.freegee"
     android:versionCode="56"
-    android:versionName="1.9.4" android:installLocation="auto">
+    android:versionName="1.9.5" android:installLocation="auto">
 
     <uses-sdk
         android:minSdkVersion="14"
