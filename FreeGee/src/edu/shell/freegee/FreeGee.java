@@ -121,13 +121,19 @@ public class FreeGee extends Activity implements OnClickListener {
 		  if(!freegeef.exists()){
 			  freegeef.mkdirs();
 		  }
-	    	File freegeeft=new File( "/sdcard"+"/freegee"+"/tools ");
+	    	File freegeeft=new File( "/sdcard"+"/freegee"+"/tools");
 			  if(!freegeeft.exists()){
 				  freegeeft.mkdirs();
 			  }
 		if (!RootTools.isAccessGiven()) {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
+		
+		if(!RootTools.isBusyboxAvailable()){
+			alertbuilder("Error!","BusyBox not installed. Please install it now","Ok",0);
+			RootTools.offerBusyBox(this);
+		}
+		
 		if(getBatteryLevel() < 15.0)
 			alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
 		
@@ -209,6 +215,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			}	 
 		  } catch (IOException e) {
 			Log.e(LOG_TAG,"Edifier not found in assets");
+			alertbuilder("Error!","Can't copy Edifier from assets","Ok",1);
 			e.printStackTrace();
 		  } finally {
 			if (in != null) {
@@ -247,6 +254,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				}	 
 			  } catch (IOException e) {
 				Log.e(LOG_TAG,"Keys not found in assets");
+				alertbuilder("Error!","Can't copy keys from assets","Ok",1);
 				e.printStackTrace();
 			  } finally {
 				if (in != null) {
@@ -285,6 +293,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				}	 
 			  } catch (IOException e) {
 				Log.e(LOG_TAG,"mkbootimg not found in assets");
+				alertbuilder("Error!","Can't copy mkbootimg from assets","Ok",1);
 				e.printStackTrace();
 			  } finally {
 				if (in != null) {
@@ -323,6 +332,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				}	 
 			  } catch (IOException e) {
 				Log.e(LOG_TAG,"unpackbootimg not found in assets");
+				alertbuilder("Error!","Can't copy unpackbootimg from assets","Ok",1);
 				e.printStackTrace();
 			  } finally {
 				if (in != null) {
@@ -361,6 +371,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				}	 
 			  } catch (IOException e) {
 				Log.e(LOG_TAG,"busybox not found in assets");
+				alertbuilder("Error!","Can't copy busybox from assets","Ok",1);
 				e.printStackTrace();
 			  } finally {
 				if (in != null) {
@@ -382,7 +393,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			  }
 			}
 		
-		CommandCapture command = new CommandCapture(0,"cp /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier");
+		CommandCapture command = new CommandCapture(0,"busybox cp /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -396,7 +407,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"cp /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys");
+		command = new CommandCapture(0,"busybox cp /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -410,7 +421,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"cp /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg");
+		command = new CommandCapture(0,"busybox cp /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -424,7 +435,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"cp /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg");
+		command = new CommandCapture(0,"busybox cp /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -438,7 +449,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"cp /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox");
+		command = new CommandCapture(0,"busybox cp /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {

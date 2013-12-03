@@ -19,6 +19,10 @@
     </style>
   </head>
   <body>
+$ 1.9.6
+  % Version 1.9.6
+  _ 2013-12-03
+    * Add BusyBox dependencies and check. This is needed for LGE 4.1 devices
 $ 1.9.5  
   % Version 1.9.5
   _ 2013-12-03
