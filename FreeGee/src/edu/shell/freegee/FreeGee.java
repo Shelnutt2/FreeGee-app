@@ -510,15 +510,18 @@ public class FreeGee extends Activity implements OnClickListener {
 		gridView.setAdapter(new ButtonAdapter(mButtons));
     }
     
-    public void unSerializeDevices(){
+    public boolean unSerializeDevices(){
     	//Toast.makeText(this, "Unserializing Devices", Toast.LENGTH_LONG).show();
     	Serializer serializer = new Persister();
     	File source = new File(DEVICE_XML);
     	try {
 			DeviceList = serializer.read(Devices.class, source).getDevices();
+			return true;
 		} catch (Exception e) {
 			Log.e(LOG_TAG,"Could not unserialize");
+			mProgressDialog.dismiss();
 			alertbuilder("Error!","Could not unserialize devices from xml","Ok",1);
+			return false;
 		}
     }
     
@@ -646,8 +649,8 @@ public class FreeGee extends Activity implements OnClickListener {
 
         String fileName = new File(fullPathName).getName();
         if(fileName.equalsIgnoreCase("devices.xml")){
-        	unSerializeDevices();
-        	matchDevice();
+        	if(unSerializeDevices())
+        	    matchDevice();
         }
         else{
         	Log.v(LOG_TAG,"Matching action");
@@ -661,6 +664,12 @@ public class FreeGee extends Activity implements OnClickListener {
     }
     
     public void matchDevice(){
+    	mProgressDialog.setMessage("Matching device");
+    	if(DeviceList == null){
+    		mProgressDialog.dismiss();
+    		alertbuilder("Error!","Could not unserialize devices from xml","Ok",1);
+    		return;
+    	}
     	for(Device device:DeviceList){
     		String prop = buildProp.getProperty(device.getProp_id());
     		String prop2 = buildProp.getProperty(device.getProp_id().toLowerCase(Locale.US));
@@ -692,8 +701,10 @@ public class FreeGee extends Activity implements OnClickListener {
     	     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
     	}
     	else{
+    		mProgressDialog.dismiss();
     		alertbuilder("Unsupported", "Your devices is not currently supported", "ok", 1);
     	}
+    	mProgressDialog.dismiss();
     }
     
     public boolean doAction(Action i, String fullPathName){
@@ -800,6 +811,12 @@ public class FreeGee extends Activity implements OnClickListener {
     }
     
     public void getDevices(){
+	    mProgressDialog = new ProgressDialog(FreeGee.this);      
+	    mProgressDialog.setIndeterminate(true);
+	    mProgressDialog.setCancelable(false);
+	    mProgressDialog.setMessage("Downloading supported device list...");
+	    mProgressDialog.show();
+	    
         Action dAction = new Action();
         dAction.setName("devices.xml");
         dAction.setZipFile("devices.xml");
