@@ -92,7 +92,7 @@ public class FreeGee extends Activity implements OnClickListener {
     
     private int actionsleft = 0;
     private Action mainAction;
-    
+    private boolean ActionSuccess = true;
     private String swprop;
     
     private String LOG_TAG = "Freegee";
@@ -653,13 +653,21 @@ public class FreeGee extends Activity implements OnClickListener {
         	    matchDevice();
         }
         else{
-        	Log.v(LOG_TAG,"Matching action");
-            ArrayList<Action> actions = myDevice.getActions();
-            for(Action i:actions){
-        	    if (i.getZipFile().equalsIgnoreCase(fileName)){
-            	    doAction(i,fullPathName);
-        	    }
-            }
+        	Log.v(LOG_TAG, "ActionSuccess is: " + ActionSuccess);
+        	if(ActionSuccess){
+        	    Log.v(LOG_TAG,"Matching action");
+                ArrayList<Action> actions = myDevice.getActions();
+                for(Action i:actions){
+        	        if (i.getZipFile().equalsIgnoreCase(fileName)){
+            	        ActionSuccess = doAction(i,fullPathName);
+        	        }
+                }
+        	}
+        	else{
+        		actionsleft--;
+        		if(actionsleft == 0)
+        			ActionSuccess = false;
+        	}
         }
     }
     
