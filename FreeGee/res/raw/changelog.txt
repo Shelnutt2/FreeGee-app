@@ -20,6 +20,11 @@
   </head>
   <body>
 $ 1.9.6
+  % Version 1.9.7
+  _ 2013-12-08
+    * Improved detection of failed actions
+    * Added progress dialog for downloading initial supported devices
+$ 1.9.6
   % Version 1.9.6
   _ 2013-12-03
     * Add BusyBox dependencies and check. This is needed for LGE 4.1 devices

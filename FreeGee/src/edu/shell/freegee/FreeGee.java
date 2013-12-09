@@ -476,7 +476,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	//Toast.makeText(this, "Updating Grid View", Toast.LENGTH_LONG).show();
     	int j = 0;
         for(int i = 0; i < device.getActions().size();i++){
-        	if(((device.getActions().get(i).getStockOnly() && swprop != null ) || !device.getActions().get(i).getStockOnly()) && !device.getActions().get(i).getHidden()){
+        	if(((device.getActions().get(i).getStockOnly() && onStock() ) || !device.getActions().get(i).getStockOnly()) && !device.getActions().get(i).getHidden()){
     		Button cb = new Button(this);
   		    cb.setText(device.getActions().get(i).getName());
   		    
@@ -510,6 +510,14 @@ public class FreeGee extends Activity implements OnClickListener {
 		gridView.setAdapter(new ButtonAdapter(mButtons));
     }
     
+    public boolean onStock(){
+    	if(swprop != null)
+    		return true;
+    	else
+    		return false;
+    	
+    }
+
     public boolean unSerializeDevices(){
     	//Toast.makeText(this, "Unserializing Devices", Toast.LENGTH_LONG).show();
     	Serializer serializer = new Persister();
@@ -531,44 +539,68 @@ public class FreeGee extends Activity implements OnClickListener {
      //Toast.makeText(getBaseContext(), selection.getText()+ " was pressed!", Toast.LENGTH_SHORT).show();
      for(final Action a:myDevice.getActions()){
     	 if(a.getName().equals(selection.getText())){
-    	    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        	    
-    	    	// set title
-    	    	alertDialogBuilder.setTitle(a.getName());
-
-    	    	// set dialog message
-    	    	alertDialogBuilder
-    	    	.setMessage(a.getDescription())
-    	    	.setCancelable(false)
-    	    	.setPositiveButton("Proceed",new DialogInterface.OnClickListener() {
-    	    	public void onClick(DialogInterface dialog,int id) {
-    	    		 mainAction = a;
-    	    	     processAction(a);
-    	    	     mProgressDialog = new ProgressDialog(FreeGee.this);      
-    	    	     mProgressDialog.setIndeterminate(true);
-    	    	     mProgressDialog.setCancelable(false);
-    	    	     mProgressDialog.setMessage("Performing action " + a.getName() + " ...");
-    	    	     mProgressDialog.show();
-    	    	}
-    	    	})
-    	    	.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
-        	    	public void onClick(DialogInterface dialog,int id) {
-        	    		Toast.makeText(getBaseContext(), "Action " + a.getName() + " was cancelled", Toast.LENGTH_SHORT).show();
-       	    	}
-    	    	});
-
-    	    	// create alert dialog
-    	    	AlertDialog alertDialog = alertDialogBuilder.create();
-
-    	    	// show it
-    	    	alertDialog.show();
+    		 if(onStock()){
+    			 //checkForMakoUnlock(a,false);
+    		 }
+    		 showActionAlertDialog(a);
     	    	break;
     	 }
      }
      //Toast.makeText(getBaseContext(), "Result is: "+result, Toast.LENGTH_SHORT).show();
     }
     
-    public class ButtonAdapter extends BaseAdapter {  
+/*    private boolean checkForMakoUnlock(Action a, boolean exit) {
+    	if (exit)
+    		return true;
+    	if(!a.getDependencies().isEmpty()){
+    		for(Action b:a.getDependencies()){
+    			exit = checkForMakoUnlock(b, exit);
+    		}
+    	}
+    	if (exit)
+    		return true;
+    	if(a.getName().equalsIgnoreCase("Unlock") || a.getName().equalsIgnoreCase("Mako Unlock")){
+    		
+    	}
+		
+	}*/
+
+	private void showActionAlertDialog(final Action a) {
+    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+	    
+    	// set title
+    	alertDialogBuilder.setTitle(a.getName());
+
+    	// set dialog message
+    	alertDialogBuilder
+    	.setMessage(a.getDescription())
+    	.setCancelable(false)
+    	.setPositiveButton("Proceed",new DialogInterface.OnClickListener() {
+    	public void onClick(DialogInterface dialog,int id) {
+    		 mainAction = a;
+    	     processAction(a);
+    	     mProgressDialog = new ProgressDialog(FreeGee.this);      
+    	     mProgressDialog.setIndeterminate(true);
+    	     mProgressDialog.setCancelable(false);
+    	     mProgressDialog.setMessage("Performing action " + a.getName() + " ...");
+    	     mProgressDialog.show();
+    	}
+    	})
+    	.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
+	    	public void onClick(DialogInterface dialog,int id) {
+	    		Toast.makeText(getBaseContext(), "Action " + a.getName() + " was cancelled", Toast.LENGTH_SHORT).show();
+	    	}
+    	});
+
+    	// create alert dialog
+    	AlertDialog alertDialog = alertDialogBuilder.create();
+
+    	// show it
+    	alertDialog.show();
+		
+	}
+
+	public class ButtonAdapter extends BaseAdapter {  
     	private ArrayList<Object> mButtons = null;
 
     	public ButtonAdapter(ArrayList<Object> b) {
@@ -653,20 +685,24 @@ public class FreeGee extends Activity implements OnClickListener {
         	    matchDevice();
         }
         else{
-        	Log.v(LOG_TAG, "ActionSuccess is: " + ActionSuccess);
-        	if(ActionSuccess){
-        	    Log.v(LOG_TAG,"Matching action");
-                ArrayList<Action> actions = myDevice.getActions();
-                for(Action i:actions){
-        	        if (i.getZipFile().equalsIgnoreCase(fileName)){
-            	        ActionSuccess = doAction(i,fullPathName);
-        	        }
-                }
+        	if(myDevice != null && myDevice.getActions() != null){
+        	    if(ActionSuccess){
+        	        Log.v(LOG_TAG,"Matching action");
+                    ArrayList<Action> actions = myDevice.getActions();
+                    for(Action i:actions){
+        	            if (i.getZipFile().equalsIgnoreCase(fileName)){
+            	            ActionSuccess = doAction(i,fullPathName);
+        	            }
+                    }
+        	    }
+        	    else{
+        		    actionsleft--;
+        		    if(actionsleft == 0)
+        			    ActionSuccess = false;
+        	    }
         	}
         	else{
-        		actionsleft--;
-        		if(actionsleft == 0)
-        			ActionSuccess = false;
+        		alertbuilder("Error","There was an error detecting what was downloaded. This usually can be fixed by closing and reopening the applications.","Close now",1);
         	}
         }
     }
@@ -800,7 +836,7 @@ public class FreeGee extends Activity implements OnClickListener {
     }
     
     public void processAction(Action action){
-    	if((action.getStockOnly() && swprop != null) || !action.getStockOnly()){
+    	if((action.getStockOnly() && onStock()) || !action.getStockOnly()){
     	    actionsleft++;
     	    if(action.getDependencies() != null && !action.getDependencies().isEmpty()){
     		    for(Action i:action.getDependencies()){
