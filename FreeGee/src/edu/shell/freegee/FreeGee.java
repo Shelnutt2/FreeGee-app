@@ -87,6 +87,8 @@ public class FreeGee extends Activity implements OnClickListener {
     public static final String EXTRA_FINISHED_DOWNLOAD_ID = "download_id";
     public static final String EXTRA_FINISHED_DOWNLOAD_PATH = "download_path";
     public static final String DOWNLOAD_ERROR = "Error";
+
+	private static String CP_COMMAND;
     
     private Properties buildProp = new Properties();
     
@@ -96,6 +98,10 @@ public class FreeGee extends Activity implements OnClickListener {
     private String swprop;
     
     private String LOG_TAG = "Freegee";
+    
+    private boolean makoUnlock = true;
+    private Action ogunlock;
+    private Action ogMakounlock;
     
     
     @Override
@@ -109,6 +115,64 @@ public class FreeGee extends Activity implements OnClickListener {
         ChangeLog cl = new ChangeLog(this);
         if (cl.firstRun())
             cl.getLogDialog().show();
+    }
+    
+    private boolean findCP(){
+    	CommandCapture command = new CommandCapture(0,"ls /system/bin/cp");
+		Shell shell = null;
+		try {
+			shell = RootTools.getShell(true,60000);
+		} catch (IOException e) {
+			Log.e(LOG_TAG, "Root Denined!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		} catch (TimeoutException e) {
+			Log.e(LOG_TAG, "Timed out ls /system/bin/cp!");
+			alertbuilder("Error!","Timed out looking for cp","Ok",1);
+		} catch (RootDeniedException e) {
+			Log.e(LOG_TAG, "Root Denined!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		try {
+			shell.add(command);
+		} catch (IOException e) {
+			Log.e(LOG_TAG, "Root Denined!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		try {
+			commandWait(command);
+		} catch (Exception e1) {
+			Log.e(LOG_TAG, "Timed out ls /system/bin/cp!");
+			alertbuilder("Error!","Timed out looking for cp","Ok",1);
+		}
+		int err = command.getExitCode();
+		if(err == 0){
+			CP_COMMAND="/system/bin/cp";
+			Log.v(LOG_TAG,"CP_COMMAND is " + CP_COMMAND);
+			return true;
+		}
+		else{
+			command = new CommandCapture(0,"ls /system/xbin/cp");
+			try {
+				shell.add(command);
+			} catch (IOException e) {
+				Log.e(LOG_TAG, "Timed out ls /system/xbin/cp!");
+				alertbuilder("Error!","Timed out looking for cp","Ok",1);
+			}
+			try {
+				commandWait(command);
+			} catch (Exception e) {
+				Log.e(LOG_TAG, "Timed out ls /system/xbin/cp!");
+				alertbuilder("Error!","Timed out looking for cp","Ok",1);
+			}
+			err = command.getExitCode();
+			if(err == 0){
+				CP_COMMAND="/system/xbin/cp";
+				Log.v(LOG_TAG,"CP_COMMAND is " + CP_COMMAND);
+				return true;
+			}
+		}
+		
+    	return false;
     }
     
     /** Called when the activity is first created. */
@@ -126,13 +190,19 @@ public class FreeGee extends Activity implements OnClickListener {
 				  freegeeft.mkdirs();
 			  }
 		if (!RootTools.isAccessGiven()) {
+			Log.e(LOG_TAG, "Root Denined!");
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
 		if(!RootTools.isBusyboxAvailable()){
+			Log.e(LOG_TAG, "Buysbox no found!");
 			alertbuilder("Error!","BusyBox not installed. Please install it now","Ok",0);
 			RootTools.offerBusyBox(this);
 		}
+		
+		if(!findCP())
+			CP_COMMAND="busybox cp";
+		Log.v(LOG_TAG,"CP_COMMAND is " + CP_COMMAND);
 		
 		if(getBatteryLevel() < 15.0)
 			alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
@@ -393,7 +463,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			  }
 			}
 		
-		CommandCapture command = new CommandCapture(0,"busybox cp /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier");
+		CommandCapture command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -407,7 +477,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"busybox cp /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys");
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -421,7 +491,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"busybox cp /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg");
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -435,7 +505,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"busybox cp /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg");
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -449,7 +519,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,"busybox cp /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox");
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox");
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -540,7 +610,9 @@ public class FreeGee extends Activity implements OnClickListener {
      for(final Action a:myDevice.getActions()){
     	 if(a.getName().equals(selection.getText())){
     		 if(onStock()){
-    			 //checkForMakoUnlock(a,false);
+    			 if(checkForUnlock(a,false)){
+    				 promptUnlockAlertDialog(a);
+    			 }
     		 }
     		 showActionAlertDialog(a);
     	    	break;
@@ -549,21 +621,54 @@ public class FreeGee extends Activity implements OnClickListener {
      //Toast.makeText(getBaseContext(), "Result is: "+result, Toast.LENGTH_SHORT).show();
     }
     
-/*    private boolean checkForMakoUnlock(Action a, boolean exit) {
-    	if (exit)
+    private boolean checkForUnlock(Action a, boolean unlock) {
+    	if(!myDevice.getName().equalsIgnoreCase("LG Optimus G"))
+    		return false;
+    	if (unlock)
     		return true;
-    	if(!a.getDependencies().isEmpty()){
+    	if(a.getDependencies() != null && !a.getDependencies().isEmpty()){
     		for(Action b:a.getDependencies()){
-    			exit = checkForMakoUnlock(b, exit);
+    			unlock = checkForUnlock(b, unlock);
     		}
     	}
-    	if (exit)
+    	if (unlock)
     		return true;
-    	if(a.getName().equalsIgnoreCase("Unlock") || a.getName().equalsIgnoreCase("Mako Unlock")){
-    		
+    	if(a.getName().equalsIgnoreCase("Optimus G Unlock") || a.getName().equalsIgnoreCase("Mako Unlock")){
+    		return true;
     	}
+    	else
+    		return false;
 		
-	}*/
+	}
+    
+	private void promptUnlockAlertDialog(final Action a) {
+    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+	    
+    	// set title
+    	alertDialogBuilder.setTitle(a.getName());
+
+    	// set dialog message
+    	alertDialogBuilder
+    	.setMessage("The action of "+ a.getName() + " requires your device to be unlocked. There are two unlock options avaliable. The mako (formerly sbl) unlock will give you the boot menu screen. It has no increased risk over the standard unlock. The standard is the classic unlock procedure used on old freegee.")
+    	.setCancelable(false)
+    	.setPositiveButton("Mako Unlock",new DialogInterface.OnClickListener() {
+    	public void onClick(DialogInterface dialog,int id) {
+    	     makoUnlock = true;
+    	}
+    	})
+    	.setNegativeButton("Classic Unlock",new DialogInterface.OnClickListener() {
+	    	public void onClick(DialogInterface dialog,int id) {
+	    		makoUnlock = false;
+	    	}
+    	});
+
+    	// create alert dialog
+    	AlertDialog alertDialog = alertDialogBuilder.create();
+
+    	// show it
+    	alertDialog.show();
+		
+	}
 
 	private void showActionAlertDialog(final Action a) {
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -577,13 +682,13 @@ public class FreeGee extends Activity implements OnClickListener {
     	.setCancelable(false)
     	.setPositiveButton("Proceed",new DialogInterface.OnClickListener() {
     	public void onClick(DialogInterface dialog,int id) {
-    		 mainAction = a;
-    	     processAction(a);
     	     mProgressDialog = new ProgressDialog(FreeGee.this);      
     	     mProgressDialog.setIndeterminate(true);
     	     mProgressDialog.setCancelable(false);
     	     mProgressDialog.setMessage("Performing action " + a.getName() + " ...");
     	     mProgressDialog.show();
+    		 mainAction = a;
+    	     processAction(a);
     	}
     	})
     	.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
@@ -722,12 +827,16 @@ public class FreeGee extends Activity implements OnClickListener {
     		if(prop != null){
     			if(prop.equalsIgnoreCase(model)){
     				myDevice = device;
+    				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
+    					setUnlocks();
     				break;
     			}
     		}
     		if(prop2 != null){
     			if(prop2.equalsIgnoreCase(model)){
     				myDevice = device;
+    				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
+    					setUnlocks();
     				break;
     			}
     		}
@@ -749,6 +858,15 @@ public class FreeGee extends Activity implements OnClickListener {
     		alertbuilder("Unsupported", "Your devices is not currently supported", "ok", 1);
     	}
     	mProgressDialog.dismiss();
+    }
+    
+    public void setUnlocks(){
+    	for(Action a:myDevice.getActions()){
+    		if(a.getName().equalsIgnoreCase("Optimus G Unlock"))
+    			ogunlock = a;
+    		else if(a.getName().equalsIgnoreCase("Mako Unlock"))
+    			ogMakounlock = a;
+    	}    	
     }
     
     public boolean doAction(Action i, String fullPathName){
@@ -823,7 +941,7 @@ public class FreeGee extends Activity implements OnClickListener {
     }
     
     public float getBatteryLevel() {
-        Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        Intent batteryIntent = this.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 
@@ -843,7 +961,32 @@ public class FreeGee extends Activity implements OnClickListener {
     			    processAction(i);
     		    }
     	    }
-    	startDownload(action);
+    	    
+    	    if(myDevice.getName().equalsIgnoreCase("LG Optimus G")){
+    	    	if(makoUnlock && action.getName().equalsIgnoreCase("Optimus G Unlock")){
+    	    		action = ogMakounlock;
+    	    	}
+    	    	else if(!makoUnlock && action.getName().equalsIgnoreCase("Mako Unlock")){
+    	    		action = ogunlock;
+    	    	}
+    	    }
+    	    
+    	    String azipS = "/sdcard/freegee/"+action.getZipFile();
+    	    File azipF = new File(azipS);
+    	    if(azipF.exists()){
+    	    	if(utils.checkMD5(action.getMd5sum(), azipF)){
+    	    	    Log.v(LOG_TAG,"Using predownloaded "+action.getName());
+    	    		doAction(action,azipS);
+    	    	}
+    	    	else{
+    	    		Log.v(LOG_TAG,"Downloading "+action.getName());
+    	    		startDownload(action);
+    	    	}
+    	    }
+	    	else{
+	    		Log.v(LOG_TAG,"Downloading "+action.getName());
+	    		startDownload(action);
+	    	}
     	}
     }
     
@@ -855,7 +998,7 @@ public class FreeGee extends Activity implements OnClickListener {
     }
     
     public void getDevices(){
-	    mProgressDialog = new ProgressDialog(FreeGee.this);      
+    	mProgressDialog = new ProgressDialog(FreeGee.this);
 	    mProgressDialog.setIndeterminate(true);
 	    mProgressDialog.setCancelable(false);
 	    mProgressDialog.setMessage("Downloading supported device list...");
@@ -893,21 +1036,6 @@ public class FreeGee extends Activity implements OnClickListener {
         }
     }
 
-    @Override
-    protected Dialog onCreateDialog(int id) {
-        switch (id) {
-		case DIALOG_ACTION_PROGRESS:
-                setmProgressDialog(new ProgressDialog(this));
-                getmProgressDialog().setMessage("Performing Action ..");
-                getmProgressDialog().setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                getmProgressDialog().setCancelable(false);
-                getmProgressDialog().show();
-                return getmProgressDialog();
-		default:
-                return null;
-        }
-    }
-
     public void alertbuilder(String title, String text, String Button, final int exits){
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
     	    
@@ -936,12 +1064,6 @@ public class FreeGee extends Activity implements OnClickListener {
 
     	}
 
-	public static ProgressDialog getmProgressDialog() {
-		return mProgressDialog;
-	}
-	public void setmProgressDialog(ProgressDialog mProgressDialog) {
-		this.mProgressDialog = mProgressDialog;
-	}
 	public static boolean isMainActivityActive() {
 	    return mMainActivityActive;
 	    
