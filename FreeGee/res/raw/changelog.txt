@@ -25,6 +25,7 @@ $ 1.9.6
     * Improved detection of failed actions
     * Added progress dialog for downloading initial supported devices
     * Will default to using exiting action zips if md5sum's match
+    * Added option for choosing mako sbls or stock sbls for optimus g
 $ 1.9.6
   % Version 1.9.6
   _ 2013-12-03

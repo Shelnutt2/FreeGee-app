@@ -194,14 +194,14 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		if(!RootTools.isBusyboxAvailable()){
-			Log.e(LOG_TAG, "Buysbox no found!");
-			alertbuilder("Error!","BusyBox not installed. Please install it now","Ok",0);
-			RootTools.offerBusyBox(this);
-		}
-		
-		if(!findCP())
+		if(!findCP()){
+			if(!RootTools.isBusyboxAvailable()){
+				Log.e(LOG_TAG, "Buysbox no found!");
+				alertbuilder("Error!","BusyBox not installed. Please install it now","Ok",0);
+				RootTools.offerBusyBox(this);
+			}
 			CP_COMMAND="busybox cp";
+		}			
 		Log.v(LOG_TAG,"CP_COMMAND is " + CP_COMMAND);
 		
 		if(getBatteryLevel() < 15.0)
@@ -613,8 +613,13 @@ public class FreeGee extends Activity implements OnClickListener {
     			 if(checkForUnlock(a,false)){
     				 promptUnlockAlertDialog(a);
     			 }
+    			 else{
+    				 showActionAlertDialog(a);
+    			 }
     		 }
-    		 showActionAlertDialog(a);
+    		 else{
+    			 showActionAlertDialog(a);
+    		 }
     	    	break;
     	 }
      }
@@ -649,16 +654,18 @@ public class FreeGee extends Activity implements OnClickListener {
 
     	// set dialog message
     	alertDialogBuilder
-    	.setMessage("The action of "+ a.getName() + " requires your device to be unlocked. There are two unlock options avaliable. The mako (formerly sbl) unlock will give you the boot menu screen. It has no increased risk over the standard unlock. The standard is the classic unlock procedure used on old freegee.")
+    	.setMessage("The action of "+ a.getName() + " requires your device to be unlocked. There are two unlock options avaliable. The mako (formerly sbl) unlock will give you the boot menu screen. It has no increased risk over the standard unlock. The standard is the classic unlock procedure used on old freegee and has a soft brick risk.")
     	.setCancelable(false)
     	.setPositiveButton("Mako Unlock",new DialogInterface.OnClickListener() {
     	public void onClick(DialogInterface dialog,int id) {
     	     makoUnlock = true;
+    	     showActionAlertDialog(a);
     	}
     	})
     	.setNegativeButton("Classic Unlock",new DialogInterface.OnClickListener() {
 	    	public void onClick(DialogInterface dialog,int id) {
 	    		makoUnlock = false;
+	    		showActionAlertDialog(a);
 	    	}
     	});
 
