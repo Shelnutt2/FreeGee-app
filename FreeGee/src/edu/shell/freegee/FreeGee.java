@@ -121,7 +121,9 @@ public class FreeGee extends Activity implements OnClickListener {
     	CommandCapture command = new CommandCapture(0,"ls /system/bin/cp");
 		Shell shell = null;
 		try {
-			shell = RootTools.getShell(true,60000);
+			shell = RootTools.getShell(true);
+			shell.add(command);
+			commandWait(command);
 		} catch (IOException e) {
 			Log.e(LOG_TAG, "Root Denined!");
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
@@ -131,19 +133,7 @@ public class FreeGee extends Activity implements OnClickListener {
 		} catch (RootDeniedException e) {
 			Log.e(LOG_TAG, "Root Denined!");
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
-		}
-		try {
-			shell.add(command);
-		} catch (IOException e) {
-			Log.e(LOG_TAG, "Root Denined!");
-			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
-		}
-		try {
-			commandWait(command);
-		} catch (Exception e1) {
-			Log.e(LOG_TAG, "Timed out ls /system/bin/cp!");
-			alertbuilder("Error!","Timed out looking for cp","Ok",1);
-		}
+		}		
 		int err = command.getExitCode();
 		if(err == 0){
 			CP_COMMAND="/system/bin/cp";
@@ -153,16 +143,18 @@ public class FreeGee extends Activity implements OnClickListener {
 		else{
 			command = new CommandCapture(0,"ls /system/xbin/cp");
 			try {
+				shell = RootTools.getShell(true);
 				shell.add(command);
+				commandWait(command);
 			} catch (IOException e) {
 				Log.e(LOG_TAG, "Timed out ls /system/xbin/cp!");
 				alertbuilder("Error!","Timed out looking for cp","Ok",1);
-			}
-			try {
-				commandWait(command);
-			} catch (Exception e) {
+			} catch (TimeoutException e) {
 				Log.e(LOG_TAG, "Timed out ls /system/xbin/cp!");
 				alertbuilder("Error!","Timed out looking for cp","Ok",1);
+			} catch (RootDeniedException e) {
+				Log.e(LOG_TAG, "Root Denined!");
+				alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 			}
 			err = command.getExitCode();
 			if(err == 0){
@@ -925,7 +917,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			return false;
     }
     
-    private void commandWait(Command cmd) throws Exception {
+    private void commandWait(Command cmd) {
         int waitTill = 50;
         int waitTillMultiplier = 2;
         int waitTillLimit = 60000; //7 tries, 6350 msec
@@ -938,7 +930,8 @@ public class FreeGee extends Activity implements OnClickListener {
                         waitTill *= waitTillMultiplier;
                     }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Log.e(LOG_TAG,"Error with waiting for command: "+ cmd.toString());
+                    alertbuilder("Error","Error with waiting for command: "+ cmd.toString(),"ok",1);
                 }
             }
         }
