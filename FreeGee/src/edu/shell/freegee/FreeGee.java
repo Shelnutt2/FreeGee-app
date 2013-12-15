@@ -5,8 +5,6 @@
 
 package edu.shell.freegee;
 
-import it.gmariotti.changelibs.library.view.ChangeLogListView;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -15,10 +13,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
@@ -37,22 +33,18 @@ import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
 import edu.shell.freegee.R;
+import edu.shell.freegee.utils.constants;
+import edu.shell.freegee.utils.utils;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.os.BatteryManager;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -73,22 +65,17 @@ public class FreeGee extends Activity implements OnClickListener {
     public static final int DIALOG_ACTION_PROGRESS = 0;
 
     private Device myDevice;
-    private String DEVICE_XML =   "/sdcard/" +"freegee/devices.xml";
+    
     private static ProgressDialog mProgressDialog;
     public static boolean isSpecial;
     private ArrayList<Object> mButtons = new ArrayList<Object>();
     private ArrayList<Device> DeviceList;
-    
-    DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-    Date date = new Date();
-    private String now = dateFormat.format(date);
-    
+        
     private static boolean mMainActivityActive;
-    public static final String EXTRA_FINISHED_DOWNLOAD_ID = "download_id";
-    public static final String EXTRA_FINISHED_DOWNLOAD_PATH = "download_path";
-    public static final String DOWNLOAD_ERROR = "Error";
+
 
 	private static String CP_COMMAND;
+	private HashMap<String,Integer> downloadTries = new HashMap<String,Integer>();
     
     private Properties buildProp = new Properties();
     
@@ -97,12 +84,11 @@ public class FreeGee extends Activity implements OnClickListener {
     private boolean ActionSuccess = true;
     private String swprop;
     
-    private String LOG_TAG = "Freegee";
-    
     private boolean makoUnlock = true;
     private Action ogunlock;
     private Action ogMakounlock;
     
+	File logFile = new File(constants.LOG_FILE);
     
     @Override
     public void onResume(){
@@ -125,19 +111,19 @@ public class FreeGee extends Activity implements OnClickListener {
 			shell.add(command);
 			commandWait(command);
 		} catch (IOException e) {
-			Log.e(LOG_TAG, "Root Denined!");
+			utils.customlog(Log.ERROR, "Root Denined!");
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		} catch (TimeoutException e) {
-			Log.e(LOG_TAG, "Timed out ls /system/bin/cp!");
+			utils.customlog(Log.ERROR, "Timed out ls /system/bin/cp!");
 			alertbuilder("Error!","Timed out looking for cp","Ok",1);
 		} catch (RootDeniedException e) {
-			Log.e(LOG_TAG, "Root Denined!");
+			utils.customlog(Log.ERROR, "Root Denined!");
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}		
 		int err = command.getExitCode();
 		if(err == 0){
 			CP_COMMAND="/system/bin/cp";
-			Log.v(LOG_TAG,"CP_COMMAND is " + CP_COMMAND);
+			utils.customlog(Log.VERBOSE,"CP_COMMAND is " + CP_COMMAND);
 			return true;
 		}
 		else{
@@ -147,19 +133,19 @@ public class FreeGee extends Activity implements OnClickListener {
 				shell.add(command);
 				commandWait(command);
 			} catch (IOException e) {
-				Log.e(LOG_TAG, "Timed out ls /system/xbin/cp!");
+				utils.customlog(Log.ERROR, "Timed out ls /system/xbin/cp!");
 				alertbuilder("Error!","Timed out looking for cp","Ok",1);
 			} catch (TimeoutException e) {
-				Log.e(LOG_TAG, "Timed out ls /system/xbin/cp!");
+				utils.customlog(Log.ERROR, "Timed out ls /system/xbin/cp!");
 				alertbuilder("Error!","Timed out looking for cp","Ok",1);
 			} catch (RootDeniedException e) {
-				Log.e(LOG_TAG, "Root Denined!");
+				utils.customlog(Log.ERROR, "Root Denined!");
 				alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 			}
 			err = command.getExitCode();
 			if(err == 0){
 				CP_COMMAND="/system/xbin/cp";
-				Log.v(LOG_TAG,"CP_COMMAND is " + CP_COMMAND);
+				utils.customlog(Log.VERBOSE,"CP_COMMAND is " + CP_COMMAND);
 				return true;
 			}
 		}
@@ -177,26 +163,40 @@ public class FreeGee extends Activity implements OnClickListener {
 		  if(!freegeef.exists()){
 			  freegeef.mkdirs();
 		  }
-	    	File freegeeft=new File( "/sdcard"+"/freegee"+"/tools");
-			  if(!freegeeft.exists()){
-				  freegeeft.mkdirs();
-			  }
+	    File freegeeft=new File( "/sdcard"+"/freegee"+"/tools");
+		  if(!freegeeft.exists()){
+			  freegeeft.mkdirs();
+		  }
+			
+			//Move log if it exists, keep a backup copy just incase one needs to report old error but reruns freegee
+		if(logFile.exists()){
+			logFile.renameTo(new File(constants.LOG_FILE_OLD));
+			logFile = new File(constants.LOG_FILE);
+		} else{
+			try {
+				logFile.createNewFile();
+			} catch (IOException e) {
+				utils.customlog(Log.ERROR,"IOException trying to open log file");
+				alertbuilder("Error","There was an error tring to open the log file. The app will continue but debugging will not be avaliable","ok",0);
+			}
+		}
+		
 		if (!RootTools.isAccessGiven()) {
-			Log.e(LOG_TAG, "Root Denined!");
+			utils.customlog(Log.ERROR, "Root Denined!");
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
 		if(!findCP()){
 			if(!RootTools.isBusyboxAvailable()){
-				Log.e(LOG_TAG, "Buysbox no found!");
+				utils.customlog(Log.ERROR, "Buysbox no found!");
 				alertbuilder("Error!","BusyBox not installed. Please install it now","Ok",0);
 				RootTools.offerBusyBox(this);
 			}
 			CP_COMMAND="busybox cp";
-		}			
-		Log.v(LOG_TAG,"CP_COMMAND is " + CP_COMMAND);
+		}
+		utils.customlog(Log.VERBOSE,"CP_COMMAND is " + CP_COMMAND);
 		
-		if(getBatteryLevel() < 15.0)
+		if(utils.getBatteryLevel(this) < 15.0)
 			alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
 		
 	    // read the property text  file
@@ -209,39 +209,39 @@ public class FreeGee extends Activity implements OnClickListener {
 			try {
 				RootTools.getShell(true).add(command).isFinished();
 			} catch (IOException e) {
-				Log.e(LOG_TAG,"Can't remount /system");
+				utils.customlog(Log.ERROR,"Can't remount /system");
 				alertbuilder("Error!","Can't remount /system","Ok",1);
 			} catch (TimeoutException e) {
-				Log.e(LOG_TAG,"Chmod timed out");
+				utils.customlog(Log.ERROR,"Chmod timed out");
 				alertbuilder("Error!","remount timed out","Ok",1);
 			} catch (RootDeniedException e) {
-				Log.e(LOG_TAG,"No root access!");
+				utils.customlog(Log.ERROR,"No root access!");
 				alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 			}
 			command = new CommandCapture(0,"chmod 644 /system/build.prop");
 			try {
 				RootTools.getShell(true).add(command).isFinished();
 			} catch (IOException e) {
-				Log.e(LOG_TAG,"");
+				utils.customlog(Log.ERROR,"");
 				alertbuilder("Error!","Can't chmod build.prop","Ok",1);
 			} catch (TimeoutException e) {
-				Log.e(LOG_TAG,"Chmod timed out");
+				utils.customlog(Log.ERROR,"Chmod timed out");
 				alertbuilder("Error!","Chmod timed out","Ok",1);
 			} catch (RootDeniedException e) {
-				Log.e(LOG_TAG,"No root access!");
+				utils.customlog(Log.ERROR,"No root access!");
 				alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 			}
 			command = new CommandCapture(0,"mount -o remount,ro /system");
 			try {
 				RootTools.getShell(true).add(command).isFinished();
 			} catch (IOException e) {
-				Log.e(LOG_TAG,"Can't remount /system");
+				utils.customlog(Log.ERROR,"Can't remount /system");
 				alertbuilder("Error!","Can't remount /system","Ok",1);
 			} catch (TimeoutException e) {
-				Log.e(LOG_TAG,"remount timed out");
+				utils.customlog(Log.ERROR,"remount timed out");
 				alertbuilder("Error!","remount timed out","Ok",1);
 			} catch (RootDeniedException e) {
-				Log.e(LOG_TAG,"No root access!");
+				utils.customlog(Log.ERROR,"No root access!");
 				alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 			}
 		}
@@ -260,273 +260,8 @@ public class FreeGee extends Activity implements OnClickListener {
 			e.printStackTrace();
 		}
 		
-		if(!new File("/sdcard/freegee/tools/edifier").exists()){
-		  InputStream in = null;
-		  OutputStream out = null;
-		  try {
-			// read this file into InputStream
-			in = getAssets().open("edifier");
-	 
-			// write the inputStream to a FileOutputStream
-			out = new FileOutputStream(new File("/sdcard/freegee/tools/edifier"));
-			int read = 0;
-			byte[] bytes = new byte[50468];
-	 
-			while ((read = in.read(bytes)) != -1) {
-				out.write(bytes, 0, read);
-			}	 
-		  } catch (IOException e) {
-			Log.e(LOG_TAG,"Edifier not found in assets");
-			alertbuilder("Error!","Can't copy Edifier from assets","Ok",1);
-			e.printStackTrace();
-		  } finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			if (out != null) {
-				try {
-					// outputStream.flush();
-					out.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-	 
-			  }
-		  }
-		}
-		
-		if(!new File("/sdcard/freegee/tools/keys").exists()){
-			  InputStream in = null;
-			  OutputStream out = null;
-			  try {
-				// read this file into InputStream
-				in = getAssets().open("keys");
-		 
-				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/sdcard/freegee/tools/keys"));
-				int read = 0;
-				byte[] bytes = new byte[50468];
-		 
-				while ((read = in.read(bytes)) != -1) {
-					out.write(bytes, 0, read);
-				}	 
-			  } catch (IOException e) {
-				Log.e(LOG_TAG,"Keys not found in assets");
-				alertbuilder("Error!","Can't copy keys from assets","Ok",1);
-				e.printStackTrace();
-			  } finally {
-				if (in != null) {
-					try {
-						in.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				if (out != null) {
-					try {
-						// outputStream.flush();
-						out.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-		 
-				  }
-			  }
-			}
-		
-		if(!new File("/sdcard/freegee/tools/mkbootimg").exists()){
-			  InputStream in = null;
-			  OutputStream out = null;
-			  try {
-				// read this file into InputStream
-				in = getAssets().open("mkbootimg");
-		 
-				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/sdcard/freegee/tools/mkbootimg"));
-				int read = 0;
-				byte[] bytes = new byte[50468];
-		 
-				while ((read = in.read(bytes)) != -1) {
-					out.write(bytes, 0, read);
-				}	 
-			  } catch (IOException e) {
-				Log.e(LOG_TAG,"mkbootimg not found in assets");
-				alertbuilder("Error!","Can't copy mkbootimg from assets","Ok",1);
-				e.printStackTrace();
-			  } finally {
-				if (in != null) {
-					try {
-						in.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				if (out != null) {
-					try {
-						// outputStream.flush();
-						out.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-		 
-				  }
-			  }
-			}
-		
-		if(!new File("/sdcard/freegee/tools/unpackbootimg").exists()){
-			  InputStream in = null;
-			  OutputStream out = null;
-			  try {
-				// read this file into InputStream
-				in = getAssets().open("unpackbootimg");
-		 
-				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/sdcard/freegee/tools/unpackbootimg"));
-				int read = 0;
-				byte[] bytes = new byte[50468];
-		 
-				while ((read = in.read(bytes)) != -1) {
-					out.write(bytes, 0, read);
-				}	 
-			  } catch (IOException e) {
-				Log.e(LOG_TAG,"unpackbootimg not found in assets");
-				alertbuilder("Error!","Can't copy unpackbootimg from assets","Ok",1);
-				e.printStackTrace();
-			  } finally {
-				if (in != null) {
-					try {
-						in.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				if (out != null) {
-					try {
-						// outputStream.flush();
-						out.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-		 
-				  }
-			  }
-			}
-		
-		if(!new File("/sdcard/freegee/tools/busybox").exists()){
-			  InputStream in = null;
-			  OutputStream out = null;
-			  try {
-				// read this file into InputStream
-				in = getAssets().open("busybox");
-		 
-				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/sdcard/freegee/tools/busybox"));
-				int read = 0;
-				byte[] bytes = new byte[50468];
-		 
-				while ((read = in.read(bytes)) != -1) {
-					out.write(bytes, 0, read);
-				}	 
-			  } catch (IOException e) {
-				Log.e(LOG_TAG,"busybox not found in assets");
-				alertbuilder("Error!","Can't copy busybox from assets","Ok",1);
-				e.printStackTrace();
-			  } finally {
-				if (in != null) {
-					try {
-						in.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				if (out != null) {
-					try {
-						// outputStream.flush();
-						out.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-		 
-				  }
-			  }
-			}
-		
-		CommandCapture command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier");
-		try {
-			RootTools.getShell(true).add(command).isFinished();
-		} catch (IOException e) {
-			Log.e(LOG_TAG,"Edifier not found in assets");
-			alertbuilder("Error!","Can't open edifier","Ok",1);
-		} catch (TimeoutException e) {
-			Log.e(LOG_TAG,"Chmod timed out");
-			alertbuilder("Error!","Chmod timed out","Ok",1);
-		} catch (RootDeniedException e) {
-			Log.e(LOG_TAG,"No root access!");
-			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
-		}
-		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys");
-		try {
-			RootTools.getShell(true).add(command).isFinished();
-		} catch (IOException e) {
-			Log.e(LOG_TAG,"keys not found in assets");
-			alertbuilder("Error!","Can't open keys","Ok",1);
-		} catch (TimeoutException e) {
-			Log.e(LOG_TAG,"Chmod timed out");
-			alertbuilder("Error!","Chmod timed out","Ok",1);
-		} catch (RootDeniedException e) {
-			Log.e(LOG_TAG,"No root access!");
-			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
-		}
-		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg");
-		try {
-			RootTools.getShell(true).add(command).isFinished();
-		} catch (IOException e) {
-			Log.e(LOG_TAG,"mkbootimg not found in assets");
-			alertbuilder("Error!","Can't open mkbootimg","Ok",1);
-		} catch (TimeoutException e) {
-			Log.e(LOG_TAG,"Chmod timed out");
-			alertbuilder("Error!","Chmod timed out","Ok",1);
-		} catch (RootDeniedException e) {
-			Log.e(LOG_TAG,"No root access!");
-			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
-		}
-		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg");
-		try {
-			RootTools.getShell(true).add(command).isFinished();
-		} catch (IOException e) {
-			Log.e(LOG_TAG,"unpackbootimg not found in assets");
-			alertbuilder("Error!","Can't open unpackbootimg","Ok",1);
-		} catch (TimeoutException e) {
-			Log.e(LOG_TAG,"Chmod timed out");
-			alertbuilder("Error!","Chmod timed out","Ok",1);
-		} catch (RootDeniedException e) {
-			Log.e(LOG_TAG,"No root access!");
-			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
-		}
-		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox");
-		try {
-			RootTools.getShell(true).add(command).isFinished();
-		} catch (IOException e) {
-			Log.e(LOG_TAG,"busybox not found in assets");
-			alertbuilder("Error!","Can't open busybox","Ok",1);
-		} catch (TimeoutException e) {
-			Log.e(LOG_TAG,"Chmod timed out");
-			alertbuilder("Error!","Chmod timed out","Ok",1);
-		} catch (RootDeniedException e) {
-			Log.e(LOG_TAG,"No root access!");
-			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
-		}
-
-		showChangeLog();
-		
+		setupUtilities();
+		showChangeLog();		
         getDevices();
        
         checkForDownloadCompleted(getIntent());
@@ -583,12 +318,12 @@ public class FreeGee extends Activity implements OnClickListener {
     public boolean unSerializeDevices(){
     	//Toast.makeText(this, "Unserializing Devices", Toast.LENGTH_LONG).show();
     	Serializer serializer = new Persister();
-    	File source = new File(DEVICE_XML);
+    	File source = new File(constants.DEVICE_XML);
     	try {
 			DeviceList = serializer.read(Devices.class, source).getDevices();
 			return true;
 		} catch (Exception e) {
-			Log.e(LOG_TAG,"Could not unserialize");
+			utils.customlog(Log.ERROR,"Could not unserialize");
 			mProgressDialog.dismiss();
 			alertbuilder("Error!","Could not unserialize devices from xml","Ok",1);
 			return false;
@@ -757,7 +492,7 @@ public class FreeGee extends Activity implements OnClickListener {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        if(intent.hasExtra(DOWNLOAD_ERROR)){
+        if(intent.hasExtra(constants.DOWNLOAD_ERROR)){
         	mProgressDialog.dismiss();
         	alertbuilder("Error","There was an error downloading the necessary files","ok",0);
         }
@@ -771,13 +506,13 @@ public class FreeGee extends Activity implements OnClickListener {
             return;
         }
 
-        long downloadId = intent.getLongExtra(EXTRA_FINISHED_DOWNLOAD_ID, -1);
+        long downloadId = intent.getLongExtra(constants.EXTRA_FINISHED_DOWNLOAD_ID, -1);
         if (downloadId < 0) {
         //	Toast.makeText(this, "Not download", Toast.LENGTH_LONG).show();
             return;
         }
 
-        String fullPathName = intent.getStringExtra(EXTRA_FINISHED_DOWNLOAD_PATH);
+        String fullPathName = intent.getStringExtra(constants.EXTRA_FINISHED_DOWNLOAD_PATH);
         if (fullPathName == null) {
        // 	Toast.makeText(this, "No path given", Toast.LENGTH_LONG).show();
             return;
@@ -791,11 +526,23 @@ public class FreeGee extends Activity implements OnClickListener {
         else{
         	if(myDevice != null && myDevice.getActions() != null){
         	    if(ActionSuccess){
-        	        Log.v(LOG_TAG,"Matching action");
+        	        utils.customlog(Log.VERBOSE,"Matching action");
                     ArrayList<Action> actions = myDevice.getActions();
                     for(Action i:actions){
         	            if (i.getZipFile().equalsIgnoreCase(fileName)){
-            	            ActionSuccess = doAction(i,fullPathName);
+        	            	if(utils.checkMD5(i.getMd5sum(), new File(fullPathName))){
+            	                ActionSuccess = doAction(i,fullPathName);
+        	            	}
+        	            	else{
+        	            		int count;
+        	            		if(downloadTries.containsKey(i.getName()))
+        	            			count = downloadTries.get(i.getName());        	            		
+        	            		else
+        	            			count = 1;
+        	            		downloadTries.put(i.getName(), count);
+        	            		Toast.makeText(this, "md5sum mismatch for "+i.getName()+". Redownloading", Toast.LENGTH_LONG).show();
+        	            		startDownload(i);
+        	            	}
         	            }
                     }
         	    }
@@ -874,7 +621,8 @@ public class FreeGee extends Activity implements OnClickListener {
 	        @Override
 	        public void output(int id, String line)
 	        {
-	            RootTools.log(LOG_TAG, line);
+	            RootTools.log(constants.LOG_TAG, line);
+	            
 	        }
 		 };
 			try {
@@ -883,10 +631,10 @@ public class FreeGee extends Activity implements OnClickListener {
 				shell.add(command);
 				commandWait(command);
 				int err = command.getExitCode();
-				Log.v(LOG_TAG,"Exit code is: " + err);
+				utils.customlog(Log.VERBOSE,"Exit code is: " + err);
 				if(err == 0){
 					actionsleft--;
-					Log.v(LOG_TAG,"actionsleft is: " + actionsleft);
+					utils.customlog(Log.VERBOSE,"actionsleft is: " + actionsleft);
 					if(actionsleft == 0){
 						mProgressDialog.dismiss();
 						alertbuilder("Done","The requested action of " + mainAction.getName() +" is complete","Ok",0);
@@ -902,16 +650,16 @@ public class FreeGee extends Activity implements OnClickListener {
 				}
 				
 			} catch (IOException e) {
-				Log.e(LOG_TAG,"Edifier not found");
+				utils.customlog(Log.ERROR,"Edifier not found");
 				alertbuilder("Error","Edifier not found.","ok",0);
 			} catch (TimeoutException e) {
-				Log.e(LOG_TAG,"command timed out");
+				utils.customlog(Log.ERROR,"command timed out");
 				alertbuilder("Error","Edifier "+i.getName() + " command timed out","ok",0);
 			} catch (RootDeniedException e) {
-				Log.e(LOG_TAG,"No root access!");
+				utils.customlog(Log.ERROR,"No root access!");
 				alertbuilder("Error","Please check root access","ok",0);
 			} catch (Exception e) {
-				Log.e(LOG_TAG,"Exception thrown waiting for command to finish");
+				utils.customlog(Log.ERROR,"Exception thrown waiting for command to finish");
 				alertbuilder("Error","Exception thrown waiting for command to finish","ok",0);
 			}
 			return false;
@@ -930,27 +678,281 @@ public class FreeGee extends Activity implements OnClickListener {
                         waitTill *= waitTillMultiplier;
                     }
                 } catch (InterruptedException e) {
-                    Log.e(LOG_TAG,"Error with waiting for command: "+ cmd.toString());
+                    utils.customlog(Log.ERROR,"Error with waiting for command: "+ cmd.toString());
                     alertbuilder("Error","Error with waiting for command: "+ cmd.toString(),"ok",1);
                 }
             }
         }
         if (!cmd.isFinished()){
-            Log.e(LOG_TAG, "Could not finish root command in " + (waitTill/waitTillMultiplier));
+            utils.customlog(Log.ERROR, "Could not finish root command in " + (waitTill/waitTillMultiplier));
         }
     }
     
-    public float getBatteryLevel() {
-        Intent batteryIntent = this.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-
-        // Error checking that probably isn't needed but I added just in case.
-        if(level == -1 || scale == -1) {
-            return 50.0f;
-        }
-
-        return ((float)level / (float)scale) * 100.0f; 
+    public void setupUtilities(){
+		if(!new File("/sdcard/freegee/tools/edifier").exists()){
+		  InputStream in = null;
+		  OutputStream out = null;
+		  try {
+			// read this file into InputStream
+			in = getAssets().open("edifier");
+	 
+			// write the inputStream to a FileOutputStream
+			out = new FileOutputStream(new File("/sdcard/freegee/tools/edifier"));
+			int read = 0;
+			byte[] bytes = new byte[50468];
+	 
+			while ((read = in.read(bytes)) != -1) {
+				out.write(bytes, 0, read);
+			}	 
+		  } catch (IOException e) {
+			utils.customlog(Log.ERROR,"Edifier not found in assets");
+			alertbuilder("Error!","Can't copy Edifier from assets","Ok",1);
+			e.printStackTrace();
+		  } finally {
+			if (in != null) {
+				try {
+					in.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			if (out != null) {
+				try {
+					// outputStream.flush();
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+	 
+			  }
+		  }
+		}
+		
+		if(!new File("/sdcard/freegee/tools/keys").exists()){
+			  InputStream in = null;
+			  OutputStream out = null;
+			  try {
+				// read this file into InputStream
+				in = getAssets().open("keys");
+		 
+				// write the inputStream to a FileOutputStream
+				out = new FileOutputStream(new File("/sdcard/freegee/tools/keys"));
+				int read = 0;
+				byte[] bytes = new byte[50468];
+		 
+				while ((read = in.read(bytes)) != -1) {
+					out.write(bytes, 0, read);
+				}	 
+			  } catch (IOException e) {
+				utils.customlog(Log.ERROR,"Keys not found in assets");
+				alertbuilder("Error!","Can't copy keys from assets","Ok",1);
+				e.printStackTrace();
+			  } finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (out != null) {
+					try {
+						// outputStream.flush();
+						out.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		 
+				  }
+			  }
+			}
+		
+		if(!new File("/sdcard/freegee/tools/mkbootimg").exists()){
+			  InputStream in = null;
+			  OutputStream out = null;
+			  try {
+				// read this file into InputStream
+				in = getAssets().open("mkbootimg");
+		 
+				// write the inputStream to a FileOutputStream
+				out = new FileOutputStream(new File("/sdcard/freegee/tools/mkbootimg"));
+				int read = 0;
+				byte[] bytes = new byte[50468];
+		 
+				while ((read = in.read(bytes)) != -1) {
+					out.write(bytes, 0, read);
+				}	 
+			  } catch (IOException e) {
+				utils.customlog(Log.ERROR,"mkbootimg not found in assets");
+				alertbuilder("Error!","Can't copy mkbootimg from assets","Ok",1);
+				e.printStackTrace();
+			  } finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (out != null) {
+					try {
+						// outputStream.flush();
+						out.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		 
+				  }
+			  }
+			}
+		
+		if(!new File("/sdcard/freegee/tools/unpackbootimg").exists()){
+			  InputStream in = null;
+			  OutputStream out = null;
+			  try {
+				// read this file into InputStream
+				in = getAssets().open("unpackbootimg");
+		 
+				// write the inputStream to a FileOutputStream
+				out = new FileOutputStream(new File("/sdcard/freegee/tools/unpackbootimg"));
+				int read = 0;
+				byte[] bytes = new byte[50468];
+		 
+				while ((read = in.read(bytes)) != -1) {
+					out.write(bytes, 0, read);
+				}	 
+			  } catch (IOException e) {
+				utils.customlog(Log.ERROR,"unpackbootimg not found in assets");
+				alertbuilder("Error!","Can't copy unpackbootimg from assets","Ok",1);
+				e.printStackTrace();
+			  } finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (out != null) {
+					try {
+						// outputStream.flush();
+						out.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		 
+				  }
+			  }
+			}
+		
+		if(!new File("/sdcard/freegee/tools/busybox").exists()){
+			  InputStream in = null;
+			  OutputStream out = null;
+			  try {
+				// read this file into InputStream
+				in = getAssets().open("busybox");
+		 
+				// write the inputStream to a FileOutputStream
+				out = new FileOutputStream(new File("/sdcard/freegee/tools/busybox"));
+				int read = 0;
+				byte[] bytes = new byte[50468];
+		 
+				while ((read = in.read(bytes)) != -1) {
+					out.write(bytes, 0, read);
+				}	 
+			  } catch (IOException e) {
+				utils.customlog(Log.ERROR,"busybox not found in assets");
+				alertbuilder("Error!","Can't copy busybox from assets","Ok",1);
+				e.printStackTrace();
+			  } finally {
+				if (in != null) {
+					try {
+						in.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if (out != null) {
+					try {
+						// outputStream.flush();
+						out.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		 
+				  }
+			  }
+			}
+		
+		CommandCapture command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR,"Edifier not found in assets");
+			alertbuilder("Error!","Can't open edifier","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR,"keys not found in assets");
+			alertbuilder("Error!","Can't open keys","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR,"mkbootimg not found in assets");
+			alertbuilder("Error!","Can't open mkbootimg","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR,"unpackbootimg not found in assets");
+			alertbuilder("Error!","Can't open unpackbootimg","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox");
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR,"busybox not found in assets");
+			alertbuilder("Error!","Can't open busybox","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
     }
     
     public void processAction(Action action){
@@ -975,16 +977,16 @@ public class FreeGee extends Activity implements OnClickListener {
     	    File azipF = new File(azipS);
     	    if(azipF.exists()){
     	    	if(utils.checkMD5(action.getMd5sum(), azipF)){
-    	    	    Log.v(LOG_TAG,"Using predownloaded "+action.getName());
+    	    	    utils.customlog(Log.VERBOSE,"Using predownloaded "+action.getName());
     	    		doAction(action,azipS);
     	    	}
     	    	else{
-    	    		Log.v(LOG_TAG,"Downloading "+action.getName());
+    	    		utils.customlog(Log.VERBOSE,"Downloading "+action.getName());
     	    		startDownload(action);
     	    	}
     	    }
 	    	else{
-	    		Log.v(LOG_TAG,"Downloading "+action.getName());
+	    		utils.customlog(Log.VERBOSE,"Downloading "+action.getName());
 	    		startDownload(action);
 	    	}
     	}
@@ -1009,7 +1011,7 @@ public class FreeGee extends Activity implements OnClickListener {
         dAction.setZipFile("devices.xml");
         dAction.setZipFileLocation("devices.xml");
         dAction.setMd5sum("nono");
-        File devicesXML = new File(DEVICE_XML);
+        File devicesXML = new File(constants.DEVICE_XML);
         if(devicesXML.exists()){
         	devicesXML.delete();
         }

@@ -28,6 +28,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 import edu.shell.freegee.R;
+import edu.shell.freegee.utils.constants;
+import edu.shell.freegee.utils.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -71,7 +73,7 @@ public class DownloadReceiver extends BroadcastReceiver{
        /*     try {
                 Utils.triggerUpdate(context, fileName);
             } catch (IOException e) {
-                Log.e(TAG, "Unable to reboot into recovery mode", e);
+                utils.customlog(Log.ERROR, "Unable to reboot into recovery mode", e);
                 Toast.makeText(context, R.string.apply_unable_to_reboot_toast,
                             Toast.LENGTH_SHORT).show();
                 Utils.cancelNotification(context);
@@ -84,7 +86,7 @@ public class DownloadReceiver extends BroadcastReceiver{
         File directory = new File(Environment.getExternalStorageDirectory() + "/freegee");
         if (!directory.exists()) {
             directory.mkdirs();
-            Log.d(TAG, "Freegee created");
+            utils.customlog(Log.DEBUG, "Freegee created");
         }
 
         // Build the name of the file to download, adding .partial at the end.  It will get
@@ -123,7 +125,7 @@ public class DownloadReceiver extends BroadcastReceiver{
                 .putStringSet(DOWNLOAD_ID, downloadIdSet)
                 .putStringSet(DOWNLOAD_MD5, getMd5sumSet)
                 .apply();
-        Log.v("Freegee","Download id from start is: "+Long.toString(downloadId));
+        utils.customlog(Log.VERBOSE,"Download id from start is: "+Long.toString(downloadId));
         Intent intent = new Intent(ACTION_DOWNLOAD_STARTED);
         intent.putExtra(DownloadManager.EXTRA_DOWNLOAD_ID, downloadId);
         context.sendBroadcast(intent);
@@ -183,9 +185,9 @@ public class DownloadReceiver extends BroadcastReceiver{
             	//|| getMd5sumSet.contains(calculateMD5(updateFile).toLowerCase(Locale.US))) {
             
                 // We passed. Bring the main app to the foreground and trigger download completed
-            	Log.v("Freegee","Download id from completition is: "+Long.toString(id));
-                updateIntent.putExtra(FreeGee.EXTRA_FINISHED_DOWNLOAD_ID, id);
-                updateIntent.putExtra(FreeGee.EXTRA_FINISHED_DOWNLOAD_PATH, completedFileFullPath);
+            	utils.customlog(Log.VERBOSE,"Download id from completition is: "+Long.toString(id));
+                updateIntent.putExtra(constants.EXTRA_FINISHED_DOWNLOAD_ID, id);
+                updateIntent.putExtra(constants.EXTRA_FINISHED_DOWNLOAD_PATH, completedFileFullPath);
 /*            } else {
                 // We failed. Clear the file and reset everything
                 dm.remove(id);
