@@ -22,10 +22,6 @@ import java.util.concurrent.TimeoutException;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
-/*import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;*/
-
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootDeniedException;
 import com.stericson.RootTools.execution.Command;
@@ -145,7 +141,6 @@ public class FreeGee extends Activity implements OnClickListener {
 			err = command.getExitCode();
 			if(err == 0){
 				CP_COMMAND="/system/xbin/cp";
-				utils.customlog(Log.VERBOSE,"CP_COMMAND is " + CP_COMMAND);
 				return true;
 			}
 		}
@@ -572,7 +567,17 @@ public class FreeGee extends Activity implements OnClickListener {
     		String model = device.getModel();
     		if(prop != null){
     			if(prop.equalsIgnoreCase(model)){
-    				myDevice = device;
+    				if(onStock()){
+    					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
+    						myDevice = device;
+    					}
+    					else{
+    						utils.customlog(Log.ERROR,"Software version: " + swprop +" not supported yet");
+    						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
+    					}
+    				}
+    				else
+    					myDevice = device;
     				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
     					setUnlocks();
     				break;
@@ -593,9 +598,11 @@ public class FreeGee extends Activity implements OnClickListener {
     	     String[] lStr;
     	     if(swprop == null){
     	         lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel()};
+    	         utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel());
     	     }
     	     else{
     	    	 lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel(),"Software Version: "+swprop};
+    	    	 utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel() + "\n" + "Software Version: "+swprop);
     	     }
     	     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
     	}
@@ -621,7 +628,8 @@ public class FreeGee extends Activity implements OnClickListener {
 	        @Override
 	        public void output(int id, String line)
 	        {
-	            RootTools.log(constants.LOG_TAG, line);
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
 	            
 	        }
 		 };
@@ -646,6 +654,7 @@ public class FreeGee extends Activity implements OnClickListener {
 					actionsleft--;
 					mProgressDialog.dismiss();
 					alertbuilder("Error","There was an error running action " + i.getName(),"ok",0);
+					offerEmail(i);
 					return false;
 				}
 				
@@ -1036,6 +1045,36 @@ public class FreeGee extends Activity implements OnClickListener {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+    
+    public void offerEmail(final Action action){
+    	final String subject = "FreeGee error on " + myDevice.getModel() + " performing " + action.getName();
+    	final String message = "There was an error performing " + action.getName()+ ". " + "Please see the attached logcat.";
+    	final Activity activity = this;
+    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+	    
+    	// set title
+    	alertDialogBuilder.setTitle("Email log of Error?");
+
+    	// set dialog message
+    	alertDialogBuilder
+    	.setMessage("Would you like to email a log of your error, so it can be fixed?")
+    	.setCancelable(false)
+    	.setPositiveButton("Send Email",new DialogInterface.OnClickListener() {
+    	public void onClick(DialogInterface dialog,int id) {
+        	utils.sendEmail(activity, action, message ,subject,myDevice);
+    	}
+    	})
+    	.setNegativeButton("No Thank You", new DialogInterface.OnClickListener() {
+    	public void onClick(DialogInterface dialog,int id) {
+    	}
+    	});
+
+    	// create alert dialog
+    	AlertDialog alertDialog = alertDialogBuilder.create();
+
+    	// show it
+    	alertDialog.show();
     }
 
     public void alertbuilder(String title, String text, String Button, final int exits){

@@ -24,7 +24,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 import edu.shell.freegee.R;
@@ -32,20 +31,10 @@ import edu.shell.freegee.utils.constants;
 import edu.shell.freegee.utils.utils;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 
 public class DownloadReceiver extends BroadcastReceiver{
-    private static final String TAG = "DownloadReceiver";
-
     public static final String ACTION_START_DOWNLOAD = "edu.shell.freegee.action.START_DOWNLOAD";
     public static final String DEVICE_ACTION = "device_action";
 
@@ -69,15 +58,7 @@ public class DownloadReceiver extends BroadcastReceiver{
             long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
             handleDownloadComplete(context, prefs, id);
         } else if (ACTION_INSTALL_UPDATE.equals(action)) {
-            String fileName = intent.getStringExtra(EXTRA_FILENAME);
-       /*     try {
-                Utils.triggerUpdate(context, fileName);
-            } catch (IOException e) {
-                utils.customlog(Log.ERROR, "Unable to reboot into recovery mode", e);
-                Toast.makeText(context, R.string.apply_unable_to_reboot_toast,
-                            Toast.LENGTH_SHORT).show();
-                Utils.cancelNotification(context);
-            }*/
+            intent.getStringExtra(EXTRA_FILENAME);
         }
     }
 
@@ -248,10 +229,7 @@ public class DownloadReceiver extends BroadcastReceiver{
                 builder.setContentText(zipName);
                 builder.setTicker(context.getString(R.string.download_success));
 
-                Notification style = new Notification();
-                //style.(context.getString(R.string.download_success));
-                /*style.bigText(context.getString(R.string.not_download_install_notice, updateUiName));
-                builder.(style);*/
+                new Notification();
 
                 Intent installIntent = new Intent(context, DownloadReceiver.class);
                 installIntent.setAction(ACTION_INSTALL_UPDATE);

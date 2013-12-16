@@ -1,31 +1,27 @@
 package edu.shell.freegee.utils;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.concurrent.TimeoutException;
 
-import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.exceptions.RootDeniedException;
-import com.stericson.RootTools.execution.CommandCapture;
-
+import edu.shell.freegee.Action;
+import edu.shell.freegee.Device;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.BatteryManager;
 import android.text.TextUtils;
 import android.util.Log;
 
 public class utils {
-	private static final String TAG = "FreeGee";
 	static File logFile = new File(constants.LOG_FILE);
 	
     public static String calculateMD5(File updateFile) {
@@ -85,6 +81,18 @@ public class utils {
         
 
         return calculatedDigest.equalsIgnoreCase(md5);
+    }
+    
+    public static void sendEmail(Activity activity, Action action, String message, String subject, Device myDevice) {
+        Uri path = Uri.fromFile(logFile);
+        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+        intent.setType("application/octet-stream");
+        intent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
+        String to[] = { "shelnutt2@gmail.com" };
+        intent.putExtra(Intent.EXTRA_EMAIL, to);
+        intent.putExtra(Intent.EXTRA_TEXT, message);
+        intent.putExtra(Intent.EXTRA_STREAM, path);
+        activity.startActivityForResult(Intent.createChooser(intent, "Send mail..."), 1222);
     }
     
     public static void customlog(int logLevel, String lineToLog){

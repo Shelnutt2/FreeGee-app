@@ -90,4 +90,8 @@ public class Device {
     public void setActions( ArrayList< Action > actions ) {
         this.actions = actions;
     }
+    
+    public String toString(){
+		return "Name: "+name+" "+"Model: "+model+" "+"Carrier: " +carrier;
+    }
 }

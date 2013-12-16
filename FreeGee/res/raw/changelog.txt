@@ -24,6 +24,7 @@ $ 1.9.9
   _ 2013-12-15
     * Add option to report problem when an action fails
     * Add better md5sum checking of downloaded actions
+    * Enabled checking of stock software versions
   $ 1.9.8
   % Version 1.9.8
   _ 2013-12-10
