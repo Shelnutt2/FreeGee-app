@@ -19,13 +19,17 @@
     </style>
   </head>
   <body>
+$ 1.9.10
+  % Version 1.9.10
+  _ 2013-12-17
+    * Improvements to the logic for device detection, generic fall back implemeneted
 $ 1.9.9
   % Version 1.9.9
   _ 2013-12-15
     * Add option to report problem when an action fails
     * Add better md5sum checking of downloaded actions
     * Enabled checking of stock software versions
-  $ 1.9.8
+$ 1.9.8
   % Version 1.9.8
   _ 2013-12-10
     * Fix NPE issue with some devices when checking for existing cp command

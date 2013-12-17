@@ -84,6 +84,8 @@ public class FreeGee extends Activity implements OnClickListener {
     private Action ogunlock;
     private Action ogMakounlock;
     
+    public static String PACKAGE_NAME;
+    
 	File logFile = new File(constants.LOG_FILE);
     
     @Override
@@ -97,6 +99,13 @@ public class FreeGee extends Activity implements OnClickListener {
         ChangeLog cl = new ChangeLog(this);
         if (cl.firstRun())
             cl.getLogDialog().show();
+    }
+    
+    public boolean free(){
+    	if(PACKAGE_NAME.equalsIgnoreCase("edu.shell.freegee_free"))
+    		return true;
+    	else
+    		return false;
     }
     
     private boolean findCP(){
@@ -193,6 +202,8 @@ public class FreeGee extends Activity implements OnClickListener {
 		
 		if(utils.getBatteryLevel(this) < 15.0)
 			alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
+		
+		PACKAGE_NAME = getApplicationContext().getPackageName();
 		
 	    // read the property text  file
 		File file = new File("/system/build.prop");
@@ -572,7 +583,7 @@ public class FreeGee extends Activity implements OnClickListener {
     						myDevice = device;
     					}
     					else{
-    						utils.customlog(Log.ERROR,"Software version: " + swprop +" not supported yet");
+    						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + prop != null ? prop : prop2  +" not supported yet");
     						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
     					}
     				}
@@ -585,7 +596,17 @@ public class FreeGee extends Activity implements OnClickListener {
     		}
     		if(prop2 != null){
     			if(prop2.equalsIgnoreCase(model)){
-    				myDevice = device;
+    				if(onStock()){
+    					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
+    						myDevice = device;
+    					}
+    					else{
+    						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + prop != null ? prop : prop2  +" not supported yet");
+    						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
+    					}
+    				}
+    				else
+    				    myDevice = device;
     				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
     					setUnlocks();
     				break;
@@ -608,7 +629,72 @@ public class FreeGee extends Activity implements OnClickListener {
     	}
     	else{
     		mProgressDialog.dismiss();
-    		alertbuilder("Unsupported", "Your devices is not currently supported", "ok", 1);
+    		String Genericprop = buildProp.getProperty("ro.product.Model");
+    		String Genericprop2 = buildProp.getProperty("ro.product.model");
+        	for(Device device:DeviceList){
+        		swprop = buildProp.getProperty(device.getSW_Prop_id());
+        		String model = device.getModel();
+        		if(Genericprop != null){
+        			if(Genericprop.equalsIgnoreCase(model)){
+        				if(onStock()){
+        					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
+        						myDevice = device;
+        					}
+        					else{
+        						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
+        						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
+        					}
+        				}
+        				else
+        					myDevice = device;
+        				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
+        					setUnlocks();
+        				break;
+        			}
+        		}
+        		if(Genericprop2 != null){
+        			if(Genericprop2.equalsIgnoreCase(model)){
+        				if(onStock()){
+        					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
+        						myDevice = device;
+        					}
+        					else{
+        						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
+        						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
+        					}
+        				}
+        				else
+        				    myDevice = device;
+        				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
+        					setUnlocks();
+        				break;
+        			}
+        		}
+        	}
+        	if(myDevice != null){
+        		updateGridView(myDevice);
+        	     ListView lv = (ListView) findViewById(R.id.deviceInfo);
+        	     String[] lStr;
+        	     if(swprop == null){
+        	         lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel()};
+        	         utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel());
+        	     }
+        	     else{
+        	    	 lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel(),"Software Version: "+swprop};
+        	    	 utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel() + "\n" + "Software Version: "+swprop);
+        	     }
+        	     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
+        	}
+        	else{
+        		mProgressDialog.dismiss();
+    		    if(Genericprop != null)
+    			    alertbuilder("Unsupported", "Your device, detected as a " + Genericprop + " is not currently supported", "ok", 1);
+    		    else if(Genericprop2 != null)
+    			    alertbuilder("Unsupported", "Your device, detected as a " + Genericprop2 + " is not currently supported", "ok", 1);
+    		    else
+    		    	alertbuilder("Unsupported", "Your device, could not be dected generically or specifically and thus is not currently supported", "ok", 1);
+        	}
+    		
     	}
     	mProgressDialog.dismiss();
     }
