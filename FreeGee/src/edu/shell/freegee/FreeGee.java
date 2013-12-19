@@ -540,14 +540,19 @@ public class FreeGee extends Activity implements OnClickListener {
             	                ActionSuccess = doAction(i,fullPathName);
         	            	}
         	            	else{
-        	            		int count;
-        	            		if(downloadTries.containsKey(i.getName()))
-        	            			count = downloadTries.get(i.getName());        	            		
-        	            		else
-        	            			count = 1;
-        	            		downloadTries.put(i.getName(), count);
-        	            		Toast.makeText(this, "md5sum mismatch for "+i.getName()+". Redownloading", Toast.LENGTH_LONG).show();
-        	            		startDownload(i);
+        	            		if(downloadTries.containsKey(i.getName()) && downloadTries.get(i.getName())<=3){
+        	            		    int count;
+        	            		    if(downloadTries.containsKey(i.getName()))
+        	            			    count =+ downloadTries.get(i.getName());        	            		
+        	            		    else
+        	            		    	count = 1;
+        	            		    downloadTries.put(i.getName(), count);
+        	            		    Toast.makeText(this, "md5sum mismatch for "+i.getName()+". Redownloading", Toast.LENGTH_LONG).show();
+        	            		    startDownload(i);
+        	            		}
+        	            		else{
+        	            			Toast.makeText(this, "md5sum mismatch for "+i.getName()+". Failed 3 times, aborting", Toast.LENGTH_LONG).show();
+        	            		}
         	            	}
         	            }
                     }
@@ -594,7 +599,7 @@ public class FreeGee extends Activity implements OnClickListener {
     				break;
     			}
     		}
-    		if(prop2 != null){
+    		else if(prop2 != null){
     			if(prop2.equalsIgnoreCase(model)){
     				if(onStock()){
     					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
@@ -651,8 +656,40 @@ public class FreeGee extends Activity implements OnClickListener {
         					setUnlocks();
         				break;
         			}
+        			else if(Genericprop.contains(model)){
+        				if(onStock()){
+        					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
+        						myDevice = device;
+        					}
+        					else{
+        						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
+        						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
+        					}
+        				}
+        				else
+        					myDevice = device;
+        				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
+        					setUnlocks();
+        				break;
+        			}
+        			else if(model.contains(Genericprop)){
+        				if(onStock()){
+        					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
+        						myDevice = device;
+        					}
+        					else{
+        						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
+        						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
+        					}
+        				}
+        				else
+        					myDevice = device;
+        				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
+        					setUnlocks();
+        				break;
+        			}
         		}
-        		if(Genericprop2 != null){
+        		else if(Genericprop2 != null){
         			if(Genericprop2.equalsIgnoreCase(model)){
         				if(onStock()){
         					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
