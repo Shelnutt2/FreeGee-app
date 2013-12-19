@@ -22,6 +22,9 @@ import java.util.concurrent.TimeoutException;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootDeniedException;
 import com.stericson.RootTools.execution.Command;
@@ -51,6 +54,7 @@ import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 import android.graphics.PorterDuff;
@@ -85,15 +89,9 @@ public class FreeGee extends Activity implements OnClickListener {
     private Action ogMakounlock;
     
     public static String PACKAGE_NAME;
+    private AdView adView;
     
 	File logFile = new File(constants.LOG_FILE);
-    
-    @Override
-    public void onResume(){
-    	super.onResume();
-        mMainActivityActive = true;
-    	checkForDownloadCompleted(getIntent());
-    }
 
     private void showChangeLog(){
         ChangeLog cl = new ChangeLog(this);
@@ -101,11 +99,28 @@ public class FreeGee extends Activity implements OnClickListener {
             cl.getLogDialog().show();
     }
     
-    public boolean free(){
+    public boolean freeVersion(){
     	if(PACKAGE_NAME.equalsIgnoreCase("edu.shell.freegee_free"))
     		return true;
     	else
     		return false;
+    }
+    
+    private void makeAds(LinearLayout layout, int index){
+        adView = new AdView(this);
+        adView.setAdUnitId(privateData.AdUnitID);
+        adView.setAdSize(AdSize.SMART_BANNER);
+        layout.addView(adView, index);
+        
+        // Initiate a generic request.
+        AdRequest adRequest = new AdRequest.Builder()
+        .addTestDevice("003b344396ca856a")
+        .build();
+
+        // Load the adView with the ad request.
+        adView.loadAd(adRequest);
+
+
     }
     
     private boolean findCP(){
@@ -156,6 +171,42 @@ public class FreeGee extends Activity implements OnClickListener {
 		
     	return false;
     }
+    
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mMainActivityActive = true;
+        checkForDownloadCompleted(getIntent());
+    }
+
+    @Override
+    protected void onStop() {
+        mMainActivityActive = false;
+        super.onStop();
+    }
+    
+    @Override
+    public void onPause() {
+        if(freeVersion())
+            adView.pause();
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(freeVersion())
+            adView.resume();
+        mMainActivityActive = true;
+  	    checkForDownloadCompleted(getIntent());
+    }
+
+    @Override
+    public void onDestroy() {
+      adView.destroy();
+      super.onDestroy();
+    }
+
     
     /** Called when the activity is first created. */
     @Override
@@ -269,7 +320,15 @@ public class FreeGee extends Activity implements OnClickListener {
 		setupUtilities();
 		showChangeLog();		
         getDevices();
-       
+        LinearLayout layout =  (LinearLayout)findViewById(R.id.main_linear_layout);
+        //Toast.makeText(this, "number of children: "+layout.getChildCount(), Toast.LENGTH_LONG).show();
+        //utils.customlog(Log.VERBOSE,"number of children: "+layout.getChildCount());
+        if(freeVersion()){
+            makeAds(layout,0);
+            makeAds(layout,2);
+        }
+        //makeAds(layout,layout.getChildCount()/2);
+        //makeAds(layout,layout.getChildCount());
         checkForDownloadCompleted(getIntent());
 		GridView gridView = (GridView) findViewById(R.id.main_gridview);
 		gridView.setAdapter(new ButtonAdapter(mButtons));
@@ -480,19 +539,6 @@ public class FreeGee extends Activity implements OnClickListener {
          return button;
         }
        }
-    
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mMainActivityActive = true;
-        checkForDownloadCompleted(getIntent());
-    }
-
-    @Override
-    protected void onStop() {
-        mMainActivityActive = false;
-        super.onStop();
-    }
     
     @Override
     protected void onNewIntent(Intent intent) {
