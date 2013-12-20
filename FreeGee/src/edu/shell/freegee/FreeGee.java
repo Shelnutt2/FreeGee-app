@@ -60,9 +60,10 @@ import android.widget.Toast;
 import android.graphics.PorterDuff;
 
 @SuppressLint("SdCardPath")
+/**
+ * @author Seth Shelnutt
+ */
 public class FreeGee extends Activity implements OnClickListener {
-   
-    public static final int DIALOG_ACTION_PROGRESS = 0;
 
     private Device myDevice;
     
@@ -93,12 +94,19 @@ public class FreeGee extends Activity implements OnClickListener {
     
 	File logFile = new File(constants.LOG_FILE);
 
+	/**
+	 * Used to show the Change Log as needed on opening of new version
+	 */
     private void showChangeLog(){
         ChangeLog cl = new ChangeLog(this);
         if (cl.firstRun())
             cl.getLogDialog().show();
     }
     
+    /**
+     * Returns true if freegee is the free version or false if donate version
+     * @return 
+     */
     public boolean freeVersion(){
     	if(PACKAGE_NAME.equalsIgnoreCase("edu.shell.freegee_free"))
     		return true;
@@ -106,6 +114,11 @@ public class FreeGee extends Activity implements OnClickListener {
     		return false;
     }
     
+    /**
+     * Makes the ads to display
+     * @param layout LinearLayout in which to show adds
+     * @param index The index of the position to show the add
+     */
     private void makeAds(LinearLayout layout, int index){
         adView = new AdView(this);
         adView.setAdUnitId(privateData.AdUnitID);
@@ -123,6 +136,10 @@ public class FreeGee extends Activity implements OnClickListener {
 
     }
     
+    /**
+     * Find's the "cp" binary if it exists on the system already
+     * @return True if found, false if not found
+     */
     private boolean findCP(){
     	CommandCapture command = new CommandCapture(0,"ls /system/bin/cp");
 		Shell shell = null;
@@ -207,6 +224,20 @@ public class FreeGee extends Activity implements OnClickListener {
       super.onDestroy();
     }
 
+    /**
+     * Function to check for if busybox is available and if not offer to install it for users
+     * @return True is it exists
+     */
+    public boolean checkForBusyBox(){
+		if(!RootTools.isBusyboxAvailable()){
+			utils.customlog(Log.ERROR, "Buysbox no found!");
+			alertbuilder("Error!","BusyBox not installed. Please install it now","Ok",0);
+			RootTools.offerBusyBox(this);
+			return false;
+		}
+		else
+			return true;
+    }
     
     /** Called when the activity is first created. */
     @Override
@@ -242,10 +273,11 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
 		
 		if(!findCP()){
-			if(!RootTools.isBusyboxAvailable()){
-				utils.customlog(Log.ERROR, "Buysbox no found!");
-				alertbuilder("Error!","BusyBox not installed. Please install it now","Ok",0);
-				RootTools.offerBusyBox(this);
+			int count = 0;
+			while(!checkForBusyBox()){
+				count++;
+				if(count>3)
+					break;
 			}
 			CP_COMMAND="busybox cp";
 		}
@@ -334,6 +366,10 @@ public class FreeGee extends Activity implements OnClickListener {
 		gridView.setAdapter(new ButtonAdapter(mButtons));
     }
     
+    /**
+     * Update the grid view based on actions supported by the device
+     * @param device
+     */
     public void updateGridView(Device device){
     	//Toast.makeText(this, "Updating Grid View", Toast.LENGTH_LONG).show();
     	int j = 0;
@@ -372,6 +408,10 @@ public class FreeGee extends Activity implements OnClickListener {
 		gridView.setAdapter(new ButtonAdapter(mButtons));
     }
     
+    /**
+     * Check if on stock or now by checking if the swversion exists or not
+     * @return
+     */
     public boolean onStock(){
     	if(swprop != null)
     		return true;
@@ -380,6 +420,10 @@ public class FreeGee extends Activity implements OnClickListener {
     	
     }
 
+    /**
+     * Parse the xml into devices object
+     * @return True if completed or false if error
+     */
     public boolean unSerializeDevices(){
     	//Toast.makeText(this, "Unserializing Devices", Toast.LENGTH_LONG).show();
     	Serializer serializer = new Persister();
@@ -418,6 +462,12 @@ public class FreeGee extends Activity implements OnClickListener {
      //Toast.makeText(getBaseContext(), "Result is: "+result, Toast.LENGTH_SHORT).show();
     }
     
+    /**
+     * Check to see if action or it's dependencies require the unlock action for optimus g 
+     * @param a Action
+     * @param unlock
+     * @return True if unlocked required, false if unlock not required by action
+     */
     private boolean checkForUnlock(Action a, boolean unlock) {
     	if(!myDevice.getName().equalsIgnoreCase("LG Optimus G"))
     		return false;
@@ -438,6 +488,10 @@ public class FreeGee extends Activity implements OnClickListener {
 		
 	}
     
+    /**
+     * Prompt for unlock Alert Dialog for LG Optimus G, so users can choose mako sbl stack or ics sbl stack
+     * @param a Action
+     */
 	private void promptUnlockAlertDialog(final Action a) {
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 	    
@@ -469,6 +523,10 @@ public class FreeGee extends Activity implements OnClickListener {
 		
 	}
 
+	/**
+	 * Show an alertDialog to prompt for action selected
+	 * @param a Action
+	 */
 	private void showActionAlertDialog(final Action a) {
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 	    
@@ -552,7 +610,11 @@ public class FreeGee extends Activity implements OnClickListener {
             checkForDownloadCompleted(intent);
     }
     
-    private void checkForDownloadCompleted(Intent intent) {
+    /**
+     * Check for if the completed download was our download or not.
+     * @param intent
+     */
+    private void checkForDownloadCompleted(Intent intent) { //Based on CMUpdater
     	//Toast.makeText(this, "Checking for Completed Downloads", Toast.LENGTH_SHORT).show();
         if (intent == null) {
             return;
@@ -615,6 +677,9 @@ public class FreeGee extends Activity implements OnClickListener {
         }
     }
     
+    /**
+     * Match device to supported devices from devices object
+     */
     public void matchDevice(){
     	mProgressDialog.setMessage("Matching device");
     	if(DeviceList == null){
@@ -782,6 +847,9 @@ public class FreeGee extends Activity implements OnClickListener {
     	mProgressDialog.dismiss();
     }
     
+    /**
+     * Set the unlock objects to our local objects
+     */
     public void setUnlocks(){
     	for(Action a:myDevice.getActions()){
     		if(a.getName().equalsIgnoreCase("Optimus G Unlock"))
@@ -791,6 +859,12 @@ public class FreeGee extends Activity implements OnClickListener {
     	}    	
     }
     
+    /**
+     * Run an action
+     * @param i Action
+     * @param fullPathName Path to zip file
+     * @return True if action is sucess or false if action fails
+     */
     public boolean doAction(Action i, String fullPathName){
 
 		 CommandCapture command = new CommandCapture(0,"/data/local/tmp/edifier "+ "/sdcard/freegee/"+i.getZipFile()){
@@ -843,6 +917,10 @@ public class FreeGee extends Activity implements OnClickListener {
 			return false;
     }
     
+    /**
+     * Wait for RootTools command to finish
+     * @param cmd Command
+     */
     private void commandWait(Command cmd) {
         int waitTill = 50;
         int waitTillMultiplier = 2;
@@ -866,6 +944,10 @@ public class FreeGee extends Activity implements OnClickListener {
         }
     }
     
+    /**
+     * Setup utilities needed, such as edifier
+     * This extract the utilities from assets to /sdcard/freegee and then copies them to /data/local/tmp
+     */
     public void setupUtilities(){
 		if(!new File("/sdcard/freegee/tools/edifier").exists()){
 		  InputStream in = null;
@@ -1133,6 +1215,10 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
     }
     
+    /**
+     * Process an action, iterate through all dependencies and start downloads
+     * @param action
+     */
     public void processAction(Action action){
     	if((action.getStockOnly() && onStock()) || !action.getStockOnly()){
     	    actionsleft++;
@@ -1170,6 +1256,10 @@ public class FreeGee extends Activity implements OnClickListener {
     	}
     }
     
+    /**
+     * Start download by sending action to our DownloadReceiver
+     * @param action
+     */
     public void startDownload(Action action){
         Intent intent = new Intent(this, DownloadReceiver.class);
         intent.setAction(DownloadReceiver.ACTION_START_DOWNLOAD);
@@ -1177,6 +1267,9 @@ public class FreeGee extends Activity implements OnClickListener {
         sendBroadcast(intent);    	
     }
     
+    /**
+     * Create an action for devices xml and download it
+     */
     public void getDevices(){
     	mProgressDialog = new ProgressDialog(FreeGee.this);
 	    mProgressDialog.setIndeterminate(true);
@@ -1216,6 +1309,10 @@ public class FreeGee extends Activity implements OnClickListener {
         }
     }
     
+    /**
+     * Offer to email bug report
+     * @param action
+     */
     public void offerEmail(final Action action){
     	final String subject = "FreeGee error on " + myDevice.getModel() + " performing " + action.getName();
     	final String message = "There was an error performing " + action.getName()+ ". " + "Please see the attached logcat.";
@@ -1246,6 +1343,13 @@ public class FreeGee extends Activity implements OnClickListener {
     	alertDialog.show();
     }
 
+    /**
+     * Generic class to open an alertDialog with given title, message and button.
+     * @param title Title for alertDialog
+     * @param text Message
+     * @param Button Text for button
+     * @param exits 0 does not exit application, 1 forces exit
+     */
     public void alertbuilder(String title, String text, String Button, final int exits){
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
     	    
@@ -1274,8 +1378,11 @@ public class FreeGee extends Activity implements OnClickListener {
 
     	}
 
+    /**
+     * Is FreeGee the main activity?
+     * @return True or False
+     */
 	public static boolean isMainActivityActive() {
 	    return mMainActivityActive;
-	    
 	}
 }
