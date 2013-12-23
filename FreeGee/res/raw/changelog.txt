@@ -23,6 +23,7 @@ $ 1.9.11
   % Version 1.9.11
   _ 2013-12-18
     * Added support for fall back on failed downloads
+    * Add context menu options for shutdown and rebooting
 $ 1.9.10
   % Version 1.9.10
   _ 2013-12-17

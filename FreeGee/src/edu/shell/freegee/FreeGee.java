@@ -276,8 +276,10 @@ public class FreeGee extends Activity implements OnClickListener {
 			int count = 0;
 			while(!checkForBusyBox()){
 				count++;
-				if(count>3)
+				if(count>3){
+					alertbuilder("Error!","No CP or busybox command found, attempted to find it and offer install 3 times. Please install busybox and relaunch FreeGee","Exit",1);
 					break;
+				}
 			}
 			CP_COMMAND="busybox cp";
 		}
@@ -1293,6 +1295,8 @@ public class FreeGee extends Activity implements OnClickListener {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.activity_free_gee, menu);
+        if(myDevice != null && !myDevice.getName().equalsIgnoreCase("LG Optimus G"))
+        	menu.removeItem(R.id.menu_reboot_bootloader);
         return true;
     }
 
@@ -1300,10 +1304,26 @@ public class FreeGee extends Activity implements OnClickListener {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case R.id.menu_settings:
+            case R.id.menu_settings:{
         		Intent newActivity = new Intent(this, settings.class);
                 startActivity(newActivity);
                 return true;
+                }
+            case R.id.menu_reboot_recovery:{
+        		if(!utils.rebootRecovery())
+        			Toast.makeText(this, "Reboot to Recovery Failed", Toast.LENGTH_LONG).show();
+                return true;
+                }
+            case R.id.menu_reboot_bootloader:{
+        		if(!utils.rebootBootloader())
+        			Toast.makeText(this, "Reboot to Bootloader Failed", Toast.LENGTH_LONG).show();
+                return true;
+                }
+            case R.id.menu_shutdown:{
+        		if(!utils.Shutdown())
+        			Toast.makeText(this, "Shutdown Failed", Toast.LENGTH_LONG).show();
+                return true;
+                }
             default:
                 return super.onOptionsItemSelected(item);
         }

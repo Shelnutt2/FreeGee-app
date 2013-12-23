@@ -9,6 +9,11 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.TimeoutException;
+
+import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.exceptions.RootDeniedException;
+import com.stericson.RootTools.execution.CommandCapture;
 
 import edu.shell.freegee.Action;
 import edu.shell.freegee.Device;
@@ -18,6 +23,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.BatteryManager;
+import android.os.PowerManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -93,6 +99,57 @@ public class utils {
         intent.putExtra(Intent.EXTRA_TEXT, message);
         intent.putExtra(Intent.EXTRA_STREAM, path);
         activity.startActivityForResult(Intent.createChooser(intent, "Send mail..."), 1222);
+    }
+    
+    public static boolean rebootRecovery(){
+    	CommandCapture command = new CommandCapture(0,"reboot recovery");
+		try {
+			RootTools.getShell(true).add(command);
+		} catch (IOException e) {
+			customlog(Log.ERROR,"IOException trying to reboot to recovery");
+			return false;
+		} catch (TimeoutException e) {
+			customlog(Log.ERROR,"TimeoutException trying to reboot to recovery");
+			return false;
+		} catch (RootDeniedException e) {
+			customlog(Log.ERROR,"Root Denined trying to reboot to recovery");
+			return false;
+		}
+		return true;
+    }
+    
+    public static boolean rebootBootloader(){
+    	CommandCapture command = new CommandCapture(0,"reboot bootloader");
+		try {
+			RootTools.getShell(true).add(command);
+		} catch (IOException e) {
+			customlog(Log.ERROR,"IOException trying to reboot to bootloader");
+			return false;
+		} catch (TimeoutException e) {
+			customlog(Log.ERROR,"TimeoutException trying to reboot to bootloader");
+			return false;
+		} catch (RootDeniedException e) {
+			customlog(Log.ERROR,"Root Denined trying to reboot to bootloader");
+			return false;
+		}
+		return true;  	
+    }
+    
+    public static boolean Shutdown(){
+    	CommandCapture command = new CommandCapture(0,"/data/local/tmp/busybox halt");
+		try {
+			RootTools.getShell(true).add(command);
+		} catch (IOException e) {
+			customlog(Log.ERROR,"IOException trying to shutdown");
+			return false;
+		} catch (TimeoutException e) {
+			customlog(Log.ERROR,"TimeoutException trying to shutdown");
+			return false;
+		} catch (RootDeniedException e) {
+			customlog(Log.ERROR,"Root Denined trying to shutdown");
+			return false;
+		}
+		return true;  	
     }
     
     public static void customlog(int logLevel, String lineToLog){
