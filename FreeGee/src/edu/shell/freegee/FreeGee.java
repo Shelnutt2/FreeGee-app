@@ -141,7 +141,15 @@ public class FreeGee extends Activity implements OnClickListener {
      * @return True if found, false if not found
      */
     private boolean findCP(){
-    	CommandCapture command = new CommandCapture(0,"ls /system/bin/cp");
+    	CommandCapture command = new CommandCapture(0,"ls /system/bin/cp"){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
+	            
+	        }
+		 };
 		Shell shell = null;
 		try {
 			shell = RootTools.getShell(true);
@@ -164,7 +172,15 @@ public class FreeGee extends Activity implements OnClickListener {
 			return true;
 		}
 		else{
-			command = new CommandCapture(0,"ls /system/xbin/cp");
+			command = new CommandCapture(0,"ls /system/xbin/cp"){
+		        @Override
+		        public void output(int id, String line)
+		        {
+		        	utils.customlog(Log.VERBOSE,line);
+		            //RootTools.log(constants.LOG_TAG, line);
+		            
+		        }
+			 };
 			try {
 				shell = RootTools.getShell(true);
 				shell.add(command);
@@ -351,7 +367,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			e.printStackTrace();
 		}
 		
-		setupUtilities();
+		setupUtilities(0);
 		showChangeLog();		
         getDevices();
         LinearLayout layout =  (LinearLayout)findViewById(R.id.main_linear_layout);
@@ -950,7 +966,7 @@ public class FreeGee extends Activity implements OnClickListener {
      * Setup utilities needed, such as edifier
      * This extract the utilities from assets to /sdcard/freegee and then copies them to /data/local/tmp
      */
-    public void setupUtilities(){
+    public void setupUtilities(int count){
 		if(!new File("/sdcard/freegee/tools/edifier").exists()){
 		  InputStream in = null;
 		  OutputStream out = null;
@@ -1146,7 +1162,37 @@ public class FreeGee extends Activity implements OnClickListener {
 			  }
 			}
 		
-		CommandCapture command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier");
+		CommandCapture command = new CommandCapture(0, "mkdir -p /data/local/tmp/"){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
+	            
+	        }
+		 };
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR,"IOException when making /data/local/tmp dir");
+			alertbuilder("Error!","Can't make /data/local/tmp","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR,"mkdir timeout when making /data/local/tmp dir");
+			alertbuilder("Error!","Mkdir timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier"){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
+	            
+	        }
+		 };
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -1160,7 +1206,15 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys");
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys"){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
+	            
+	        }
+		 };
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -1174,7 +1228,15 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg");
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg"){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
+	            
+	        }
+		 };
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -1188,7 +1250,15 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg");
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg"){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
+	            
+	        }
+		 };
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -1202,7 +1272,15 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox");
+		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox"){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
+	            
+	        }
+		 };
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
@@ -1215,7 +1293,169 @@ public class FreeGee extends Activity implements OnClickListener {
 			utils.customlog(Log.ERROR,"No root access!");
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
-    }
+		
+    	command = new CommandCapture(0,"ls /data/local/tmp/edifier"){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
+	            
+	        }
+		 };
+		Shell shell = null;
+		try {
+			shell = RootTools.getShell(true);
+			shell.add(command);
+			commandWait(command);
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/edifier!");
+			alertbuilder("Error!","IOException checking if edifier copied fine","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/edifier!");
+			alertbuilder("Error!","Timed out looking for /data/local/tmp/edifier","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR, "Root Denined!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}		
+		int err = command.getExitCode();
+		if(err != 0){
+			if(count<2)
+			    setupUtilities(count++);
+			else{
+				utils.customlog(Log.ERROR,"Tried twice to copy utlities and it failed");
+				alertbuilder("Error","Tried twice to copy utlities and it failed","ok",1);
+			}
+		}
+		command = new CommandCapture(0,"ls /data/local/tmp/busybox"){
+		    @Override
+		    public void output(int id, String line)
+		    {
+		    	utils.customlog(Log.VERBOSE,line);
+		        //RootTools.log(constants.LOG_TAG, line);
+		        }
+	    };
+		try {
+		    shell = RootTools.getShell(true);
+			shell.add(command);
+			commandWait(command);
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/busybox!");
+			alertbuilder("Error!","IOException checking if busybox copied fine","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/busybox!");
+			alertbuilder("Error!","Timed out looking for /data/local/tmp/busybox","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR, "Root Denined!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		err = command.getExitCode();
+		if(err != 0){
+			if(count<2)
+			    setupUtilities(count++);
+			else{
+				utils.customlog(Log.ERROR,"Tried twice to copy utlities and it failed");
+				alertbuilder("Error","Tried twice to copy utlities and it failed","ok",1);
+			}
+		}
+		
+		command = new CommandCapture(0,"ls /data/local/tmp/busybox"){
+		    @Override
+		    public void output(int id, String line)
+		    {
+		    	utils.customlog(Log.VERBOSE,line);
+		        //RootTools.log(constants.LOG_TAG, line);
+		        }
+	    };
+		try {
+		    shell = RootTools.getShell(true);
+			shell.add(command);
+			commandWait(command);
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/keys!");
+			alertbuilder("Error!","IOException checking if keys copied fine","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/keys!");
+			alertbuilder("Error!","Timed out looking for /data/local/tmp/keys","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR, "Root Denined!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		err = command.getExitCode();
+		if(err != 0){
+			if(count<2)
+			    setupUtilities(count++);
+			else{
+				utils.customlog(Log.ERROR,"Tried twice to copy utlities and it failed");
+				alertbuilder("Error","Tried twice to copy utlities and it failed","ok",1);
+			}
+		}
+		
+		command = new CommandCapture(0,"ls /data/local/tmp/mkbootimg"){
+		    @Override
+		    public void output(int id, String line)
+		    {
+		    	utils.customlog(Log.VERBOSE,line);
+		        //RootTools.log(constants.LOG_TAG, line);
+		        }
+	    };
+		try {
+		    shell = RootTools.getShell(true);
+			shell.add(command);
+			commandWait(command);
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/mkbootimg!");
+			alertbuilder("Error!","IOException checking if mkbootimg copied fine","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/mkbootimg!");
+			alertbuilder("Error!","Timed out looking for /data/local/tmp/mkbootimg","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR, "Root Denined!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		err = command.getExitCode();
+		if(err != 0){
+			if(count<2)
+			    setupUtilities(count++);
+			else{
+				utils.customlog(Log.ERROR,"Tried twice to copy utlities and it failed");
+				alertbuilder("Error","Tried twice to copy utlities and it failed","ok",1);
+			}
+		}
+		
+		command = new CommandCapture(0,"ls /data/local/tmp/unpackbootimg"){
+		    @Override
+		    public void output(int id, String line)
+		    {
+		    	utils.customlog(Log.VERBOSE,line);
+		        //RootTools.log(constants.LOG_TAG, line);
+		        }
+	    };
+		try {
+		    shell = RootTools.getShell(true);
+			shell.add(command);
+			commandWait(command);
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/unpackbootimg!");
+			alertbuilder("Error!","IOException checking if unpackbootimg copied fine","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/unpackbootimg!");
+			alertbuilder("Error!","Timed out looking for /data/local/tmp/unpackbootimg","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR, "Root Denined!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		err = command.getExitCode();
+		if(err != 0){
+			if(count<2)
+			    setupUtilities(count++);
+			else{
+				utils.customlog(Log.ERROR,"Tried twice to copy utlities and it failed");
+				alertbuilder("Error","Tried twice to copy utlities and it failed","ok",1);
+			}
+		}
+	}
+
     
     /**
      * Process an action, iterate through all dependencies and start downloads
