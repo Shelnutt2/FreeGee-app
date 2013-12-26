@@ -38,10 +38,12 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -220,7 +222,7 @@ public class FreeGee extends Activity implements OnClickListener {
     
     @Override
     public void onPause() {
-        if(freeVersion())
+        if(adView != null)
             adView.pause();
         super.onPause();
     }
@@ -228,7 +230,7 @@ public class FreeGee extends Activity implements OnClickListener {
     @Override
     public void onResume() {
         super.onResume();
-        if(freeVersion())
+        if(adView != null)
             adView.resume();
         mMainActivityActive = true;
   	    checkForDownloadCompleted(getIntent());
@@ -236,7 +238,8 @@ public class FreeGee extends Activity implements OnClickListener {
 
     @Override
     public void onDestroy() {
-      adView.destroy();
+    	if(adView != null)
+    		adView.destroy();
       super.onDestroy();
     }
 
@@ -253,6 +256,18 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
 		else
 			return true;
+    }
+    
+    /**
+     * Checks for if the Internet is accessible or not
+     * @return
+     */
+    public boolean isOnline() {
+        ConnectivityManager cm =
+            (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null && 
+           cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
     
     /** Called when the activity is first created. */
@@ -368,8 +383,11 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
 		
 		setupUtilities(0);
-		showChangeLog();		
-        getDevices();
+		showChangeLog();
+		if(isOnline())
+            getDevices();
+		else
+			alertbuilder("No Network","You are not connected to the internet, please connect and launch FreeGee again","Ok",1);
         LinearLayout layout =  (LinearLayout)findViewById(R.id.main_linear_layout);
         //Toast.makeText(this, "number of children: "+layout.getChildCount(), Toast.LENGTH_LONG).show();
         //utils.customlog(Log.VERBOSE,"number of children: "+layout.getChildCount());

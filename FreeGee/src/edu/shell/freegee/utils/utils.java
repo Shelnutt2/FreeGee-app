@@ -23,7 +23,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.BatteryManager;
-import android.os.PowerManager;
 import android.text.TextUtils;
 import android.util.Log;
 
