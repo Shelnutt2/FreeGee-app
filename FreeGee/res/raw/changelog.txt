@@ -20,8 +20,8 @@
   </head>
   <body>
 $ 1.9.12
-  % Version 1.9.11
-  _ 2013-12-18
+  % Version 1.9.12
+  _ 2013-12-26
     * Bugfixes
     * Add check for internet access
 $ 1.9.11
