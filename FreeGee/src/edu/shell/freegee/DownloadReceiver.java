@@ -26,7 +26,8 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
-import edu.shell.freegee.R;
+import edu.shell.freegee_free.R;
+import edu.shell.freegee.device.Action;
 import edu.shell.freegee.utils.constants;
 import edu.shell.freegee.utils.utils;
 

@@ -30,7 +30,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.webkit.WebView;
-import edu.shell.freegee.R;
+import edu.shell.freegee_free.R;
 
 public class ChangeLog {
 

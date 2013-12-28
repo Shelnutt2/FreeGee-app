@@ -1,4 +1,4 @@
-package edu.shell.freegee;
+package edu.shell.freegee.device;
 
 
 import java.io.Serializable;

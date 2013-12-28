@@ -31,7 +31,12 @@ import com.stericson.RootTools.execution.Command;
 import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
-import edu.shell.freegee.R;
+import edu.shell.freegee_free.R;
+import edu.shell.freegee.device.Action;
+import edu.shell.freegee.device.Device;
+import edu.shell.freegee.device.DeviceDetails;
+import edu.shell.freegee.device.Devices;
+import edu.shell.freegee.device.Partition;
 import edu.shell.freegee.utils.constants;
 import edu.shell.freegee.utils.utils;
 import android.annotation.SuppressLint;
@@ -68,6 +73,7 @@ import android.graphics.PorterDuff;
 public class FreeGee extends Activity implements OnClickListener {
 
     private Device myDevice;
+    private DeviceDetails myDeviceDetails;
     
     private static ProgressDialog mProgressDialog;
     public static boolean isSpecial;
@@ -733,14 +739,19 @@ public class FreeGee extends Activity implements OnClickListener {
     				if(onStock()){
     					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
     						myDevice = device;
+    						if(myDevice.getDeviceDetailsLocation() != null)
+    							getDeviceDetails(myDevice.getDeviceDetailsLocation());
     					}
     					else{
     						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + prop != null ? prop : prop2  +" not supported yet");
     						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
     					}
     				}
-    				else
+    				else{
     					myDevice = device;
+						if(myDevice.getDeviceDetailsLocation() != null)
+							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+    				}
     				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
     					setUnlocks();
     				break;
@@ -751,14 +762,19 @@ public class FreeGee extends Activity implements OnClickListener {
     				if(onStock()){
     					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
     						myDevice = device;
+    						if(myDevice.getDeviceDetailsLocation() != null)
+    							getDeviceDetails(myDevice.getDeviceDetailsLocation());
     					}
     					else{
     						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + prop != null ? prop : prop2  +" not supported yet");
     						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
     					}
     				}
-    				else
+    				else{
     				    myDevice = device;
+						if(myDevice.getDeviceDetailsLocation() != null)
+							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+    				}
     				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
     					setUnlocks();
     				break;
@@ -791,14 +807,19 @@ public class FreeGee extends Activity implements OnClickListener {
         				if(onStock()){
         					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
         						myDevice = device;
+        						if(myDevice.getDeviceDetailsLocation() != null)
+        							getDeviceDetails(myDevice.getDeviceDetailsLocation());
         					}
         					else{
         						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
         						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
         					}
         				}
-        				else
+        				else{
         					myDevice = device;
+    						if(myDevice.getDeviceDetailsLocation() != null)
+    							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+        				}
         				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
         					setUnlocks();
         				break;
@@ -807,14 +828,19 @@ public class FreeGee extends Activity implements OnClickListener {
         				if(onStock()){
         					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
         						myDevice = device;
+        						if(myDevice.getDeviceDetailsLocation() != null)
+        							getDeviceDetails(myDevice.getDeviceDetailsLocation());
         					}
         					else{
         						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
         						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
         					}
         				}
-        				else
+        				else{
         					myDevice = device;
+    						if(myDevice.getDeviceDetailsLocation() != null)
+    							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+        				}
         				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
         					setUnlocks();
         				break;
@@ -823,14 +849,19 @@ public class FreeGee extends Activity implements OnClickListener {
         				if(onStock()){
         					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
         						myDevice = device;
+        						if(myDevice.getDeviceDetailsLocation() != null)
+        							getDeviceDetails(myDevice.getDeviceDetailsLocation());
         					}
         					else{
         						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
         						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
         					}
         				}
-        				else
+        				else{
         					myDevice = device;
+    						if(myDevice.getDeviceDetailsLocation() != null)
+    							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+        				}
         				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
         					setUnlocks();
         				break;
@@ -841,14 +872,19 @@ public class FreeGee extends Activity implements OnClickListener {
         				if(onStock()){
         					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
         						myDevice = device;
+        						if(myDevice.getDeviceDetailsLocation() != null)
+        							getDeviceDetails(myDevice.getDeviceDetailsLocation());
         					}
         					else{
         						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
         						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
         					}
         				}
-        				else
+        				else{
         				    myDevice = device;
+    						if(myDevice.getDeviceDetailsLocation() != null)
+    							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+        				}
         				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
         					setUnlocks();
         				break;
@@ -899,11 +935,11 @@ public class FreeGee extends Activity implements OnClickListener {
      * Run an action
      * @param i Action
      * @param fullPathName Path to zip file
-     * @return True if action is sucess or false if action fails
+     * @return True if action is success or false if action fails
      */
     public boolean doAction(Action i, String fullPathName){
 
-		 CommandCapture command = new CommandCapture(0,"/data/local/tmp/edifier "+ "/sdcard/freegee/"+i.getZipFile()){
+		 CommandCapture command = new CommandCapture(0,"/data/local/tmp/edifier "+ constants.FreeGeeFolder + "/"+i.getZipFile()){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -984,8 +1020,8 @@ public class FreeGee extends Activity implements OnClickListener {
      * Setup utilities needed, such as edifier
      * This extract the utilities from assets to /sdcard/freegee and then copies them to /data/local/tmp
      */
-    public void setupUtilities(int count){
-		if(!new File("/sdcard/freegee/tools/edifier").exists()){
+    public void setupUtilities(int tries){
+		if(!new File(constants.FreeGeeFolder + "/tools/edifier").exists()){
 		  InputStream in = null;
 		  OutputStream out = null;
 		  try {
@@ -993,7 +1029,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			in = getAssets().open("edifier");
 	 
 			// write the inputStream to a FileOutputStream
-			out = new FileOutputStream(new File("/sdcard/freegee/tools/edifier"));
+			out = new FileOutputStream(new File(constants.FreeGeeFolder + "/tools/edifier"));
 			int read = 0;
 			byte[] bytes = new byte[50468];
 	 
@@ -1024,7 +1060,7 @@ public class FreeGee extends Activity implements OnClickListener {
 		  }
 		}
 		
-		if(!new File("/sdcard/freegee/tools/keys").exists()){
+		if(!new File(constants.FreeGeeFolder + "/tools/keys").exists()){
 			  InputStream in = null;
 			  OutputStream out = null;
 			  try {
@@ -1032,7 +1068,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				in = getAssets().open("keys");
 		 
 				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/sdcard/freegee/tools/keys"));
+				out = new FileOutputStream(new File(constants.FreeGeeFolder + "/tools/keys"));
 				int read = 0;
 				byte[] bytes = new byte[50468];
 		 
@@ -1063,7 +1099,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			  }
 			}
 		
-		if(!new File("/sdcard/freegee/tools/mkbootimg").exists()){
+		if(!new File(constants.FreeGeeFolder + "/tools/mkbootimg").exists()){
 			  InputStream in = null;
 			  OutputStream out = null;
 			  try {
@@ -1071,7 +1107,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				in = getAssets().open("mkbootimg");
 		 
 				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/sdcard/freegee/tools/mkbootimg"));
+				out = new FileOutputStream(new File(constants.FreeGeeFolder + "/tools/mkbootimg"));
 				int read = 0;
 				byte[] bytes = new byte[50468];
 		 
@@ -1102,7 +1138,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			  }
 			}
 		
-		if(!new File("/sdcard/freegee/tools/unpackbootimg").exists()){
+		if(!new File(constants.FreeGeeFolder + "/tools/unpackbootimg").exists()){
 			  InputStream in = null;
 			  OutputStream out = null;
 			  try {
@@ -1110,7 +1146,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				in = getAssets().open("unpackbootimg");
 		 
 				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/sdcard/freegee/tools/unpackbootimg"));
+				out = new FileOutputStream(new File(constants.FreeGeeFolder + "/tools/unpackbootimg"));
 				int read = 0;
 				byte[] bytes = new byte[50468];
 		 
@@ -1141,7 +1177,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			  }
 			}
 		
-		if(!new File("/sdcard/freegee/tools/busybox").exists()){
+		if(!new File(constants.FreeGeeFolder + "/tools/busybox").exists()){
 			  InputStream in = null;
 			  OutputStream out = null;
 			  try {
@@ -1149,7 +1185,7 @@ public class FreeGee extends Activity implements OnClickListener {
 				in = getAssets().open("busybox");
 		 
 				// write the inputStream to a FileOutputStream
-				out = new FileOutputStream(new File("/sdcard/freegee/tools/busybox"));
+				out = new FileOutputStream(new File(constants.FreeGeeFolder + "/tools/busybox"));
 				int read = 0;
 				byte[] bytes = new byte[50468];
 		 
@@ -1338,8 +1374,8 @@ public class FreeGee extends Activity implements OnClickListener {
 		}		
 		int err = command.getExitCode();
 		if(err != 0){
-			if(count<2)
-			    setupUtilities(count++);
+			if(tries<=2)
+			    setupUtilities(tries+1);
 			else{
 				utils.customlog(Log.ERROR,"Tried twice to copy utlities and it failed");
 				alertbuilder("Error","Tried twice to copy utlities and it failed","ok",1);
@@ -1369,8 +1405,8 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
 		err = command.getExitCode();
 		if(err != 0){
-			if(count<2)
-			    setupUtilities(count++);
+			if(tries<=2)
+			    setupUtilities(tries+1);
 			else{
 				utils.customlog(Log.ERROR,"Tried twice to copy utlities and it failed");
 				alertbuilder("Error","Tried twice to copy utlities and it failed","ok",1);
@@ -1401,8 +1437,8 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
 		err = command.getExitCode();
 		if(err != 0){
-			if(count<2)
-			    setupUtilities(count++);
+			if(tries<=2)
+			    setupUtilities(tries+1);
 			else{
 				utils.customlog(Log.ERROR,"Tried twice to copy utlities and it failed");
 				alertbuilder("Error","Tried twice to copy utlities and it failed","ok",1);
@@ -1433,8 +1469,8 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
 		err = command.getExitCode();
 		if(err != 0){
-			if(count<2)
-			    setupUtilities(count++);
+			if(tries<=2)
+			    setupUtilities(tries+1);
 			else{
 				utils.customlog(Log.ERROR,"Tried twice to copy utlities and it failed");
 				alertbuilder("Error","Tried twice to copy utlities and it failed","ok",1);
@@ -1465,14 +1501,31 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
 		err = command.getExitCode();
 		if(err != 0){
-			if(count<2)
-			    setupUtilities(count++);
+			if(tries<=2)
+			    setupUtilities(tries+1);
 			else{
 				utils.customlog(Log.ERROR,"Tried twice to copy utlities and it failed");
 				alertbuilder("Error","Tried twice to copy utlities and it failed","ok",1);
 			}
 		}
 	}
+    
+    public boolean checkForBackups(){
+    	if(myDeviceDetails == null){
+    	    alertbuilder("Error","Can not check if backups exists, restoring might fail if partition backups are not in /sdcard/freegee. Will continue with attempt anyway.","Ok",0);
+    	    return true;
+    	}
+    	else{
+    	    for(Partition partition: myDeviceDetails.getPartitions()){
+    	    	if(partition.getRequiredBackup()){
+    	    		if(! new File(constants.FreeGeeFolder+"/"+partition.getName()+"-backup.img").exists())
+    	    			alertbuilder("Backup not found","Backup of "+partition.getName() + " is not found. Aborting restoring backups","Ok",0);
+    	    			return false;
+    	    	}
+    	    }
+    	}
+    	return true;
+    }
 
     
     /**
@@ -1480,6 +1533,12 @@ public class FreeGee extends Activity implements OnClickListener {
      * @param action
      */
     public void processAction(Action action){
+    	if(action.getName().equalsIgnoreCase("Re-lock (restore backups)")){
+    		if(myDeviceDetails != null)
+    			if(!checkForBackups()){
+    			    return;
+    			}    				
+    	}
     	if((action.getStockOnly() && onStock()) || !action.getStockOnly()){
     	    actionsleft++;
     	    if(action.getDependencies() != null && !action.getDependencies().isEmpty()){
@@ -1497,7 +1556,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	    	}
     	    }
     	    
-    	    String azipS = "/sdcard/freegee/"+action.getZipFile();
+    	    String azipS = constants.FreeGeeFolder + "/"+action.getZipFile();
     	    File azipF = new File(azipS);
     	    if(azipF.exists()){
     	    	if(utils.checkMD5(action.getMd5sum(), azipF)){
@@ -1547,6 +1606,26 @@ public class FreeGee extends Activity implements OnClickListener {
         	devicesXML.delete();
         }
         startDownload(dAction);
+    }
+    
+    public void getDeviceDetails(String DeviceDetailsLocation){
+    	mProgressDialog = new ProgressDialog(FreeGee.this);
+	    mProgressDialog.setIndeterminate(true);
+	    mProgressDialog.setCancelable(false);
+	    mProgressDialog.setMessage("Downloading additional device details...");
+	    mProgressDialog.show();
+	    
+        Action ddAction = new Action();
+        String fileName = new File(DeviceDetailsLocation).getName().toString();
+        ddAction.setName(fileName);
+        ddAction.setZipFile(fileName);
+        ddAction.setZipFileLocation(DeviceDetailsLocation);
+        ddAction.setMd5sum("nono");
+        File deviceDetailsXML = new File(constants.FreeGeeFolder+"/"+fileName);
+        if(deviceDetailsXML.exists()){
+        	deviceDetailsXML.delete();
+        }
+        startDownload(ddAction);
     }
     
     @Override

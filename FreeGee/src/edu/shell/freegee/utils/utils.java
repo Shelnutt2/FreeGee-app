@@ -15,8 +15,8 @@ import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootDeniedException;
 import com.stericson.RootTools.execution.CommandCapture;
 
-import edu.shell.freegee.Action;
-import edu.shell.freegee.Device;
+import edu.shell.freegee.device.Action;
+import edu.shell.freegee.device.Device;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
