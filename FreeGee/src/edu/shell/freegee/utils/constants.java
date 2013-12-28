@@ -1,9 +1,5 @@
 package edu.shell.freegee.utils;
 
-import java.io.File;
-
-import android.os.Environment;
-
 public class constants {
 
 	public static final String FreeGeeFolder = setFreeGeeFolder();

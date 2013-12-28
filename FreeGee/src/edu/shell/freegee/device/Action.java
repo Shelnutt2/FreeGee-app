@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
-public class Action  implements Serializable {
+public class Action implements Serializable, Comparable<Action> {
 	/**
 	 * 
 	 */
@@ -28,15 +28,22 @@ public class Action  implements Serializable {
     private boolean stockOnly;
 	@Element(required=false)
     private boolean hidden;
+	@Element(required=false)
+    private int priority = 10;
     @ElementList(required=false)
     private ArrayList<Action> dependencies;
 
-    public Action(String name, String version, String zipfile, String zipfilelocation, String md5sum){
+    public Action(String name, String description, String version, String zipfile, String zipfilelocation, String md5sum, boolean stockOnly, boolean hidden, int priority, ArrayList<Action> dependencies){
     	this.name = name;
+    	this.description = description;
     	this.version = version;
     	this.zipfile = zipfile;
     	this.zipfilelocation = zipfilelocation;
     	this.md5sum = md5sum;
+    	this.stockOnly = stockOnly;
+    	this.hidden = hidden;
+    	this.priority = priority;
+    	this.dependencies = dependencies;
     }
     
     public Action(){}
@@ -73,6 +80,10 @@ public class Action  implements Serializable {
     	return hidden;
     }
     
+    public int getPriority() {
+		return priority;
+	}
+    
     public ArrayList<Action> getDependencies() {
         return dependencies;
     }
@@ -108,8 +119,17 @@ public class Action  implements Serializable {
     public void setHidden( boolean hidden ){
     	this.hidden = hidden;
     }
-    
-    public void setDependencies( ArrayList<Action> dependencies ) {
+
+	public void setPriority(int priority) {
+		this.priority = priority;
+	}
+
+	public void setDependencies( ArrayList<Action> dependencies ) {
         this.dependencies = dependencies;
     }
+
+	@Override
+	public int compareTo(Action b) {
+		return b.priority - this.priority;
+	}
 }

@@ -14,7 +14,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.TimeoutException;
@@ -50,7 +52,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -90,6 +91,8 @@ public class FreeGee extends Activity implements OnClickListener {
     private Properties buildProp = new Properties();
     
     private int actionsleft = 0;
+    private List<Action> actionOrder;
+    private HashMap<Action,Boolean> actionDownloads;
     private Action mainAction;
     private boolean ActionSuccess = true;
     private String swprop;
@@ -610,6 +613,8 @@ public class FreeGee extends Activity implements OnClickListener {
     	     mProgressDialog.setMessage("Performing action " + a.getName() + " ...");
     	     mProgressDialog.show();
     		 mainAction = a;
+			 actionOrder = new ArrayList<Action>();
+			 actionDownloads = new HashMap<Action,Boolean>();
     	     processAction(a);
     	}
     	})
@@ -715,7 +720,16 @@ public class FreeGee extends Activity implements OnClickListener {
                     for(Action i:actions){
         	            if (i.getZipFile().equalsIgnoreCase(fileName)){
         	            	if(utils.checkMD5(i.getMd5sum(), new File(fullPathName))){
-            	                ActionSuccess = doAction(i,fullPathName);
+        	            		if(actionDownloads.containsKey(i))
+        	            			actionDownloads.put(i,true);
+        	            		else{
+        	            			utils.customlog(Log.ERROR,"Downloaded action of " + i.getName() + " wasn't part of actions to be downloaded");
+        	            			mProgressDialog.dismiss();
+        	            			alertbuilder("Error","The wrong action was received, aborting processing actions","ok",0);
+        	            			ActionSuccess = false;
+        	            		}  	            			
+        	            		if(actionDownloads.size() == actionsleft && allActionsDownloads())
+            	                    doAllActions();
         	            	}
         	            	else{
         	            		if(downloadTries.containsKey(i.getName()) && downloadTries.get(i.getName())<=3){
@@ -745,6 +759,25 @@ public class FreeGee extends Activity implements OnClickListener {
         		alertbuilder("Error","There was an error detecting what was downloaded. This usually can be fixed by closing and reopening the applications.","Close now",1);
         	}
         }
+    }
+    
+    public boolean doAllActions(){
+    	utils.customlog(Log.VERBOSE,"actionDownloads size: " + actionDownloads.size());
+    	utils.customlog(Log.VERBOSE,"actionOrder size: " + actionOrder.size());
+    	if(actionDownloads.size() == actionsleft && allActionsDownloads()){
+    		for(Action action:actionOrder){
+    			if(ActionSuccess){
+    			    ActionSuccess = doAction(action, constants.FreeGeeFolder+action.getZipFile());
+    			    //actionOrder.remove(action);
+    			    //actionDownloads.remove(action);
+    			}
+    			else
+    				return false;
+    		}
+    		if(ActionSuccess)
+    			return true;
+    	}
+    	return false;
     }
     
     /**
@@ -1597,7 +1630,7 @@ public class FreeGee extends Activity implements OnClickListener {
     			if(!checkForBackups()){
     				mProgressDialog.dismiss();
     			    return;
-    			}    				
+    			}
     	}
     	if((action.getStockOnly() && onStock()) || !action.getStockOnly()){
     	    actionsleft++;
@@ -1615,27 +1648,45 @@ public class FreeGee extends Activity implements OnClickListener {
     	    		action = ogunlock;
     	    	}
     	    }
-    	    
+    	    actionOrder.add(action);
+    	    Collections.sort(actionOrder);
+    	    utils.customlog(Log.VERBOSE,"Current actions are: " + actionOrder.toString());
     	    String azipS = constants.FreeGeeFolder + "/"+action.getZipFile();
     	    File azipF = new File(azipS);
     	    if(azipF.exists()){
     	    	if(utils.checkMD5(action.getMd5sum(), azipF)){
     	    	    utils.customlog(Log.VERBOSE,"Using predownloaded "+action.getName());
-    	    		doAction(action,azipS);
+    	    	    actionDownloads.put(action,true);
+    	    	    if(actionDownloads.size() == actionsleft && allActionsDownloads())
+    	    		    doAllActions();
     	    	}
     	    	else{
     	    		utils.customlog(Log.VERBOSE,"Downloading "+action.getName());
+    	    	    actionDownloads.put(action,false);
     	    		startDownload(action);
     	    	}
     	    }
 	    	else{
 	    		utils.customlog(Log.VERBOSE,"Downloading "+action.getName());
+	    	    actionDownloads.put(action,false);
 	    		startDownload(action);
 	    	}
     	}
     }
     
-    /**
+    private boolean allActionsDownloads() {
+		if(actionDownloads != null){
+			for(Action action:actionDownloads.keySet()){
+				if(!actionDownloads.get(action))
+					return false;
+			}
+			return true;
+		}
+		else
+		    return false;
+	}
+
+	/**
      * Start download by sending action to our DownloadReceiver
      * @param action
      */
