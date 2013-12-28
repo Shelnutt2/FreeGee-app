@@ -31,7 +31,7 @@ import com.stericson.RootTools.execution.Command;
 import com.stericson.RootTools.execution.CommandCapture;
 import com.stericson.RootTools.execution.Shell;
 
-import edu.shell.freegee_free.R;
+import edu.shell.freegee.R;
 import edu.shell.freegee.device.Action;
 import edu.shell.freegee.device.Device;
 import edu.shell.freegee.device.DeviceDetails;
@@ -50,6 +50,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -282,11 +283,12 @@ public class FreeGee extends Activity implements OnClickListener {
         super.onCreate(savedInstanceState);
         mMainActivityActive = false;
         setContentView(R.layout.activity_freegee);
-    	File freegeef=new File( "/sdcard"+"/freegee");
+        utils.customlog(Log.VERBOSE,"FreeGee dir is: "+constants.FreeGeeFolder);
+    	File freegeef=new File(constants.FreeGeeFolder);
 		  if(!freegeef.exists()){
 			  freegeef.mkdirs();
 		  }
-	    File freegeeft=new File( "/sdcard"+"/freegee"+"/tools");
+	    File freegeeft=new File(constants.FreeGeeFolder+"/tools");
 		  if(!freegeeft.exists()){
 			  freegeeft.mkdirs();
 		  }
@@ -477,6 +479,27 @@ public class FreeGee extends Activity implements OnClickListener {
 			utils.customlog(Log.ERROR,"Could not unserialize");
 			mProgressDialog.dismiss();
 			alertbuilder("Error!","Could not unserialize devices from xml","Ok",1);
+			return false;
+		}
+    }
+    
+    /**
+     * Parse the xml into devices object
+     * @return True if completed or false if error
+     */
+    public boolean unSerializeDeviceDetails(String DeviceDetailsXML){
+    	//Toast.makeText(this, "Unserializing Devices", Toast.LENGTH_LONG).show();
+    	mProgressDialog.setMessage("UnSerializing Device Detials");
+    	Serializer serializer = new Persister();
+    	File source = new File(DeviceDetailsXML);
+    	try {
+			myDeviceDetails = serializer.read(DeviceDetails.class, source);
+			mProgressDialog.dismiss();
+			return true;
+		} catch (Exception e) {
+			utils.customlog(Log.ERROR,"Could not unserialize deviceDetails");
+			mProgressDialog.dismiss();
+			alertbuilder("Error!","Could not unserialize device details from xml","Ok",1);
 			return false;
 		}
     }
@@ -675,9 +698,14 @@ public class FreeGee extends Activity implements OnClickListener {
         }
 
         String fileName = new File(fullPathName).getName();
-        if(fileName.equalsIgnoreCase("devices.xml")){
+        if(fileName.equalsIgnoreCase("devices2.xml")){
+        	utils.customlog(Log.VERBOSE,"DeviceXML is: " + fullPathName);
         	if(unSerializeDevices())
         	    matchDevice();
+        }
+        else if(myDevice != null && fileName.equalsIgnoreCase(new File(myDevice.getDeviceDetailsLocation()).getName().toString())){
+        	utils.customlog(Log.VERBOSE,"DeviceDetailsXML is: " + fullPathName);
+        	unSerializeDeviceDetails(fullPathName);
         }
         else{
         	if(myDevice != null && myDevice.getActions() != null){
@@ -739,18 +767,23 @@ public class FreeGee extends Activity implements OnClickListener {
     				if(onStock()){
     					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
     						myDevice = device;
-    						if(myDevice.getDeviceDetailsLocation() != null)
+    						if(myDevice.getDeviceDetailsLocation() != null){
+    							mProgressDialog.dismiss();
     							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+    						}
     					}
     					else{
+    						mProgressDialog.dismiss();
     						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + prop != null ? prop : prop2  +" not supported yet");
     						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
     					}
     				}
     				else{
     					myDevice = device;
-						if(myDevice.getDeviceDetailsLocation() != null)
+						if(myDevice.getDeviceDetailsLocation() != null){
+							mProgressDialog.dismiss();
 							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+						}
     				}
     				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
     					setUnlocks();
@@ -762,18 +795,23 @@ public class FreeGee extends Activity implements OnClickListener {
     				if(onStock()){
     					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
     						myDevice = device;
-    						if(myDevice.getDeviceDetailsLocation() != null)
+    						if(myDevice.getDeviceDetailsLocation() != null){
+    							mProgressDialog.dismiss();
     							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+    						}
     					}
     					else{
+    						mProgressDialog.dismiss();
     						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + prop != null ? prop : prop2  +" not supported yet");
     						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
     					}
     				}
     				else{
     				    myDevice = device;
-						if(myDevice.getDeviceDetailsLocation() != null)
+						if(myDevice.getDeviceDetailsLocation() != null){
+							mProgressDialog.dismiss();
 							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+						}
     				}
     				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
     					setUnlocks();
@@ -807,18 +845,23 @@ public class FreeGee extends Activity implements OnClickListener {
         				if(onStock()){
         					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
         						myDevice = device;
-        						if(myDevice.getDeviceDetailsLocation() != null)
+        						if(myDevice.getDeviceDetailsLocation() != null){
+        							mProgressDialog.dismiss();
         							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+        						}
         					}
         					else{
+        						mProgressDialog.dismiss();
         						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
         						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
         					}
         				}
         				else{
         					myDevice = device;
-    						if(myDevice.getDeviceDetailsLocation() != null)
+    						if(myDevice.getDeviceDetailsLocation() != null){
+    							mProgressDialog.dismiss();
     							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+    						}
         				}
         				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
         					setUnlocks();
@@ -828,18 +871,23 @@ public class FreeGee extends Activity implements OnClickListener {
         				if(onStock()){
         					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
         						myDevice = device;
-        						if(myDevice.getDeviceDetailsLocation() != null)
+        						if(myDevice.getDeviceDetailsLocation() != null){
+        							mProgressDialog.dismiss();
         							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+        						}
         					}
         					else{
+        						mProgressDialog.dismiss();
         						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
         						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
         					}
         				}
         				else{
         					myDevice = device;
-    						if(myDevice.getDeviceDetailsLocation() != null)
+    						if(myDevice.getDeviceDetailsLocation() != null){
+    							mProgressDialog.dismiss();
     							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+    						}
         				}
         				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
         					setUnlocks();
@@ -849,18 +897,23 @@ public class FreeGee extends Activity implements OnClickListener {
         				if(onStock()){
         					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
         						myDevice = device;
-        						if(myDevice.getDeviceDetailsLocation() != null)
+        						if(myDevice.getDeviceDetailsLocation() != null){
+        							mProgressDialog.dismiss();
         							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+        						}
         					}
         					else{
+        						mProgressDialog.dismiss();
         						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
         						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
         					}
         				}
         				else{
         					myDevice = device;
-    						if(myDevice.getDeviceDetailsLocation() != null)
+    						if(myDevice.getDeviceDetailsLocation() != null){
+    							mProgressDialog.dismiss();
     							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+    						}
         				}
         				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
         					setUnlocks();
@@ -872,18 +925,23 @@ public class FreeGee extends Activity implements OnClickListener {
         				if(onStock()){
         					if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
         						myDevice = device;
-        						if(myDevice.getDeviceDetailsLocation() != null)
+        						if(myDevice.getDeviceDetailsLocation() != null){
+        							mProgressDialog.dismiss();
         							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+        						}
         					}
         					else{
+        						mProgressDialog.dismiss();
         						utils.customlog(Log.ERROR,"Software version: " + swprop +" on device" + Genericprop != null ? Genericprop : Genericprop2  +" not supported yet");
         						alertbuilder("Unspported", "Your devices specific software version of " + swprop + " is not currently supported","Ok",0);
         					}
         				}
         				else{
         				    myDevice = device;
-    						if(myDevice.getDeviceDetailsLocation() != null)
+    						if(myDevice.getDeviceDetailsLocation() != null){
+    							mProgressDialog.dismiss();
     							getDeviceDetails(myDevice.getDeviceDetailsLocation());
+    						}
         				}
         				if(myDevice.getName().equalsIgnoreCase("LG Optimus G"))
         					setUnlocks();
@@ -916,7 +974,6 @@ public class FreeGee extends Activity implements OnClickListener {
         	}
     		
     	}
-    	mProgressDialog.dismiss();
     }
     
     /**
@@ -1518,9 +1575,11 @@ public class FreeGee extends Activity implements OnClickListener {
     	else{
     	    for(Partition partition: myDeviceDetails.getPartitions()){
     	    	if(partition.getRequiredBackup()){
-    	    		if(! new File(constants.FreeGeeFolder+"/"+partition.getName()+"-backup.img").exists())
+    	    		if(! new File(constants.FreeGeeFolder+"/"+partition.getName()+"-backup.img").exists()){
+    	    			utils.customlog(Log.ERROR,"Backup of "+partition.getName() + " is not found in "+constants.FreeGeeFolder+"/"+partition.getName()+"-backup.img. Aborting restoring backups");
     	    			alertbuilder("Backup not found","Backup of "+partition.getName() + " is not found. Aborting restoring backups","Ok",0);
     	    			return false;
+    	    		}
     	    	}
     	    }
     	}
@@ -1536,6 +1595,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	if(action.getName().equalsIgnoreCase("Re-lock (restore backups)")){
     		if(myDeviceDetails != null)
     			if(!checkForBackups()){
+    				mProgressDialog.dismiss();
     			    return;
     			}    				
     	}
@@ -1597,9 +1657,9 @@ public class FreeGee extends Activity implements OnClickListener {
 	    mProgressDialog.show();
 	    
         Action dAction = new Action();
-        dAction.setName("devices.xml");
-        dAction.setZipFile("devices.xml");
-        dAction.setZipFileLocation("devices.xml");
+        dAction.setName("devices2.xml");
+        dAction.setZipFile("devices2.xml");
+        dAction.setZipFileLocation("devices2.xml");
         dAction.setMd5sum("nono");
         File devicesXML = new File(constants.DEVICE_XML);
         if(devicesXML.exists()){

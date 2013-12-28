@@ -26,7 +26,7 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
-import edu.shell.freegee_free.R;
+import edu.shell.freegee.R;
 import edu.shell.freegee.device.Action;
 import edu.shell.freegee.utils.constants;
 import edu.shell.freegee.utils.utils;
@@ -68,7 +68,7 @@ public class DownloadReceiver extends BroadcastReceiver{
         File directory = new File(Environment.getExternalStorageDirectory() + "/freegee");
         if (!directory.exists()) {
             directory.mkdirs();
-            utils.customlog(Log.DEBUG, "Freegee created");
+            utils.customlog(Log.DEBUG, "Freegee folder created");
         }
 
         // Build the name of the file to download, adding .partial at the end.  It will get
