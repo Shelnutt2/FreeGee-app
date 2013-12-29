@@ -19,6 +19,10 @@
     </style>
   </head>
   <body>
+$ 1.9.14
+  % Version 1.9.14
+  _ 2013-12-29
+    * Check if device is supported by loki
 $ 1.9.13
   % Version 1.9.13
   _ 2013-12-28
