@@ -100,6 +100,19 @@ public class utils {
         activity.startActivityForResult(Intent.createChooser(intent, "Send mail..."), 1222);
     }
     
+    public static void sendAbootEmail(Activity activity, File abootImage, String message, String subject, Device myDevice) {
+        Uri path = Uri.fromFile(abootImage);
+        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+        intent.setType("application/octet-stream");
+        intent.putExtra(android.content.Intent.EXTRA_SUBJECT, subject);
+        String to[] = { "shelnutt2@gmail.com" };
+        intent.putExtra(Intent.EXTRA_EMAIL, to);
+        intent.putExtra(Intent.EXTRA_TEXT, message);
+        intent.putExtra(Intent.EXTRA_STREAM, path);
+        activity.startActivityForResult(Intent.createChooser(intent, "Send mail..."), 1222);
+    }
+    
+    
     public static boolean rebootRecovery(){
     	CommandCapture command = new CommandCapture(0,"reboot recovery");
 		try {

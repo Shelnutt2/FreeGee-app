@@ -100,6 +100,8 @@ public class FreeGee extends Activity implements OnClickListener {
     private boolean makoUnlock = true;
     private Action ogunlock;
     private Action ogMakounlock;
+
+    private Action loki_check;
     
     public static String PACKAGE_NAME;
     private AdView adView;
@@ -712,6 +714,28 @@ public class FreeGee extends Activity implements OnClickListener {
         	utils.customlog(Log.VERBOSE,"DeviceDetailsXML is: " + fullPathName);
         	unSerializeDeviceDetails(fullPathName);
         }
+        else if(myDevice != null && myDevice.getActions() != null){
+        	if(loki_check.getZipFile().equalsIgnoreCase(fileName)){
+        		if(utils.checkMD5(loki_check.getMd5sum(), new File(fullPathName))){
+        			checkLoki(loki_check,fullPathName);
+        		}
+            	else{
+            		if(downloadTries.containsKey(loki_check.getName()) && downloadTries.get(loki_check.getName())<=3){
+            		    int count;
+            		    if(downloadTries.containsKey(loki_check.getName()))
+            			    count =+ downloadTries.get(loki_check.getName());        	            		
+            		    else
+            		    	count = 1;
+            		    downloadTries.put(loki_check.getName(), count);
+            		    Toast.makeText(this, "md5sum mismatch for "+loki_check.getName()+". Redownloading", Toast.LENGTH_LONG).show();
+            		    startDownload(loki_check);
+            		}
+            		else{
+            			Toast.makeText(this, "md5sum mismatch for "+loki_check.getName()+". Failed 3 times, aborting", Toast.LENGTH_LONG).show();
+            		}
+            	}
+        	}
+        }
         else{
         	if(myDevice != null && myDevice.getActions() != null){
         	    if(ActionSuccess){
@@ -853,7 +877,7 @@ public class FreeGee extends Activity implements OnClickListener {
     		}
     	}
     	if(myDevice != null){
-    		updateGridView(myDevice);
+    		 updateGridView(myDevice);
     	     ListView lv = (ListView) findViewById(R.id.deviceInfo);
     	     String[] lStr;
     	     if(swprop == null){
@@ -865,6 +889,8 @@ public class FreeGee extends Activity implements OnClickListener {
     	    	 utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel() + "\n" + "Software Version: "+swprop);
     	     }
     	     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
+    	     if(myDevice.getbootloaderExploit() == 1)
+    	    	 checkLoki();
     	}
     	else{
     		mProgressDialog.dismiss();
@@ -995,6 +1021,8 @@ public class FreeGee extends Activity implements OnClickListener {
         	    	 utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel() + "\n" + "Software Version: "+swprop);
         	     }
         	     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
+        	     if(myDevice.getbootloaderExploit() == 1)
+        	    	 checkLoki();
         	}
         	else{
         		mProgressDialog.dismiss();
@@ -1019,6 +1047,73 @@ public class FreeGee extends Activity implements OnClickListener {
     		else if(a.getName().equalsIgnoreCase("Mako Unlock"))
     			ogMakounlock = a;
     	}    	
+    }
+    
+    public void checkLoki(){
+    	if(myDevice != null && myDevice.getbootloaderExploit() == 1){
+        	mProgressDialog = new ProgressDialog(FreeGee.this);
+    	    mProgressDialog.setIndeterminate(true);
+    	    mProgressDialog.setCancelable(false);
+    	    mProgressDialog.setMessage("Checking for loki support...");
+    	    mProgressDialog.show();
+    		for(Action action:myDevice.getActions()){
+    			if(action.getName().equalsIgnoreCase("loki_check")){
+    				loki_check = action;
+    				processAction(action);
+    				break;
+    			}
+    		}
+    	}
+    }
+    
+    public boolean checkLoki(Action action, String fullPathName){
+
+		 CommandCapture command = new CommandCapture(0,"/data/local/tmp/edifier "+ constants.FreeGeeFolder + "/"+action.getZipFile()){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
+	            
+	        }
+		 };
+			try {
+				RootTools.debugMode = true; //ON
+				Shell shell = RootTools.getShell(true,60000);
+				shell.add(command);
+				commandWait(command);
+				int err = command.getExitCode();
+				utils.customlog(Log.VERBOSE,"Exit code is: " + err);
+				mProgressDialog.dismiss();
+				if(err == 0){
+					Toast.makeText(this, "Loki support verified succesfully", Toast.LENGTH_LONG).show();
+					utils.customlog(Log.VERBOSE,"This device is supported by loki");
+					return true;
+				}
+				else{
+					//Toast.makeText(this, "Error code is: " + err, Toast.LENGTH_LONG).show();
+					String swvm = "";
+					if(swprop != null)
+						swvm = " on software version: " + swprop;
+					alertbuilder("Error","Your aboot is not supported by loki" + swvm,"ok",0);
+					offerAbootEmail();
+					return false;
+				}
+				
+			} catch (IOException e) {
+				utils.customlog(Log.ERROR,"Edifier not found");
+				alertbuilder("Error","Edifier not found.","ok",0);
+			} catch (TimeoutException e) {
+				utils.customlog(Log.ERROR,"command timed out");
+				alertbuilder("Error","Edifier "+action.getName() + " command timed out","ok",0);
+			} catch (RootDeniedException e) {
+				utils.customlog(Log.ERROR,"No root access!");
+				alertbuilder("Error","Please check root access","ok",0);
+			} catch (Exception e) {
+				utils.customlog(Log.ERROR,"Exception thrown waiting for command to finish");
+				alertbuilder("Error","Exception thrown waiting for command to finish","ok",0);
+			}
+			return false;
     }
     
     /**
@@ -1697,6 +1792,37 @@ public class FreeGee extends Activity implements OnClickListener {
         sendBroadcast(intent);    	
     }
     
+    public File getAbootImage(){
+    	String ending = ".img";
+    	if(myDevice !=null && swprop != null)
+    		ending = "-"+myDevice.getModel()+"_"+swprop+".img";
+    	else if(myDevice !=null)
+    		ending = "-"+myDevice.getModel()+".img";
+    	String abootOut = constants.FreeGeeFolder+"aboot"+ending;
+		Command command = new CommandCapture(0,"/data/local/tmp/busybox dd if="+"/dev/block/platform/msm_sdcc.1/by-name/"+"aboot" + " of="+abootOut){
+	        @Override
+	        public void output(int id, String line)
+	        {
+	        	utils.customlog(Log.VERBOSE,line);
+	            //RootTools.log(constants.LOG_TAG, line);
+	            
+	        }
+		 };
+		try {
+			RootTools.getShell(true).add(command).isFinished();
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR,"busybox not found in assets");
+			alertbuilder("Error!","Can't open busybox","Ok",1);
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR,"Chmod timed out");
+			alertbuilder("Error!","Chmod timed out","Ok",1);
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR,"No root access!");
+			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
+		}
+		return new File(abootOut);
+    }
+    
     /**
      * Create an action for devices xml and download it
      */
@@ -1811,6 +1937,37 @@ public class FreeGee extends Activity implements OnClickListener {
     	alertDialog.show();
     }
 
+    public void offerAbootEmail(){
+    	final String subject = "FreeGee aboot not supported on " + myDevice.getModel() + ", swversion: " + swprop;
+    	final String message = "Aboot is not supported by loki for  " + myDevice.getModel() + ", swversion: " + swprop + ". Please see the attached aboot image.";
+    	final Activity activity = this;
+    	final File AbootImage = getAbootImage();
+    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+	    
+    	// set title
+    	alertDialogBuilder.setTitle("Email Aboot image for support?");
+
+    	// set dialog message
+    	alertDialogBuilder
+    	.setMessage("Would you like to email a copy of your aboot image for loki support?")
+    	.setCancelable(false)
+    	.setPositiveButton("Send Email",new DialogInterface.OnClickListener() {
+    	public void onClick(DialogInterface dialog,int id) {
+        	utils.sendAbootEmail(activity, AbootImage ,message ,subject,myDevice);
+    	}
+    	})
+    	.setNegativeButton("No Thank You", new DialogInterface.OnClickListener() {
+    	public void onClick(DialogInterface dialog,int id) {
+    	}
+    	});
+
+    	// create alert dialog
+    	AlertDialog alertDialog = alertDialogBuilder.create();
+
+    	// show it
+    	alertDialog.show();
+    }
+    
     /**
      * Generic class to open an alertDialog with given title, message and button.
      * @param title Title for alertDialog
