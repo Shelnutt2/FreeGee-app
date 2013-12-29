@@ -32,16 +32,3 @@ LOCAL_CFLAGS := -DINTERNAL_SHA1 -DCONFIG_CRYPTO_INTERNAL -DCONFIG_NO_T_PRF -DCON
 
 LOCAL_STATIC_LIBRARIES := libedify libminzip libmincrypt libz
 include $(BUILD_EXECUTABLE)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE    := libfreegeenativetask
-LOCAL_SRC_FILES := edu_shell_freegee_NativeTask.c \
-        edifier/install.c \
-        edifier/verifier.c
-        
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/edifier
-LOCAL_LDLIBS := -llog -landroid
-LOCAL_CFLAGS := -DINTERNAL_SHA1 -DCONFIG_CRYPTO_INTERNAL -DCONFIG_NO_T_PRF -DCONFIG_NO_TLS_PRF
-        
-LOCAL_STATIC_LIBRARIES := libedifier libedify libminzip libmincrypt libz
-include $(BUILD_SHARED_LIBRARY)
