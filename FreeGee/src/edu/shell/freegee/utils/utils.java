@@ -88,7 +88,7 @@ public class utils {
         return calculatedDigest.equalsIgnoreCase(md5);
     }
     
-    public static void sendEmail(Activity activity, Action action, String message, String subject, Device myDevice) {
+    public static void sendEmail(Activity activity, String message, String subject, Device myDevice) {
         Uri path = Uri.fromFile(logFile);
         Intent intent = new Intent(android.content.Intent.ACTION_SEND);
         intent.setType("application/octet-stream");
@@ -212,6 +212,17 @@ public class utils {
 
         return ((float)level / (float)scale) * 100.0f; 
     }
+    
+    public static boolean getBatteryCharging(Context context) {
+    	
+        Intent batteryStatus = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        // Are we charging / charged?
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        return status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                             status == BatteryManager.BATTERY_STATUS_FULL;
+    }
+
+
     
     public static void writeToLog(String lineToLog){
         FileOutputStream fop = null;
