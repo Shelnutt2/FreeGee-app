@@ -16,9 +16,9 @@
 			<attribute name="javadoc_location" value="file:/home/s.shelnutt/Downloads/simple-xml-2.7.1/javadoc/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/RootTools-3.3.jar">
+	<classpathentry kind="lib" path="libs/RootTools-3.4.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="jar:file:/home/s.shelnutt/Downloads/RootTools-javadoc-3.3.jar!/"/>
+			<attribute name="javadoc_location" value="jar:platform:/resource/FreeGee/libs/RootTools-javadoc-3.4.jar!/"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin/classes"/>
