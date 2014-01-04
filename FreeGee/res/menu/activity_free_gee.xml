@@ -7,6 +7,12 @@
         android:title="@string/menu_settings"/>
     
     <item
+        android:id="@+id/menu_update_zip"
+        android:orderInCategory="150"
+        android:showAsAction="never"
+        android:title="@string/menu_update_zip"/>
+    
+    <item
         android:id="@+id/menu_reboot_recovery"
         android:orderInCategory="200"
         android:showAsAction="never"

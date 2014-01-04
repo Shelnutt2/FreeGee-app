@@ -9,11 +9,14 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
 import com.stericson.RootTools.RootTools;
 import com.stericson.RootTools.exceptions.RootDeniedException;
+import com.stericson.RootTools.execution.Command;
 import com.stericson.RootTools.execution.CommandCapture;
+import com.stericson.RootTools.execution.Shell;
 
 import edu.shell.freegee.device.Action;
 import edu.shell.freegee.device.Device;
@@ -23,12 +26,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.BatteryManager;
+import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
 public class utils {
 	static File logFile = new File(constants.LOG_FILE);
-	
+
     public static String calculateMD5(File updateFile) {
         MessageDigest digest;
         try {
@@ -222,7 +226,13 @@ public class utils {
                              status == BatteryManager.BATTERY_STATUS_FULL;
     }
 
-
+    public static Action findAction(ArrayList<Action> actions,String name){
+    	for(Action action:actions){
+    		if(action.getName().equalsIgnoreCase(name))
+    			return action;
+    	}
+    	return null;
+    }
     
     public static void writeToLog(String lineToLog){
         FileOutputStream fop = null;
@@ -250,5 +260,91 @@ public class utils {
 				Log.e(constants.LOG_TAG,"IOException trying to close log file");
 			}
 		}
+    }
+
+	public static boolean updateZip(File file) {
+		CommandCapture command = new CommandCapture(0,constants.CP_COMMAND + " " + file.getAbsolutePath() + " " + "/data/local/tmp/tmp.zip"){
+		    @Override
+		    public void output(int id, String line)
+		    {
+		    	utils.customlog(Log.VERBOSE,line);
+		        //RootTools.log(constants.LOG_TAG, line);
+		        }
+	    };
+		try {
+		    Shell shell = RootTools.getShell(true);
+			shell.add(command);
+			commandWait(command);
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR, "IOException on copying " + file + " to /data/local/tmp/tmp.zip!");
+			return false;
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR, "Timed out on copying " + file + " to /data/local/tmp/tmp.zip!");
+			return false;
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR, "Root Denined!");
+			return false;
+		}
+		int err = command.getExitCode();
+		if(err == 0)
+			return true;
+		else
+			return false;
+	}
+	
+	public static boolean copyUpdatedZip(File file) {
+		CommandCapture command = new CommandCapture(0,constants.CP_COMMAND + " " + "/data/local/tmp/tmp.zip" + " " + file.getAbsolutePath()){
+		    @Override
+		    public void output(int id, String line)
+		    {
+		    	utils.customlog(Log.VERBOSE,line);
+		        //RootTools.log(constants.LOG_TAG, line);
+		        }
+	    };
+		try {
+		    Shell shell = RootTools.getShell(true);
+			shell.add(command);
+			commandWait(command);
+		} catch (IOException e) {
+			utils.customlog(Log.ERROR, "IOException on copying " + " /data/local/tmp/tmp.zip to" + file);
+			return false;
+		} catch (TimeoutException e) {
+			utils.customlog(Log.ERROR, "Timed out on copying " + "/data/local/tmp/tmp.zip to" + file);
+			return false;
+		} catch (RootDeniedException e) {
+			utils.customlog(Log.ERROR, "Root Denined!");
+			return false;
+		}
+		int err = command.getExitCode();
+		if(err == 0)
+			return true;
+		else
+			return false;
+	}
+	
+    /**
+     * Wait for RootTools command to finish
+     * @param cmd Command
+     */
+    private static void commandWait(Command cmd) {
+        int waitTill = 50;
+        int waitTillMultiplier = 2;
+        int waitTillLimit = 60000; //7 tries, 6350 msec
+
+        while (!cmd.isFinished() && waitTill<=waitTillLimit) {
+            synchronized (cmd) {
+                try {
+                    if (!cmd.isFinished()) {
+                        cmd.wait(waitTill);
+                        waitTill *= waitTillMultiplier;
+                    }
+                } catch (InterruptedException e) {
+                    utils.customlog(Log.ERROR,"Error with waiting for command: "+ cmd.toString());
+                }
+            }
+        }
+        if (!cmd.isFinished()){
+            utils.customlog(Log.ERROR, "Could not finish root command in " + (waitTill/waitTillMultiplier));
+        }
     }
 }

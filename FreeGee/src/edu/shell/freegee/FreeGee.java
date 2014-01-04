@@ -39,6 +39,7 @@ import edu.shell.freegee.device.Device;
 import edu.shell.freegee.device.DeviceDetails;
 import edu.shell.freegee.device.Devices;
 import edu.shell.freegee.device.Partition;
+import edu.shell.freegee.utils.FileDialog;
 import edu.shell.freegee.utils.constants;
 import edu.shell.freegee.utils.utils;
 import android.annotation.SuppressLint;
@@ -51,7 +52,9 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -78,14 +81,13 @@ public class FreeGee extends Activity implements OnClickListener {
     private DeviceDetails myDeviceDetails;
     
     private static ProgressDialog mProgressDialog;
+    private static FileDialog fileDialog;
     public static boolean isSpecial;
     private ArrayList<Object> mButtons = new ArrayList<Object>();
     private ArrayList<Device> DeviceList;
         
     private static boolean mMainActivityActive;
 
-
-	private static String CP_COMMAND;
 	private HashMap<String,Integer> downloadTries = new HashMap<String,Integer>();
     
     private Properties buildProp = new Properties();
@@ -102,6 +104,8 @@ public class FreeGee extends Activity implements OnClickListener {
     private Action ogMakounlock;
 
     private Action loki_check;
+    
+    private File updateZipFile;
     
     public static String PACKAGE_NAME;
     private AdView adView;
@@ -181,7 +185,7 @@ public class FreeGee extends Activity implements OnClickListener {
 		}		
 		int err = command.getExitCode();
 		if(err == 0){
-			CP_COMMAND="/system/bin/cp";
+			constants.CP_COMMAND="/system/bin/cp";
 			return true;
 		}
 		else{
@@ -210,7 +214,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			}
 			err = command.getExitCode();
 			if(err == 0){
-				CP_COMMAND="/system/xbin/cp";
+				constants.CP_COMMAND="/system/xbin/cp";
 				return true;
 			}
 		}
@@ -324,9 +328,9 @@ public class FreeGee extends Activity implements OnClickListener {
 					break;
 				}
 			}
-			CP_COMMAND="busybox cp";
+			constants.CP_COMMAND="busybox cp";
 		}
-		utils.customlog(Log.VERBOSE,"CP_COMMAND is " + CP_COMMAND);
+		utils.customlog(Log.VERBOSE,"constants.CP_COMMAND is " + constants.CP_COMMAND);
 		
 		if(utils.getBatteryLevel(this) < 15.0 && !(utils.getBatteryCharging(this) && utils.getBatteryLevel(this) >= 10.0) )
 			alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
@@ -465,7 +469,6 @@ public class FreeGee extends Activity implements OnClickListener {
     		return true;
     	else
     		return false;
-    	
     }
 
     /**
@@ -715,7 +718,7 @@ public class FreeGee extends Activity implements OnClickListener {
         	unSerializeDeviceDetails(fullPathName);
         }
         else if(myDevice != null && myDevice.getActions() != null){
-        	if(loki_check.getZipFile().equalsIgnoreCase(fileName)){
+        	if(loki_check != null && loki_check.getZipFile().equalsIgnoreCase(fileName)){
         		if(utils.checkMD5(loki_check.getMd5sum(), new File(fullPathName))){
         			checkLoki(loki_check,fullPathName);
         		}
@@ -802,6 +805,8 @@ public class FreeGee extends Activity implements OnClickListener {
 	public boolean doAllActions(){
     	utils.customlog(Log.VERBOSE,"actionDownloads size: " + actionDownloads.size());
     	utils.customlog(Log.VERBOSE,"actionOrder size: " + actionOrder.size());
+    	utils.customlog(Log.VERBOSE,"actionsleft: " + actionsleft);
+    	utils.customlog(Log.VERBOSE,"allActionsDownloads is: " + allActionsDownloads());
     	if(actionDownloads.size() == actionsleft && allActionsDownloads()){
     		for(Action action:actionOrder){
     			if(ActionSuccess){
@@ -897,12 +902,12 @@ public class FreeGee extends Activity implements OnClickListener {
     	     ListView lv = (ListView) findViewById(R.id.deviceInfo);
     	     String[] lStr;
     	     if(swprop == null){
-    	         lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel()};
-    	         utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel());
+    	         lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel().get(0)};
+    	         utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel().get(0));
     	     }
     	     else{
-    	    	 lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel(),"Software Version: "+swprop};
-    	    	 utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel() + "\n" + "Software Version: "+swprop);
+    	    	 lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel().get(0),"Software Version: "+swprop};
+    	    	 utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel().get(0) + "\n" + "Software Version: "+swprop);
     	     }
     	     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
     	     if(mProgressDialog.isShowing())
@@ -1033,12 +1038,12 @@ public class FreeGee extends Activity implements OnClickListener {
         	     ListView lv = (ListView) findViewById(R.id.deviceInfo);
         	     String[] lStr;
         	     if(swprop == null){
-        	         lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel()};
-        	         utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel());
+        	         lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel().get(0)};
+        	         utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel().get(0));
         	     }
         	     else{
-        	    	 lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel(),"Software Version: "+swprop};
-        	    	 utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel() + "\n" + "Software Version: "+swprop);
+        	    	 lStr = new String[]{"Device Name: "+myDevice.getName(),"Device Model: "+myDevice.getModel().get(0),"Software Version: "+swprop};
+        	    	 utils.customlog(Log.VERBOSE,"Device Name: "+myDevice.getName() + "\n" +"Device Model: "+myDevice.getModel().get(0) + "\n" + "Software Version: "+swprop);
         	     }
         	     lv.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, lStr));
         	     if(mProgressDialog.isShowing())
@@ -1155,8 +1160,8 @@ public class FreeGee extends Activity implements OnClickListener {
      * @return True if action is success or false if action fails
      */
     public boolean doAction(Action i, String fullPathName){
-
-		 CommandCapture command = new CommandCapture(0,"/data/local/tmp/edifier "+ constants.FreeGeeFolder + "/"+i.getZipFile()){
+    	utils.customlog(Log.VERBOSE,"Performing action: " + i.getName());
+		CommandCapture command = new CommandCapture(0,60000,"/data/local/tmp/edifier "+ constants.FreeGeeFolder + "/"+i.getZipFile()){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -1176,8 +1181,21 @@ public class FreeGee extends Activity implements OnClickListener {
 					actionsleft--;
 					utils.customlog(Log.VERBOSE,"actionsleft is: " + actionsleft);
 					if(actionsleft == 0){
-						mProgressDialog.dismiss();
-						alertbuilder("Done","The requested action of " + mainAction.getName() +" is complete","Ok",0);
+						if(mainAction.getName().equalsIgnoreCase("loki_update_zip")){
+							if(utils.copyUpdatedZip(updateZipFile)){
+								mProgressDialog.dismiss();
+							    alertbuilder("Done","The zip " + updateZipFile +" has been updated with the latest loki_patch and loki_flash","Ok",0);
+							}
+							else{
+								mProgressDialog.dismiss();
+							    alertbuilder("Error","The zip " + updateZipFile +" could not be copied back after updating","Ok",0);
+								offerEmail(i);
+							}	
+						}
+					    else{
+						    mProgressDialog.dismiss();
+						    alertbuilder("Done","The requested action of " + mainAction.getName() +" is complete","Ok",0);
+					    }
 					}
 					return true;
 				}
@@ -1439,7 +1457,6 @@ public class FreeGee extends Activity implements OnClickListener {
 	        {
 	        	utils.customlog(Log.VERBOSE,line);
 	            //RootTools.log(constants.LOG_TAG, line);
-	            
 	        }
 		 };
 		try {
@@ -1455,7 +1472,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier"){
+		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -1477,7 +1494,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys"){
+		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -1499,7 +1516,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg"){
+		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -1521,7 +1538,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg"){
+		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -1543,7 +1560,7 @@ public class FreeGee extends Activity implements OnClickListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		command = new CommandCapture(0,CP_COMMAND + " /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox"){
+		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -1925,6 +1942,8 @@ public class FreeGee extends Activity implements OnClickListener {
         inflater.inflate(R.menu.activity_free_gee, menu);
         if(myDevice != null && !myDevice.getName().equalsIgnoreCase("LG Optimus G"))
         	menu.removeItem(R.id.menu_reboot_bootloader);
+/*        if(myDevice != null && !(myDevice.getBootloaderExploit() == 1))
+        	menu.removeItem(R.id.menu_update_zip);*/
         return true;
     }
 
@@ -1935,6 +1954,21 @@ public class FreeGee extends Activity implements OnClickListener {
             case R.id.menu_settings:{
         		Intent newActivity = new Intent(this, settings.class);
                 startActivity(newActivity);
+                return true;
+                }
+            case R.id.menu_update_zip:{
+            	File mPath = new File(constants.getSDCARD());
+                fileDialog = new FileDialog(this, mPath, ".zip");
+                fileDialog.setFileEndsWith(".zip");
+                fileDialog.addFileListener(new FileDialog.FileSelectedListener() {
+                    public void fileSelected(File file) {
+                    	updateZipFile = file;
+                        utils.customlog(Log.DEBUG, "zip file to update: " + updateZipFile.toString());
+                        fileDialog.dismiss();
+                        new updateLokiZip().execute(updateZipFile);
+                    }
+                });
+                fileDialog.showDialog();
                 return true;
                 }
             case R.id.menu_reboot_recovery:{
@@ -1957,7 +1991,48 @@ public class FreeGee extends Activity implements OnClickListener {
         }
     }
     
-    /**
+	private class updateLokiZip extends AsyncTask<File, Void, Boolean> {
+		
+		protected void onPreExecute(){
+		    mProgressDialog = new ProgressDialog(FreeGee.this);      
+	        mProgressDialog.setIndeterminate(true);
+	        mProgressDialog.setCancelable(false);
+	        mProgressDialog.setMessage("Copying selected zip file for updating...");
+	        mProgressDialog.show();
+		}
+	    /** The system calls this to perform work in a worker thread and
+	      * delivers it the parameters given to AsyncTask.execute() */
+	    protected Boolean doInBackground(File... updateZip) {
+	        return utils.updateZip(updateZip[0]);
+	    }
+	    
+	    /** The system calls this to perform work in the UI thread and delivers
+	      * the result from doInBackground() */
+	    protected void onPostExecute(Boolean result) {
+	        if(result){
+            	mProgressDialog.setMessage("Updating selected zip with newer loki support...");
+	            mainAction = utils.findAction(myDevice.getActions(), "loki_update_zip");
+	            if(mainAction != null){
+				    actionOrder = new ArrayList<Action>();
+				    actionDownloads = new HashMap<String,Boolean>();
+	                processAction(mainAction);
+	            }
+	            else{
+	            	mProgressDialog.dismiss();
+	            	utils.customlog(Log.ERROR,"Could not find the loki_update_zip action for your device.");
+	            	alertbuilder("Error","Could not find the loki_update_zip action for your device.","ok",0);
+	            }
+	        }
+	        else{
+	        	mProgressDialog.dismiss();
+	        	utils.customlog(Log.ERROR,"There was an error copying the zip file to be updated");
+	        	alertbuilder("Error","There was an error copying the zip file you requested to be updated","ok",0);
+	        }
+			
+	    }
+	}
+
+	/**
      * Offer to email bug report
      * @param action
      */

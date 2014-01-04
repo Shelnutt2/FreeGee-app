@@ -2,8 +2,8 @@
 <resources>
 
     <string name="app_name">FreeGee</string>
-    <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
+    <string name="menu_update_zip">Update loki in zip</string>
     <string name="menu_reboot_recovery">Reboot Recovery</string>
     <string name="menu_reboot_bootloader">Reboot Bootloader</string>
     <string name="menu_shutdown">Shutdown</string>
