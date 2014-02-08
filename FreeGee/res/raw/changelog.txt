@@ -19,6 +19,10 @@
     </style>
   </head>
   <body>
+$ 1.9.16
+  % Version 1.9.16
+  _ 2014-2-07
+    * Fix bug which caused NPE and crash on unsupported sw versions
 $ 1.9.15
   % Version 1.9.15
   _ 2014-1-04

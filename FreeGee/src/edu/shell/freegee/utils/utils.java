@@ -169,37 +169,39 @@ public class utils {
     }
     
     public static void customlog(int logLevel, String lineToLog){
-    	switch(logLevel){
-    	    case Log.DEBUG:{
-    	    	Log.d(constants.LOG_TAG, lineToLog);
-    	    	writeToLog(lineToLog);
-    	    	break;
-    	    	}
-    	    case Log.ERROR:{
-    	    	Log.e(constants.LOG_TAG, lineToLog);
-    	    	writeToLog(lineToLog);
-    	    	break;
-    	    	}
-    	    case Log.INFO:{
-    	    	Log.i(constants.LOG_TAG, lineToLog);
-    	    	writeToLog(lineToLog);
-    	    	break;
-    	    	}
-    	    case Log.VERBOSE:{
-    	    	Log.v(constants.LOG_TAG, lineToLog);
-    	    	writeToLog(lineToLog);
-    	    	break;
-    	    	}
-    	    case Log.WARN:{
-    	    	Log.w(constants.LOG_TAG, lineToLog);
-    	    	writeToLog(lineToLog);
-    	    	break;
-    	    	}
-    	    default:{
-    	    	Log.d(constants.LOG_TAG, lineToLog);
-    	    	writeToLog(lineToLog);
-    	    	break;
-    	    	}
+    	if(lineToLog != null && !lineToLog.isEmpty()){	
+    	    switch(logLevel){
+    	        case Log.DEBUG:{
+    	    	    Log.d(constants.LOG_TAG, lineToLog);
+    	    	    writeToLog(lineToLog);
+    	    	    break;
+    	    	    }
+    	        case Log.ERROR:{
+    	    	    Log.e(constants.LOG_TAG, lineToLog);
+    	    	    writeToLog(lineToLog);
+    	    	    break;
+    	    	    }
+    	        case Log.INFO:{
+    	    	    Log.i(constants.LOG_TAG, lineToLog);
+    	    	    writeToLog(lineToLog);
+    	    	    break;
+    	    	    }
+    	        case Log.VERBOSE:{
+    	    	    Log.v(constants.LOG_TAG, lineToLog);
+    	    	    writeToLog(lineToLog);
+    	    	    break;
+    	    	    }
+    	        case Log.WARN:{
+    	    	    Log.w(constants.LOG_TAG, lineToLog);
+    	            writeToLog(lineToLog);
+    	            break;
+    	        	}
+    	        default:{
+    	    	    Log.d(constants.LOG_TAG, lineToLog);
+    	    	    writeToLog(lineToLog);
+    	        	break;
+    	        	}
+    	    }
     	
     	}
     }
