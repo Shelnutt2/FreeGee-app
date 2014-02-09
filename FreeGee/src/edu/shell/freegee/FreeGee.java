@@ -389,13 +389,11 @@ public class FreeGee extends Activity implements OnClickListener {
 			buildProp.load(fis);
 		} catch (IOException e) {
 			alertbuilder("Error!","Can't load build.prop make sure you have root and perms are set correctly","Ok",0);
-			e.printStackTrace();
 		}
 		try {
 			fis.close();
 		} catch (IOException e) {
 			alertbuilder("Error!","Can't close build.prop, something went wrong.","Ok",0);
-			e.printStackTrace();
 		}
 		
 		setupUtilities(0);
@@ -1006,12 +1004,14 @@ public class FreeGee extends Activity implements OnClickListener {
 				else{
 					actionsleft--;
 					//Toast.makeText(this, "Error code is: " + err, Toast.LENGTH_LONG).show();
-					String swvm = "";
-					if(swprop != null)
-						swvm = " on software version: " + swprop;
-					alertbuilder("Error","Your aboot is not supported by loki" + swvm,"ok",0);
-					offerAbootEmail();
-					return false;
+					if(myDevice != null && swprop != null && !myDevice.getFirmware().contains(swprop)){
+						String swvm = "";
+					    if(swprop != null)
+						    swvm = " on software version: " + swprop;
+					    alertbuilder("Error","Your aboot is not supported by loki" + swvm,"ok",0);
+					    offerAbootEmail();
+					    return false;
+					}
 				}
 				
 			} catch (IOException e) {

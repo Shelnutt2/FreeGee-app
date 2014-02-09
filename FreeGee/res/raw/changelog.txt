@@ -19,6 +19,10 @@
     </style>
   </head>
   <body>
+$ 1.9.17
+  % Version 1.9.17
+  _ 2014-2-09
+    * Don't offer to send unsupported aboot's if your sw version is supported specifically
 $ 1.9.16
   % Version 1.9.16
   _ 2014-2-07
