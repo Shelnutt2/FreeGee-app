@@ -102,7 +102,7 @@ public class FreeGee extends Activity implements OnClickListener {
     private boolean makoUnlock = true;
     private Action ogunlock;
     private Action ogMakounlock;
-
+    
     private Action loki_check;
     
     private File updateZipFile;
@@ -976,6 +976,19 @@ public class FreeGee extends Activity implements OnClickListener {
     	}
     }
     
+    public boolean hideLokiReqActions(){
+    	if(myDevice == null || myDevice.getActions() == null)
+    		return false;
+    	for(int i = 0; i < myDevice.getActions().size(); i++){
+    		for(Action action:myDevice.getActions().get(i).getDependencies()){
+    			if(action.getName().contains("loki")){
+    				myDevice.getActions().get(i).setHidden(true);
+    			}
+    		}
+    	}
+    	return true;
+    }
+    
     public boolean checkLoki(Action action, String fullPathName){
     	utils.customlog(Log.VERBOSE, "Running check for loki support through zip");
 		 CommandCapture command = new CommandCapture(0,"/data/local/tmp/edifier "+ constants.FreeGeeFolder + "/"+action.getZipFile()){
@@ -1009,6 +1022,7 @@ public class FreeGee extends Activity implements OnClickListener {
 					    if(swprop != null)
 						    swvm = " on software version: " + swprop;
 					    alertbuilder("Error","Your aboot is not supported by loki" + swvm,"ok",0);
+					    hideLokiReqActions();
 					    offerAbootEmail();
 					    return false;
 					}
