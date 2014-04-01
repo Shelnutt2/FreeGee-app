@@ -63,11 +63,11 @@ int id deviceInfo 0x7f060006
 int id hybrid 0x7f060004
 int id main_gridview 0x7f060007
 int id main_linear_layout 0x7f060005
-int id menu_reboot_bootloader 0x7f06000d
-int id menu_reboot_recovery 0x7f06000c
-int id menu_settings 0x7f06000a
-int id menu_shutdown 0x7f06000e
-int id menu_update_zip 0x7f06000b
+int id menu_reboot_bootloader 0x7f06000c
+int id menu_reboot_recovery 0x7f06000b
+int id menu_settings 0x7f06000e
+int id menu_shutdown 0x7f06000d
+int id menu_update_zip 0x7f06000a
 int id none 0x7f060000
 int id normal 0x7f060001
 int id satellite 0x7f060002

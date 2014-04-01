@@ -54,7 +54,6 @@ import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -94,7 +93,7 @@ public class FreeGee extends Activity implements OnClickListener {
     
     private int actionsleft = 0;
     private List<Action> actionOrder = new ArrayList<Action>();	
-    private HashMap<String,Boolean> actionDownloads = new HashMap<String,Boolean>();
+    private HashMap<Action, Boolean> actionDownloads = new HashMap<Action,Boolean>();
     private Action mainAction;
     private boolean ActionSuccess = true;
     private String swprop;
@@ -110,6 +109,8 @@ public class FreeGee extends Activity implements OnClickListener {
     public static String PACKAGE_NAME;
     private AdView adView;
     
+    private String appVersion;
+    
 	File logFile = new File(constants.LOG_FILE);
 
 	/**
@@ -117,6 +118,7 @@ public class FreeGee extends Activity implements OnClickListener {
 	 */
     private void showChangeLog(){
         ChangeLog cl = new ChangeLog(this);
+        appVersion = cl.getThisVersion();
         if (cl.firstRun())
             cl.getLogDialog().show();
     }
@@ -617,7 +619,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	     mProgressDialog.show();
     		 mainAction = a;
 			 actionOrder = new ArrayList<Action>();
-			 actionDownloads = new HashMap<String,Boolean>();
+			 actionDownloads = new HashMap<Action,Boolean>();
     	     processAction(a);
     	}
     	})
@@ -707,7 +709,7 @@ public class FreeGee extends Activity implements OnClickListener {
         
         utils.customlog(Log.VERBOSE,"Downloaded file path is: " + fullPathName);
         String fileName = new File(fullPathName).getName();
-        if(fileName.equalsIgnoreCase("devices2.xml")){
+        if(fileName.equalsIgnoreCase(constants.DEVICE_XML_NAME)){
         	utils.customlog(Log.VERBOSE,"DeviceXML is: " + fullPathName);
         	if(unSerializeDevices())
         	    matchDevice();
@@ -747,8 +749,8 @@ public class FreeGee extends Activity implements OnClickListener {
         	                	utils.customlog(Log.VERBOSE,"Action matches as: " + i.getName());
         	            	    if(utils.checkMD5(i.getMd5sum(), new File(fullPathName))){
         	            	    	utils.customlog(Log.VERBOSE,"Current list of actionDownloads are: "+ printList(actionDownloads));
-        	            		    if(actionDownloadsContains(i))
-        	            			    actionDownloads.put(i.getName(),true);
+        	            		    if(actionDownloads.containsKey(i))
+        	            			    actionDownloads.put(i,true);
         	            		    else{
         	            			    utils.customlog(Log.ERROR,"Downloaded action of " + i.getName() + " wasn't part of actions to be downloaded");
 //        	            			    utils.customlog(Log.VERBOSE,"Current list of actions are: "+ printList(actionDownloads));
@@ -794,8 +796,8 @@ public class FreeGee extends Activity implements OnClickListener {
     }
     
     private boolean actionDownloadsContains(Action i) {
-		for(String actionName:actionDownloads.keySet()){
-			if(actionName.equalsIgnoreCase(i.getName()))
+		for(Action action:actionDownloads.keySet()){
+			if(action.getName().equalsIgnoreCase(i.getName()))
 				return true;
 		}
 		return false;
@@ -962,7 +964,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	    mProgressDialog.setMessage("Checking for loki support...");
     	    mProgressDialog.show();
 			actionOrder = new ArrayList<Action>();
-			actionDownloads = new HashMap<String,Boolean>();
+			actionDownloads = new HashMap<Action,Boolean>();
     		for(Action action:myDevice.getActions()){
     			if(action.getName().equalsIgnoreCase("loki_check")){
     				loki_check = action;
@@ -1008,16 +1010,14 @@ public class FreeGee extends Activity implements OnClickListener {
 				int err = command.getExitCode();
 				utils.customlog(Log.VERBOSE,"Exit code is: " + err);
 				mProgressDialog.dismiss();
+				actionsleft--;
 				if(err == 0){
-					actionsleft--;
-					Toast.makeText(this, "Loki support verified succesfully", Toast.LENGTH_LONG).show();
+					//Toast.makeText(this, "Loki support verified succesfully", Toast.LENGTH_LONG).show();
 					utils.customlog(Log.VERBOSE,"This device is supported by loki");
 					return true;
 				}
 				else{
-					actionsleft--;
-					//Toast.makeText(this, "Error code is: " + err, Toast.LENGTH_LONG).show();
-					if(myDevice != null && swprop != null && !myDevice.getFirmware().contains(swprop)){
+					if(myDevice != null && swprop != null && !swIsSupported()){
 						String swvm = "";
 					    if(swprop != null)
 						    swvm = " on software version: " + swprop;
@@ -1042,6 +1042,16 @@ public class FreeGee extends Activity implements OnClickListener {
 				alertbuilder("Error","Exception thrown waiting for command to finish","ok",0);
 			}
 			return false;
+    }
+    
+    public boolean swIsSupported(){
+    	if(myDevice == null || swprop == null)
+    		return false;
+    	for(String sw:myDevice.getFirmware()){
+    		if(sw.equalsIgnoreCase(swprop))
+    			return true;
+    	}
+    	return false;
     }
     
     /**
@@ -1691,7 +1701,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	    if(azipF.exists()){
     	    	if(utils.checkMD5(action.getMd5sum(), azipF)){
     	    	    utils.customlog(Log.VERBOSE,"Using predownloaded "+action.getName());
-    	    	    actionDownloads.put(action.getName(),true);
+    	    	    actionDownloads.put(action,true);
     	    	    if(actionDownloads.size() == actionsleft && allActionsDownloads()){
     	    		    if(action.getName().equalsIgnoreCase("loki_check"))
     	    		    	checkLoki(action,azipS);
@@ -1701,13 +1711,13 @@ public class FreeGee extends Activity implements OnClickListener {
     	    	}
     	    	else{
     	    		utils.customlog(Log.VERBOSE,"Downloading "+action.getName());
-    	    	    actionDownloads.put(action.getName(),false);
+    	    	    actionDownloads.put(action,false);
     	    		startDownload(action);
     	    	}
     	    }
 	    	else{
 	    		utils.customlog(Log.VERBOSE,"Downloading "+action.getName());
-	    	    actionDownloads.put(action.getName(),false);
+	    	    actionDownloads.put(action,false);
 	    		startDownload(action);
 	    	}
     	}
@@ -1721,19 +1731,19 @@ public class FreeGee extends Activity implements OnClickListener {
 		return string;
 	}
 
-    private String printList(HashMap<String,Boolean> actionMap) {
+    private String printList(HashMap<Action,Boolean> actionMap) {
 		String string ="";
-		for(String i:actionMap.keySet()){
-			string += i + ", ";
+		for(Action a:actionMap.keySet()){
+			string += a.getName() + ", ";
 		}
 		return string;
 	}
     
 	private boolean allActionsDownloads() {
 		if(actionDownloads != null){
-			for(String actionName:actionDownloads.keySet()){
-				if(!actionDownloads.get(actionName)){
-					utils.customlog(Log.VERBOSE,actionName+ " is not marked as downloaded.");
+			for(boolean action:actionDownloads.values()){
+				if(!action){
+					//utils.customlog(Log.VERBOSE,actionName+ " is not marked as downloaded.");
 					return false;
 				}
 			}
@@ -1796,9 +1806,9 @@ public class FreeGee extends Activity implements OnClickListener {
 	    mProgressDialog.show();
 	    
         Action dAction = new Action();
-        dAction.setName("devices2.xml");
-        dAction.setZipFile("devices2.xml");
-        dAction.setZipFileLocation("devices2.xml");
+        dAction.setName(constants.DEVICE_XML_NAME);
+        dAction.setZipFile(constants.DEVICE_XML_NAME);
+        dAction.setZipFileLocation(constants.DEVICE_XML_NAME);
         dAction.setMd5sum("nono");
         File devicesXML = new File(constants.DEVICE_XML);
         if(devicesXML.exists()){
@@ -1842,11 +1852,11 @@ public class FreeGee extends Activity implements OnClickListener {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case R.id.menu_settings:{
+/*            case R.id.menu_settings:{
         		Intent newActivity = new Intent(this, settings.class);
                 startActivity(newActivity);
                 return true;
-                }
+                }*/
             case R.id.menu_update_zip:{
             	File mPath = new File(constants.getSDCARD());
                 fileDialog = new FileDialog(this, mPath, ".zip");
@@ -1905,7 +1915,7 @@ public class FreeGee extends Activity implements OnClickListener {
 	            mainAction = utils.findAction(myDevice.getActions(), "loki_update_zip");
 	            if(mainAction != null){
 				    actionOrder = new ArrayList<Action>();
-				    actionDownloads = new HashMap<String,Boolean>();
+				    actionDownloads = new HashMap<Action,Boolean>();
 	                processAction(mainAction);
 	            }
 	            else{
@@ -1958,7 +1968,7 @@ public class FreeGee extends Activity implements OnClickListener {
     }
 
     public void offerAbootEmail(){
-    	final String subject = "FreeGee aboot not supported on " + myDevice.getModel() + ", swversion: " + swprop;
+    	final String subject = "FreeGee (" + appVersion + ") " + " aboot not supported on " + myDevice.getModel() + ", swversion: " + swprop;
     	final String message = "Aboot is not supported by loki for  " + myDevice.getModel() + ", swversion: " + swprop + ". Please see the attached aboot image.";
     	final Activity activity = this;
     	final File AbootImage = getAbootImage();
