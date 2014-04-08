@@ -13,8 +13,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -117,10 +119,10 @@ public class FreeGee extends Activity implements OnClickListener {
 	/**
 	 * Used to show the Change Log as needed on opening of new version
 	 */
-    private void showChangeLog(){
+    private void showChangeLog(boolean show){
         ChangeLog cl = new ChangeLog(this);
         appVersion = cl.getThisVersion();
-        if (cl.firstRun())
+        if (cl.firstRun() && show)
             cl.getLogDialog().show();
     }
     
@@ -288,13 +290,31 @@ public class FreeGee extends Activity implements OnClickListener {
            cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
     
+    /**
+     * 
+     * @return yyyy-MM-dd HH:mm:ss formate date as string
+     */
+    public static String getCurrentTimeStamp(){
+        try {
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.US);
+            String currentTimeStamp = dateFormat.format(new Date()); // Find todays date
+
+            return currentTimeStamp;
+        } catch (Exception e) {
+            utils.customlog(Log.ERROR, "Exception occured trying to get curent timestamp");
+            return null;
+        }
+    }
+    
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mMainActivityActive = false;
         setContentView(R.layout.activity_freegee);
-        utils.customlog(Log.VERBOSE,"FreeGee dir is: "+constants.FreeGeeFolder);
+        PACKAGE_NAME = getApplicationContext().getPackageName();
+        Log.v(constants.LOG_TAG,"FreeGee dir is: "+constants.FreeGeeFolder);
     	File freegeef=new File(constants.FreeGeeFolder);
 		  if(!freegeef.exists()){
 			  freegeef.mkdirs();
@@ -305,10 +325,7 @@ public class FreeGee extends Activity implements OnClickListener {
 		  }
 			
 			//Move log if it exists, keep a backup copy just incase one needs to report old error but reruns freegee
-		if(logFile.exists()){
-			logFile.renameTo(new File(constants.LOG_FILE_OLD));
-			logFile = new File(constants.LOG_FILE);
-		} else{
+		if(!logFile.exists()){
 			try {
 				logFile.createNewFile();
 			} catch (IOException e) {
@@ -316,6 +333,11 @@ public class FreeGee extends Activity implements OnClickListener {
 				alertbuilder("Error","There was an error tring to open the log file. The app will continue but debugging will not be avaliable","ok",0);
 			}
 		}
+		utils.customlog(Log.INFO,getCurrentTimeStamp());
+		showChangeLog(false);
+		utils.customlog(Log.INFO,"FreeGee version: " + appVersion);
+		utils.customlog(Log.INFO,"FreeGee paid: " + freeVersion());
+		utils.customlog(Log.VERBOSE,"FreeGee dir is: "+constants.FreeGeeFolder);
 		
 		if (!RootTools.isAccessGiven()) {
 			utils.customlog(Log.ERROR, "Root Denined!");
@@ -337,8 +359,6 @@ public class FreeGee extends Activity implements OnClickListener {
 		
 		if(utils.getBatteryLevel(this) < 15.0 && !(utils.getBatteryCharging(this) && utils.getBatteryLevel(this) >= 10.0) )
 			alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
-		
-		PACKAGE_NAME = getApplicationContext().getPackageName();
 		
 	    // read the property text  file
 		File file = new File("/system/build.prop");
@@ -400,7 +420,7 @@ public class FreeGee extends Activity implements OnClickListener {
 		}
 		
 		setupUtilities(0);
-		showChangeLog();
+		showChangeLog(true);
 		if(isOnline())
             getDevices();
 		else
@@ -1942,7 +1962,7 @@ public class FreeGee extends Activity implements OnClickListener {
      * @param action
      */
     public void offerEmail(final Action action){
-    	final String subject = "FreeGee error on " + myDevice.getModel() + " performing " + action.getName();
+    	final String subject = "FreeGee (" + appVersion + ") " + " error on " + myDevice.getModel() + " performing " + action.getName();
     	final String message = "There was an error performing " + action.getName()+ ". " + "Please see the attached logcat.";
     	final Activity activity = this;
     	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);

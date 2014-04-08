@@ -14,7 +14,6 @@ public class constants {
 	public static String DEVICE_XML_NAME = setDeviceXML();
 	public static String DEVICE_XML = FreeGeeFolder + "/" + DEVICE_XML_NAME;
     public static String LOG_FILE = FreeGeeFolder + "/log.txt";
-    public static String LOG_FILE_OLD = FreeGeeFolder + "/log_old.txt";
     public static final String EXTRA_FINISHED_DOWNLOAD_ID = "download_id";
     public static final String EXTRA_FINISHED_DOWNLOAD_PATH = "download_path";
     public static final String DOWNLOAD_ERROR = "Error";

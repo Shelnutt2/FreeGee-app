@@ -19,6 +19,10 @@
     </style>
   </head>
   <body>
+$ 1.9.22
+  % Version 1.9.22
+  _ 2014-4-8
+    * Adjust logging to be one persistent log file
 $ 1.9.21
   % Version 1.9.21
   _ 2014-4-8
