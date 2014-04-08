@@ -762,7 +762,7 @@ public class FreeGee extends Activity implements OnClickListener {
         	            		    utils.customlog(Log.VERBOSE,"Current size actionDownloads is: "+ actionDownloads.size());
         	            		    utils.customlog(Log.VERBOSE,"Current number of actionsleft is: "+ actionsleft);
         	            		    utils.customlog(Log.VERBOSE,"Current stauts of allActionsDownloads is: "+ allActionsDownloads());
-        	            		    if(actionDownloads.size() == actionsleft && allActionsDownloads())
+        	            		    if(actionDownloads.size() == actionsleft)
                 	                    doAllActions();
             	            	}
             	            	else{
