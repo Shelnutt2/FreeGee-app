@@ -19,6 +19,11 @@
     </style>
   </head>
   <body>
+$ 1.9.20
+  % Version 1.9.20
+  _ 2014-4-4
+    * Display warning for kitkat users
+    * Fix bug in checking downloaded actions
 $ 1.9.19
   % Version 1.9.19
   _ 2014-4-1

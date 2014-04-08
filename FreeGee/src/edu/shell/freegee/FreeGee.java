@@ -53,6 +53,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -93,7 +94,7 @@ public class FreeGee extends Activity implements OnClickListener {
     
     private int actionsleft = 0;
     private List<Action> actionOrder = new ArrayList<Action>();	
-    private HashMap<Action, Boolean> actionDownloads = new HashMap<Action,Boolean>();
+    private HashMap<String, Boolean> actionDownloads = new HashMap<String,Boolean>();
     private Action mainAction;
     private boolean ActionSuccess = true;
     private String swprop;
@@ -619,7 +620,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	     mProgressDialog.show();
     		 mainAction = a;
 			 actionOrder = new ArrayList<Action>();
-			 actionDownloads = new HashMap<Action,Boolean>();
+			 actionDownloads = new HashMap<String,Boolean>();
     	     processAction(a);
     	}
     	})
@@ -749,8 +750,8 @@ public class FreeGee extends Activity implements OnClickListener {
         	                	utils.customlog(Log.VERBOSE,"Action matches as: " + i.getName());
         	            	    if(utils.checkMD5(i.getMd5sum(), new File(fullPathName))){
         	            	    	utils.customlog(Log.VERBOSE,"Current list of actionDownloads are: "+ printList(actionDownloads));
-        	            		    if(actionDownloads.containsKey(i))
-        	            			    actionDownloads.put(i,true);
+        	            		    if(actionDownloads.containsKey(i.getName()))
+        	            			    actionDownloads.put(i.getName(),true);
         	            		    else{
         	            			    utils.customlog(Log.ERROR,"Downloaded action of " + i.getName() + " wasn't part of actions to be downloaded");
 //        	            			    utils.customlog(Log.VERBOSE,"Current list of actions are: "+ printList(actionDownloads));
@@ -796,8 +797,8 @@ public class FreeGee extends Activity implements OnClickListener {
     }
     
     private boolean actionDownloadsContains(Action i) {
-		for(Action action:actionDownloads.keySet()){
-			if(action.getName().equalsIgnoreCase(i.getName()))
+		for(String actionName:actionDownloads.keySet()){
+			if(actionName.equalsIgnoreCase(i.getName()))
 				return true;
 		}
 		return false;
@@ -964,7 +965,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	    mProgressDialog.setMessage("Checking for loki support...");
     	    mProgressDialog.show();
 			actionOrder = new ArrayList<Action>();
-			actionDownloads = new HashMap<Action,Boolean>();
+			actionDownloads = new HashMap<String,Boolean>();
     		for(Action action:myDevice.getActions()){
     			if(action.getName().equalsIgnoreCase("loki_check")){
     				loki_check = action;
@@ -1048,8 +1049,11 @@ public class FreeGee extends Activity implements OnClickListener {
     	if(myDevice == null || swprop == null)
     		return false;
     	for(String sw:myDevice.getFirmware()){
-    		if(sw.equalsIgnoreCase(swprop))
-    			return true;
+    		if(sw.equalsIgnoreCase(swprop)){
+    			if(Build.VERSION.SDK_INT == 19)
+    			alertbuilder("Warning", "Kitkat Support is currently experimental. You will not be able to boot normally after installing a recovery unless you flash a custom rom or boot image." , "Ok", 0);
+    			}
+    		return true;
     	}
     	return false;
     }
@@ -1701,7 +1705,7 @@ public class FreeGee extends Activity implements OnClickListener {
     	    if(azipF.exists()){
     	    	if(utils.checkMD5(action.getMd5sum(), azipF)){
     	    	    utils.customlog(Log.VERBOSE,"Using predownloaded "+action.getName());
-    	    	    actionDownloads.put(action,true);
+    	    	    actionDownloads.put(action.getName(),true);
     	    	    if(actionDownloads.size() == actionsleft && allActionsDownloads()){
     	    		    if(action.getName().equalsIgnoreCase("loki_check"))
     	    		    	checkLoki(action,azipS);
@@ -1711,13 +1715,13 @@ public class FreeGee extends Activity implements OnClickListener {
     	    	}
     	    	else{
     	    		utils.customlog(Log.VERBOSE,"Downloading "+action.getName());
-    	    	    actionDownloads.put(action,false);
+    	    	    actionDownloads.put(action.getName(),false);
     	    		startDownload(action);
     	    	}
     	    }
 	    	else{
 	    		utils.customlog(Log.VERBOSE,"Downloading "+action.getName());
-	    	    actionDownloads.put(action,false);
+	    	    actionDownloads.put(action.getName(),false);
 	    		startDownload(action);
 	    	}
     	}
@@ -1731,10 +1735,10 @@ public class FreeGee extends Activity implements OnClickListener {
 		return string;
 	}
 
-    private String printList(HashMap<Action,Boolean> actionMap) {
+    private String printList(HashMap<String,Boolean> actionMap) {
 		String string ="";
-		for(Action a:actionMap.keySet()){
-			string += a.getName() + ", ";
+		for(String a:actionMap.keySet()){
+			string += a + ", ";
 		}
 		return string;
 	}
@@ -1915,7 +1919,7 @@ public class FreeGee extends Activity implements OnClickListener {
 	            mainAction = utils.findAction(myDevice.getActions(), "loki_update_zip");
 	            if(mainAction != null){
 				    actionOrder = new ArrayList<Action>();
-				    actionDownloads = new HashMap<Action,Boolean>();
+				    actionDownloads = new HashMap<String,Boolean>();
 	                processAction(mainAction);
 	            }
 	            else{
