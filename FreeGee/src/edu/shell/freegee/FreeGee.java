@@ -73,6 +73,8 @@ import android.widget.ListView;
 import android.widget.Toast;
 import android.graphics.PorterDuff;
 
+/*import com.android.lge.lgsvcitems.LgSvcCmd;*/
+
 @SuppressLint("SdCardPath")
 /**
  * @author Seth Shelnutt
@@ -340,7 +342,7 @@ public class FreeGee extends Activity implements OnClickListener {
 		utils.customlog(Log.VERBOSE,"FreeGee dir is: "+constants.FreeGeeFolder);
 		
 		if (!RootTools.isAccessGiven()) {
-			utils.customlog(Log.ERROR, "Root Denined!");
+			utils.customlog(Log.ERROR, "Root Denined! Can't get root access.");
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
@@ -865,7 +867,7 @@ public class FreeGee extends Activity implements OnClickListener {
     		    if(prop != null){
     			     if(prop.equalsIgnoreCase(model)){
     				    if(onStock()){
-    					     if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
+    					     if(device.getFirmware().contains("any") || matchFirmware(device,swprop)){
     						    myDevice = device;
     						    device_but_not_swversion = false;
     						    if(myDevice.getDeviceDetailsLocation() != null){
@@ -892,7 +894,7 @@ public class FreeGee extends Activity implements OnClickListener {
     		    else if(prop2 != null){
     			    if(prop2.equalsIgnoreCase(model)){
     				    if(onStock()){
-    					    if(device.getFirmware().contains(swprop) || device.getFirmware().contains("any")){
+    					    if(device.getFirmware().contains("any") || matchFirmware(device,swprop)){
     						    myDevice = device;
     						    device_but_not_swversion = false;
     						    if(myDevice.getDeviceDetailsLocation() != null){
@@ -962,7 +964,7 @@ public class FreeGee extends Activity implements OnClickListener {
 
     }
     
-    /**
+	/**
      * Set the unlock objects to our local objects
      */
     public void setUnlocks(){
@@ -1038,7 +1040,7 @@ public class FreeGee extends Activity implements OnClickListener {
 					return true;
 				}
 				else{
-					if(myDevice != null && swprop != null && !swIsSupported()){
+					if(myDevice != null && swprop != null && !matchFirmware(myDevice,swprop)){
 						String swvm = "";
 					    if(swprop != null)
 						    swvm = " on software version: " + swprop;
@@ -1065,18 +1067,34 @@ public class FreeGee extends Activity implements OnClickListener {
 			return false;
     }
     
-    public boolean swIsSupported(){
-    	if(myDevice == null || swprop == null)
+    public boolean matchFirmware(Device device, String sw){
+    	if(device == null || sw == null)
     		return false;
-    	for(String sw:myDevice.getFirmware()){
-    		if(sw.equalsIgnoreCase(swprop)){
-    			if(Build.VERSION.SDK_INT == 19)
-    			alertbuilder("Warning", "Kitkat Support is currently experimental. You will not be able to boot normally after installing a recovery unless you flash a custom rom or boot image." , "Ok", 0);
-    			}
+    	for(String sws:device.getFirmware()){
+    		if(sw.startsWith(sws) || sw.equalsIgnoreCase(sws)){
+    			if(Build.VERSION.SDK_INT == 19 && constants.beta)
+    			    alertbuilder("Warning", "Kitkat Support is currently experimental. You will not be able to boot normally after installing a recovery unless you flash a custom rom or boot image." , "Ok", 0);
+    			
     		return true;
+    		}
     	}
     	return false;
     }
+    
+/*    public static String getMSLCode()
+    	    throws IOException
+    	  {
+    	    try
+    	    {
+    	      private static LgSvcCmd mLgSvcCmd = LgSvcCmd.getInstance(mContext);
+    	      String str = mLgSvcCmd.getCmdValue(200);
+    	      return str;
+    	    }
+    	    catch (Exception localException)
+    	    {
+    	    }
+    	    return "000000";
+    	  }*/
     
     /**
      * Run an action
