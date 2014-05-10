@@ -19,6 +19,10 @@
     </style>
   </head>
   <body>
+$ 1.9.23
+  % Version 1.9.23
+  _ 2014-4-11
+    * Allow partial software version matching.
 $ 1.9.22
   % Version 1.9.22
   _ 2014-4-8
