@@ -3,7 +3,6 @@ package edu.shell.freegee.utils;
 import java.io.File;
 import java.io.IOException;
 
-import android.annotation.SuppressLint;
 import android.os.Environment;
 import android.util.Log;
 
@@ -29,8 +28,6 @@ public class constants {
 			return "devices2.xml";
 	}
 		
-    
-    @SuppressLint("SdCardPath")
 	private static String setFreeGeeFolder(){
     	/* Disabled due to getExternalStorageDirectory() not always accessible from the cmd (RootTools) even though java applications can access it fine
     	if(Environment.getExternalStorageDirectory().exists() && Environment.getExternalStorageDirectory().canWrite() && Environment.getExternalStorageDirectory().canRead())

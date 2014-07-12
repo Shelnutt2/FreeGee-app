@@ -2,32 +2,28 @@ package edu.shell.freegee.device;
 
 import java.util.ArrayList;
 
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Root;
 
-@Root
 public class Device {
-	@Element
+
     private String name;
-	@ElementList
+
     private ArrayList<String> carrier;
-	@ElementList
+
     private ArrayList<String> model;
-	@ElementList
+
     private ArrayList<String> firmware;
-	@Element
+
     private String prop_id;
-	@Element
+
     private String sw_prop_id;
-	@Element(required=false) // 0 = mako aboot, 1 = loki
+
     private int bootloaderExploit = 1;
-    @ElementList
+
     private ArrayList< Action > actions;
-    @Element(required=false)
+
     private String deviceDetailsLocation;
 
-    public Device(@Element (name = "name") String name, @ElementList (name = "carrier") ArrayList<String> carrier, @ElementList (name = "model") ArrayList<String> model, @ElementList (name = "firmware") ArrayList<String> firmware, @Element (name = "prop_id") String prop_id, @Element (name = "sw_prop_id") String sw_prop_id, @Element (name = "bootloaderExploit") int bootloaderExploit, @ElementList (name = "actions") ArrayList< Action > actions, @Element (name = "deviceDetailsLocation") String deviceDetailsLocation){
+    public Device(String name, ArrayList<String> carrier, ArrayList<String> model, ArrayList<String> firmware, String prop_id, String sw_prop_id, int bootloaderExploit, ArrayList< Action > actions, String deviceDetailsLocation){
     	this.name = name;
     	this.carrier = carrier;
     	this.model = model;

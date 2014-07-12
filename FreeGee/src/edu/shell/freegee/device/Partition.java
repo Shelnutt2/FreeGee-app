@@ -1,14 +1,12 @@
 package edu.shell.freegee.device;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
 
-@Root
+
 public class Partition {
-	@Element
+
     private String name;
-	@Element
+
     private String partitionNumber;
-	@Element
+
     private boolean requiredBackup;
 
 	public Partition(String name, String partitionNumber, boolean requiredBackup){

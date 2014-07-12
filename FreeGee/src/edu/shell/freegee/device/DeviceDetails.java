@@ -1,12 +1,8 @@
 package edu.shell.freegee.device;
 import java.util.ArrayList;
 
-import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Root;
-
-@Root
 public class DeviceDetails {
-	@ElementList(required=false)
+
     private ArrayList<Partition> partitions;
 
 	public DeviceDetails(ArrayList<Partition> partitions){
