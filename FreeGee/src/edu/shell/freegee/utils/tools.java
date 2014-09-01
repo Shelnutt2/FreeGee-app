@@ -13,6 +13,7 @@ import java.util.concurrent.TimeoutException;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
+import android.provider.Settings.Secure;
 import android.util.Log;
 
 import com.stericson.RootTools.RootTools;
@@ -25,10 +26,15 @@ import edu.shell.freegee.view.Notices;
 
 public class tools {
 	ProgressDialog mProgressDialog;
+	Activity activity;
+	public tools(Activity activity, ProgressDialog mProgressDialog){
+		this.mProgressDialog = mProgressDialog;
+		this.activity = activity;
+	}
+	
 	public class setupTools extends AsyncTask<Activity, Integer, Boolean> {
 		
-		protected void onPreExecute(Activity... activity){
-		    mProgressDialog = new ProgressDialog(activity[0]);      
+		protected void onPreExecute(Activity... activity){      
 	        mProgressDialog.setIndeterminate(true);
 	        mProgressDialog.setCancelable(false);
 	        mProgressDialog.setMessage("Setting up utilities");
@@ -37,6 +43,9 @@ public class tools {
 	    /** The system calls this to perform work in a worker thread and
 	      * delivers it the parameters given to AsyncTask.execute() */
 	    protected Boolean doInBackground(Activity... activity) {
+	    	//Set android_id
+	    	constants.android_id = Secure.getString(activity[0].getContentResolver(),
+	                Secure.ANDROID_ID);
 	        if(!findCP(activity[0]) || checkForBusyBox(activity[0]))
 	        	return false;
 	        publishProgress(25);

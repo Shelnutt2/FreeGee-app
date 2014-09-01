@@ -25,7 +25,7 @@
         <activity
             android:name="edu.shell.freegee.FreeGee"
             android:label="@string/app_name"
-            android:configChanges="orientation|screenSize" >
+            android:configChanges="orientation|screenSize" android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -19,6 +19,10 @@ public class FreegeePager extends FragmentPagerAdapter {
 		super(fm);
 		this.fragments = fragments;
 	}
+	
+	public void addItem(FreegeeFragment newFrag){
+		fragments.add(newFrag);
+	}
 
 	@Override
 	public Fragment getItem(int position) {

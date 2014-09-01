@@ -9,24 +9,15 @@ import android.util.Log;
 public class constants {
 
 	public static final String FreeGeeFolder = setFreeGeeFolder();
-	public static boolean beta = true;
-	public static String DEVICE_XML_NAME = setDeviceXML();
-	public static String DEVICE_XML = FreeGeeFolder + "/" + DEVICE_XML_NAME;
     public static String LOG_FILE = FreeGeeFolder + "/log.txt";
     public static final String EXTRA_FINISHED_DOWNLOAD_ID = "download_id";
     public static final String EXTRA_FINISHED_DOWNLOAD_PATH = "download_path";
     public static final String DOWNLOAD_ERROR = "Error";
+    public static final String PREFS_NAME = "FreeGee";
     public static String LOG_TAG = "Freegee";
 	public static String CP_COMMAND;
-	
-
-
-	public static String setDeviceXML(){
-		if(beta)
-			return "devices2_beta.xml";
-		else
-			return "devices2.xml";
-	}
+	public static String appVersion = "";
+	public static String android_id = "";
 		
 	private static String setFreeGeeFolder(){
     	/* Disabled due to getExternalStorageDirectory() not always accessible from the cmd (RootTools) even though java applications can access it fine

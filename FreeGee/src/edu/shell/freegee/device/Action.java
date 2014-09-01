@@ -4,6 +4,10 @@ package edu.shell.freegee.device;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class Action implements Serializable, Comparable<Action> {
 	/**
 	 * 
@@ -13,6 +17,8 @@ public class Action implements Serializable, Comparable<Action> {
 	private String name;
 
     private String description;
+    
+    private String category;
 
     private String version;
 
@@ -30,9 +36,10 @@ public class Action implements Serializable, Comparable<Action> {
 
     private ArrayList<Action> dependencies;
 
-    public Action(String name, String description, String version, String zipfile, String zipfilelocation, String md5sum, boolean stockOnly, boolean hidden, int priority, ArrayList<Action> dependencies){
+    public Action(String name, String description, String category, String version, String zipfile, String zipfilelocation, String md5sum, boolean stockOnly, boolean hidden, int priority, ArrayList<Action> dependencies){
     	this.name = name;
     	this.description = description;
+    	this.category = category;
     	this.version = version;
     	this.zipfile = zipfile;
     	this.zipfilelocation = zipfilelocation;
@@ -45,12 +52,35 @@ public class Action implements Serializable, Comparable<Action> {
     
     public Action(){}
     
-    public String getName(){
+    public Action(JSONObject jAction) throws JSONException {
+    	this.name = jAction.getString("name");
+    	this.description = jAction.getString("description");
+    	this.category = jAction.getString("category");
+    	//this.version = jAction.getString("version");
+    	this.zipfile = jAction.getString("zipfile");
+    	this.zipfilelocation = jAction.getString("zipfilelocation");
+    	this.md5sum = jAction.getString("md5sum");
+    	this.stockOnly = jAction.getInt("stockonly") == 1 ? true: false;
+    	this.hidden = jAction.getInt("hidden") == 1 ? true: false;
+    	this.priority = jAction.getInt("priority");
+    	if(jAction.has("dependencies") && jAction.get("dependencies") instanceof JSONArray){
+	    	JSONArray jdepends = jAction.getJSONArray("dependencies");
+	    	for(int index = 0; index < jdepends.length(); index++){
+				this.dependencies.add(new Action((JSONObject)jdepends.get(index)));
+			}
+    	}
+	}
+
+	public String getName(){
     	return name;
     }
     
     public String getDescription(){
     	return description;
+    }
+    
+    public String getCategory(){
+    	return category;
     }
     
     public String getVersion() {
@@ -91,6 +121,10 @@ public class Action implements Serializable, Comparable<Action> {
 
     public void setDescription(String description){
     	this.description = description;
+    }
+    
+    public void setCategory(String category){
+    	this.category = category;
     }
 
     public void setVersion( String version ) {

@@ -14,6 +14,9 @@ import android.widget.TextView;
  * A placeholder fragment containing a simple view.
  */
 public class FreegeeFragment extends Fragment {
+	
+	private View v;
+	
 	/**
 	 * The fragment argument representing the section number for this
 	 * fragment.
@@ -40,11 +43,17 @@ public class FreegeeFragment extends Fragment {
 			Bundle savedInstanceState) {
 		View rootView = inflater.inflate(R.layout.fragment_main, container,
 				false);
+		v = rootView;
 		return rootView;
 	}
 
-	public void setContent(String content) {
-		 TextView view = (TextView) getView().findViewById(R.id.json_results);
-		    view.setText(content);
+	public boolean setContent(String content) {
+		if(v != null){
+			TextView view = (TextView) v.findViewById(R.id.json_results);
+			view.setText(content);
+			return true;
+		}
+		return false;
+		
 	}
 }

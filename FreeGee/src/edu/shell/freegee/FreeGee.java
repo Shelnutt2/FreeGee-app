@@ -12,18 +12,26 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.AdView;
 import com.stericson.RootTools.RootTools;
+
 import edu.shell.freegee.R;
 import edu.shell.freegee.device.Action;
 import edu.shell.freegee.device.Device;
 
 import edu.shell.freegee.utils.FileDialog;
+import edu.shell.freegee.utils.JsonHelper;
 import edu.shell.freegee.utils.constants;
 import edu.shell.freegee.utils.tools;
 import edu.shell.freegee.utils.utils;
@@ -39,6 +47,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 
@@ -85,8 +94,6 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
     
     private Device myDevice;
     
-    private String appVersion;
-    
 	File logFile = new File(constants.LOG_FILE);
 	
 	private ArrayList<FreegeeFragment> fragList = new ArrayList<FreegeeFragment>();
@@ -110,7 +117,7 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
 	 */
     private void showChangeLog(boolean show){
         ChangeLog cl = new ChangeLog(this);
-        appVersion = cl.getThisVersion();
+        constants.appVersion = cl.getThisVersion();
         if (cl.firstRun() && show)
             cl.getLogDialog().show();
     }
@@ -133,7 +140,7 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
      */
     private void makeAds(LinearLayout layout, int index){
         adView = new AdView(this);
-        adView.setAdUnitId(privateData.AdUnitID);
+        adView.setAdUnitId(PrivateData.Top_AdUnitID);
         adView.setAdSize(AdSize.SMART_BANNER);
         layout.addView(adView, index);
         
@@ -228,7 +235,7 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
      		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
      		fragList.add(FreegeeFragment.newInstance(fragList.size()+1,"Device Details"));
-     		fragList.add(FreegeeFragment.newInstance(fragList.size()+1,"Recoveries"));
+ //    		fragList.add(FreegeeFragment.newInstance(fragList.size()+1,"Recoveries"));
      		// Create the adapter that will return a fragment for each of the three
      		// primary sections of the activity.
      		mSectionsPagerAdapter = new FreegeePager(getFragmentManager(),fragList);
@@ -270,7 +277,7 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
 			  freegeeft.mkdirs();
 		  }
 			
-			//Move log if it exists, keep a backup copy just incase one needs to report old error but reruns freegee
+			//Create logfile is it does not exist
 		if(!logFile.exists()){
 			try {
 				logFile.createNewFile();
@@ -281,7 +288,7 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
 		}
 		utils.customlog(Log.INFO,getCurrentTimeStamp());
 		showChangeLog(false);
-		utils.customlog(Log.INFO,"FreeGee version: " + appVersion);
+		utils.customlog(Log.INFO,"FreeGee version: " + constants.appVersion);
 		utils.customlog(Log.INFO,"FreeGee paid: " + freeVersion());
 		utils.customlog(Log.VERBOSE,"FreeGee dir is: "+constants.FreeGeeFolder);
 		
@@ -290,32 +297,65 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
 			alertbuilder("Error!","Can't get root access. Please verify root and try again","Ok",1);
 		}
 		
-		new tools().new setupTools().execute(this);
-			
 		if(utils.getBatteryLevel(this) < 15.0 && !(utils.getBatteryCharging(this) && utils.getBatteryLevel(this) >= 10.0) )
 			alertbuilder("Error!","Your batter is too low to do anything, please charge it or connect an ac adapter","OK",1);
 		
-
+		
+	    mProgressDialog = new ProgressDialog(this);      
+		new tools(this,mProgressDialog).new setupTools().execute(this);
 		
 		showChangeLog(true);
-		if(isOnline())
-            getDevices();
-		else
-			alertbuilder("No Network","You are not connected to the internet, please connect and launch FreeGee again","Ok",1);
+		if(!isOnline()){
+			SharedPreferences settings = getSharedPreferences(constants.PREFS_NAME, 0);
+			String sDevice = settings.getString("Device", "");
+			if(sDevice.isEmpty())
+				alertbuilder("No Network","You are not connected to the internet, please connect and launch FreeGee again","Ok",1);
+			else{
+				JSONObject jDevice;
+				try {
+					jDevice = new JSONObject(sDevice);
+					myDevice = new Device(jDevice);
+					return;
+				} catch (JSONException e) {
+					alertbuilder("Error!","Could not load saved device from preferences. You will not be able to work in offline mode","Ok",1);
+				}
+			}	
+		}
         LinearLayout layout =  (LinearLayout)findViewById(R.id.main_linear_layout);
-        //Toast.makeText(this, "number of children: "+layout.getChildCount(), Toast.LENGTH_LONG).show();
-        //utils.customlog(Log.VERBOSE,"number of children: "+layout.getChildCount());
         if(freeVersion()){
             makeAds(layout,0);
             makeAds(layout,2);
         }
         //makeAds(layout,layout.getChildCount()/2);
         //makeAds(layout,layout.getChildCount());
-        checkForDownloadCompleted(getIntent());
+/*        checkForDownloadCompleted(getIntent());
 		GridView gridView = (GridView) findViewById(R.id.main_gridview);
-		gridView.setAdapter(new ButtonAdapter(mButtons));
+		gridView.setAdapter(new ButtonAdapter(mButtons));*/
+        mProgressDialog = new ProgressDialog(this);
+        JsonHelper JH = new JsonHelper(this,mProgressDialog);
+        JH.Handshake();
     }
 
+    public boolean addFragement(String title){
+    	FreegeeFragment newFrag = FreegeeFragment.newInstance(fragList.size()+1,title);
+    	fragList.add(newFrag);
+    	mSectionsPagerAdapter.addItem(newFrag);
+		getActionBar().addTab(getActionBar().newTab()
+				.setText(title)
+				.setTabListener(this));
+    	return true;
+    }
+    /**
+     * 
+     */
+    public boolean setFragmentContent(String content,int position){
+    	FreegeeFragment f1 = (FreegeeFragment)mSectionsPagerAdapter.getItem(position);
+    	if(!f1.setContent(content)){
+    		utils.customlog(Log.DEBUG, "Could not set content");
+    		return false;
+    	}
+    	return true;
+    }
 	/**
 	 * Show an alertDialog to prompt for action selected
 	 * @param a Action
@@ -392,6 +432,10 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
          return button;
         }
        }
+	
+	private void updateUI(){
+		setFragmentContent(myDevice.getDescription(),0);
+	}
     
     @Override
     protected void onNewIntent(Intent intent) {
@@ -401,8 +445,34 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
         	mProgressDialog.dismiss();
         	alertbuilder("Error","There was an error downloading the necessary files","ok",0);
         }
-        else
-            checkForDownloadCompleted(intent);
+        else if(intent.getBooleanExtra("jobject", false)){
+        	if(intent.hasExtra("device")){
+        		try {
+					JSONObject jDevice = new JSONObject(intent.getStringExtra("device"));
+					String actions_string = jDevice.getString("actions");
+					JSONObject actionsObj = new JSONObject(actions_string);
+					//ArrayList<Action> actions = new ArrayList<Action>();
+					JSONArray actionArray = new JSONArray();
+					Iterator<?> keys = actionsObj.keys();
+					while( keys.hasNext() ){
+			            String key = (String)keys.next();
+			            JSONObject jAction = new JSONObject(actionsObj.getString(key));
+			            actionArray.put(jAction);
+			            //Action new_action = new Action(jAction);
+			            //actions.add(new_action);
+			        }
+					jDevice.put("actions", actionArray);
+					myDevice = new Device(jDevice);
+					updateUI();
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        		//setFragmentContent(intent.getStringExtra("device"));
+        	}
+        }
+        
+            //checkForDownloadCompleted(intent);
     }
     
     /**
@@ -479,30 +549,6 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
         intent.setAction(DownloadReceiver.ACTION_START_DOWNLOAD);
         intent.putExtra(DownloadReceiver.DEVICE_ACTION, (Serializable) action);
         sendBroadcast(intent);
-    }
-
-
-    
-    /**
-     * Create an action for devices xml and download it
-     */
-    public void getDevices(){
-    	mProgressDialog = new ProgressDialog(FreeGee.this);
-	    mProgressDialog.setIndeterminate(true);
-	    mProgressDialog.setCancelable(false);
-	    mProgressDialog.setMessage("Downloading supported device list...");
-	    mProgressDialog.show();
-	    
-        Action dAction = new Action();
-        dAction.setName(constants.DEVICE_XML_NAME);
-        dAction.setZipFile(constants.DEVICE_XML_NAME);
-        dAction.setZipFileLocation(constants.DEVICE_XML_NAME);
-        dAction.setMd5sum("nono");
-        File devicesXML = new File(constants.DEVICE_XML);
-        if(devicesXML.exists()){
-        	devicesXML.delete();
-        }
-        startDownload(dAction);
     }
 
     @Override

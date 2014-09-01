@@ -350,6 +350,7 @@ containing a value of this type.
         public static final int download_failed=0x7f07002b;
         public static final int download_success=0x7f07002c;
         public static final int efs_text=0x7f070024;
+        public static final int json_results=0x7f070032;
         public static final int md5_verification_failed=0x7f07002d;
         public static final int menu_reboot_bootloader=0x7f07001e;
         public static final int menu_reboot_recovery=0x7f07001d;

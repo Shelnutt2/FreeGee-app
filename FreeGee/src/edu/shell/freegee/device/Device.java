@@ -1,112 +1,110 @@
 package edu.shell.freegee.device;
 
 import java.util.ArrayList;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.util.Log;
 
 
 public class Device {
 
     private String name;
 
-    private ArrayList<String> carrier;
+    private String carrier;
 
-    private ArrayList<String> model;
+    private String model;
+    
+    private String description;
 
-    private ArrayList<String> firmware;
-
-    private String prop_id;
-
-    private String sw_prop_id;
-
-    private int bootloaderExploit = 1;
+    private String firmware;
 
     private ArrayList< Action > actions;
+    
+    private Device parentDevice;
 
-    private String deviceDetailsLocation;
-
-    public Device(String name, ArrayList<String> carrier, ArrayList<String> model, ArrayList<String> firmware, String prop_id, String sw_prop_id, int bootloaderExploit, ArrayList< Action > actions, String deviceDetailsLocation){
+    public Device(String name, String carrier, String model, String description, String firmware, ArrayList< Action > actions, Device ParentDeviec){
     	this.name = name;
     	this.carrier = carrier;
     	this.model = model;
+    	this.description = description;
     	this.firmware = firmware;
-    	this.prop_id = prop_id;
-    	this.sw_prop_id = sw_prop_id;
-    	this.bootloaderExploit = bootloaderExploit;
     	this.actions = actions;
-    	this.deviceDetailsLocation = deviceDetailsLocation;
+    	this.parentDevice = parentDevice;
     }
 
     public Device() {}
+
+	public Device(JSONObject jDevice) throws JSONException {
+		this.name = jDevice.getString("name");
+		this.carrier = jDevice.getString("carrier");
+		this.model = jDevice.getString("model");
+		this.description = jDevice.getString("description");
+		this.firmware = jDevice.getString("firmware");
+		if(jDevice.has("actions") && jDevice.get("actions") instanceof JSONArray){
+			actions = new ArrayList<Action>();
+			JSONArray jActions = jDevice.getJSONArray("actions");
+			for(int index = 0; index < jActions.length(); index++){
+				this.actions.add(new Action(jActions.getJSONObject(index)));
+			}
+		}
+	}
 
 	public String getName(){
     	return name;
     }
 
-    public ArrayList<String> getCarrier(){
+    public String getCarrier(){
     	return carrier;
     }
 
-    public ArrayList<String> getModel(){
+    public String getModel(){
     	return model;
     }
+    
+    public String getDescription(){
+    	return description;
+    }
 
-    public ArrayList<String> getFirmware(){
+    public String getFirmware(){
     	return firmware;
     }
-
-    public String getProp_id(){
-    	return prop_id;
-    }
-
-    public String getSW_Prop_id(){
-    	return sw_prop_id;
-    }
-
-    public int getBootloaderExploit(){
-    	return bootloaderExploit;
+    
+    public Device getParentDevice(){
+    	return parentDevice;
     }
 
     public ArrayList< Action > getActions() {
         return actions;
     }
-    
-    public String getDeviceDetailsLocation(){
-    	return deviceDetailsLocation;
-    }
-
+  
     public void setName(String name){
     	this.name = name;
     }
 
-    public void setCarrier(ArrayList<String> carrier){
+    public void setCarrier(String carrier){
     	this.carrier = carrier;
     }
 
-    public void setModel(ArrayList<String> model){
+    public void setModel(String model){
     	this.model = model;
     }
+    
+    public void setDescription(String description){
+    	this.description = description;
+    }
 
-    public void setFirmware(ArrayList<String> firmware){
+    public void setFirmware(String firmware){
     	this.firmware = firmware;
-    }
-
-    public void setProp_id(String prop_id){
-    	this.prop_id = prop_id;
-    }
-
-    public void setSW_Prop_id(String sw_prop_id){
-    	this.sw_prop_id = sw_prop_id;
-    }
-
-    public void setBootloaderExploit(int bootloaderExploit){
-    	this.bootloaderExploit = bootloaderExploit;
     }
 
     public void setActions( ArrayList< Action > actions ) {
         this.actions = actions;
     }
     
-    public void setDeviceDetailsLocation(String deviceDetailsLocation){
-    	this.deviceDetailsLocation = deviceDetailsLocation;
+    public void setParentDevice(Device parentDevice){
+    	this.parentDevice = parentDevice;
     }
 
     public String toString(){
