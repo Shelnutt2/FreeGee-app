@@ -1,0 +1,122 @@
+<html>
+  <head>
+    <style type='text/css'>
+      a            { color:#a0a0e0 }
+      div.title    { 
+          color:#C0F0C0; 
+          font-size:1.2em; 
+          font-weight:bold; 
+          margin-top:1em; 
+          margin-bottom:0.5em; 
+          text-align:center }
+      div.subtitle { 
+          color:#C0F0C0; 
+          font-size:0.8em; 
+          margin-bottom:1em; 
+          text-align:center }
+      div.freetext { color:#F0F0F0 }
+      div.list     { color:#C0C0F0 }
+    </style>
+  </head>
+  <body>
+$ 1.9.23
+  % Version 1.9.23
+  _ 2014-4-11
+    * Allow partial software version matching.
+$ 1.9.22
+  % Version 1.9.22
+  _ 2014-4-8
+    * Adjust logging to be one persistent log file
+$ 1.9.21
+  % Version 1.9.21
+  _ 2014-4-8
+    * Fix action/downloads hanging
+$ 1.9.20
+  % Version 1.9.20
+  _ 2014-4-4
+    * Display warning for kitkat users
+    * Fix bug in checking downloaded actions
+$ 1.9.19
+  % Version 1.9.19
+  _ 2014-4-1
+    * Fix download hang bug
+    * Alter logic for allowing sending of emails
+$ 1.9.18
+  % Version 1.9.18
+  _ 2014-3-14
+    * Hide actions which require loki on non-loki aboots
+$ 1.9.17
+  % Version 1.9.17
+  _ 2014-2-09
+    * Don't offer to send unsupported aboot's if your sw version is supported specifically
+$ 1.9.16
+  % Version 1.9.16
+  _ 2014-2-07
+    * Fix bug which caused NPE and crash on unsupported sw versions
+$ 1.9.15
+  % Version 1.9.15
+  _ 2014-1-04
+    * Add context option to update zip with newer loki support
+$ 1.9.14
+  % Version 1.9.14
+  _ 2013-12-29
+    * Check if device is supported by loki
+$ 1.9.13
+  % Version 1.9.13
+  _ 2013-12-28
+    * Add support for advanced device details xml
+    * Add check for backups before attempting to run a restore
+    * Minor backend changes
+    * Support for prioritized actions
+$ 1.9.12
+  % Version 1.9.12
+  _ 2013-12-26
+    * Bugfixes
+    * Add check for internet access
+$ 1.9.11
+  % Version 1.9.11
+  _ 2013-12-18
+    * Added support for fall back on failed downloads
+    * Add context menu options for shutdown and rebooting
+    * Improved Busybox offering
+    * Check to make sure tools copied to /data/local/tmp/
+$ 1.9.10
+  % Version 1.9.10
+  _ 2013-12-17
+    * Improvements to the logic for device detection, generic fall back implemented
+$ 1.9.9
+  % Version 1.9.9
+  _ 2013-12-15
+    * Add option to report problem when an action fails
+    * Add better md5sum checking of downloaded actions
+    * Enabled checking of stock software versions
+$ 1.9.8
+  % Version 1.9.8
+  _ 2013-12-10
+    * Fix NPE issue with some devices when checking for existing cp command
+$ 1.9.7
+  % Version 1.9.7
+  _ 2013-12-08
+    * Improved detection of failed actions
+    * Added progress dialog for downloading initial supported devices
+    * Will default to using exiting action zips if md5sum's match
+    * Added option for choosing mako sbls or stock sbls for optimus g
+$ 1.9.6
+  % Version 1.9.6
+  _ 2013-12-03
+    * Add BusyBox dependencies and check. This is needed for LGE 4.1 devices
+$ 1.9.5  
+  % Version 1.9.5
+  _ 2013-12-03
+    * Fixed minor bug which caused error 127 on JB 4.1 and 4.2 stock devicse
+    
+$ 1.9.4
+  % Version 1.9.4
+  _ 2013-12-02
+    * Complete Rewrite
+    * Everything is done on device now, no more uploading boot.img's
+    * Many more features to come shortly here
+    * As always if you have trouble contact me via email, irc (freenode #lg-optimusg), or on xda
+$ END_OF_CHANGE_LOG
+  </body>
+</html>

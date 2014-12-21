@@ -1,0 +1,33 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <!-- <item
+        android:id="@+id/menu_settings"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="@string/menu_settings"/> -->
+    
+    <item
+        android:id="@+id/menu_update_zip"
+        android:orderInCategory="150"
+        android:showAsAction="never"
+        android:title="@string/menu_update_zip"/>
+    
+    <item
+        android:id="@+id/menu_reboot_recovery"
+        android:orderInCategory="200"
+        android:showAsAction="never"
+        android:title="@string/menu_reboot_recovery"/>
+        
+    <item
+        android:id="@+id/menu_reboot_bootloader"
+        android:orderInCategory="300"
+        android:showAsAction="never"
+        android:title="@string/menu_reboot_bootloader"/>
+            
+    <item
+        android:id="@+id/menu_shutdown"
+        android:orderInCategory="400"
+        android:showAsAction="never"
+        android:title="@string/menu_shutdown"/>
+
+</menu>
