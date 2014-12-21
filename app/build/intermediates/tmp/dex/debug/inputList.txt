@@ -1,0 +1,12 @@
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/classes/debug
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/internal_impl-21.0.0-22d80fae57450a226aa67387e7e0b9072200706b.jar
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/support-annotations-21.0.0-4b1246a750c524481c2f504854994ea0e029605c.jar
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/classes-b9a52009ad722a8bda59701d5ed58b666ddd1416.jar
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/json_simple-1.1-20e99b4f42e53032bd8db170ff62840dec9abca7.jar
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/RootTools-3.4-7ff4d4ca7f681dc15460fa5f16f3807f27e1225f.jar
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/dropbox-android-sdk-1.5.3-c88b0a412f6de2be45731e8d061343dce06f0ca4.jar
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/android-async-http-1.4.5-19defce6464e5ffd04f79eb9a5277c38701e916a.jar
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/internal_impl-21.0.0-b2a8e3a71fa72131a57792d9c60c13a797536838.jar
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/RootTools-javadoc-3.4-f360181eb51363bc1c59ddf937a9d0c4bfeb517e.jar
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/classes-fb02a311b4e6b2c372c4c98e1b299f6d65b14b8e.jar
+/home/s.shelnutt/AndroidstudioProjects/FreeGee-app/app/build/intermediates/pre-dexed/debug/classes-a75a1843820e1bb02ebccb344ae3c07e948eb1e0.jar
