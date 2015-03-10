@@ -46,7 +46,7 @@ public class tools {
 	    	//Set android_id
 	    	constants.android_id = Secure.getString(activity[0].getContentResolver(),
 	                Secure.ANDROID_ID);
-	        if(!findCP(activity[0]) || checkForBusyBox(activity[0]))
+	        if(!findCP(activity[0]) && !checkForBusyBox(activity[0]))
 	        	return false;
 	        publishProgress(25);
 	        if(!setupUtilities(0,activity[0]))
@@ -384,7 +384,7 @@ public class tools {
 			  }
 			}
 		
-		CommandCapture command = new CommandCapture(0, "mkdir -p /data/local/tmp/"){
+		CommandCapture command = new CommandCapture(0, "mkdir -p /data/local/tmp/freegee/"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -395,11 +395,11 @@ public class tools {
 		try {
 			RootTools.getShell(true).add(command).isFinished();
 		} catch (IOException e) {
-			utils.customlog(Log.ERROR,"IOException when making /data/local/tmp dir");
-			Notices.alertbuilder("Error!","Can't make /data/local/tmp","Ok",1,activity);
+			utils.customlog(Log.ERROR,"IOException when making /data/local/tmp/freegee dir");
+			Notices.alertbuilder("Error!","Can't make /data/local/tmp/freegee","Ok",1,activity);
 			return false;
 		} catch (TimeoutException e) {
-			utils.customlog(Log.ERROR,"mkdir timeout when making /data/local/tmp dir");
+			utils.customlog(Log.ERROR,"mkdir timeout when making /data/local/tmp/freegee dir");
 			Notices.alertbuilder("Error!","Mkdir timed out","Ok",1,activity);
 			return false;
 		} catch (RootDeniedException e) {
@@ -408,7 +408,7 @@ public class tools {
 			return false;
 		}
 		
-		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/edifier /data/local/tmp/ && chmod 755 /data/local/tmp/edifier"){
+		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/edifier /data/local/tmp/freegee/ && chmod 755 /data/local/tmp/freegee/edifier"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -433,7 +433,7 @@ public class tools {
 			return false;
 		}
 		
-		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/keys /data/local/tmp/ && chmod 644 /data/local/tmp/keys"){
+		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/keys /data/local/tmp/freegee/ && chmod 644 /data/local/tmp/freegee/keys"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -458,7 +458,7 @@ public class tools {
 			return false;
 		}
 		
-		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/mkbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/mkbootimg"){
+		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/mkbootimg /data/local/tmp/freegee/ && chmod 755 /data/local/tmp/freegee/mkbootimg"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -483,7 +483,7 @@ public class tools {
 			return false;
 		}
 		
-		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/unpackbootimg /data/local/tmp/ && chmod 755 /data/local/tmp/unpackbootimg"){
+		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/unpackbootimg /data/local/tmp/freegee/ && chmod 755 /data/local/tmp/freegee/unpackbootimg"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -508,7 +508,7 @@ public class tools {
 			return false;
 		}
 		
-		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/busybox /data/local/tmp/ && chmod 755 /data/local/tmp/busybox"){
+		command = new CommandCapture(0,constants.CP_COMMAND + " /sdcard/freegee/tools/busybox /data/local/tmp/freegee/ && chmod 755 /data/local/tmp/freegee/busybox"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -533,7 +533,7 @@ public class tools {
 			return false;
 		}
 		
-		command = new CommandCapture(0,"ls /data/local/tmp/edifier"){
+		command = new CommandCapture(0,"ls /data/local/tmp/freegee/edifier"){
 	        @Override
 	        public void output(int id, String line)
 	        {
@@ -548,12 +548,12 @@ public class tools {
 			shell.add(command);
 			commandWait(command);
 		} catch (IOException e) {
-			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/edifier!");
+			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/freegee/edifier!");
 			Notices.alertbuilder("Error!","IOException checking if edifier copied fine","Ok",1,activity);
 			return false;
 		} catch (TimeoutException e) {
-			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/edifier!");
-			Notices.alertbuilder("Error!","Timed out looking for /data/local/tmp/edifier","Ok",1,activity);
+			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/freegee/edifier!");
+			Notices.alertbuilder("Error!","Timed out looking for /data/local/tmp/freegee/edifier","Ok",1,activity);
 			return false;
 		} catch (RootDeniedException e) {
 			utils.customlog(Log.ERROR, "Root Denined!");
@@ -570,7 +570,7 @@ public class tools {
 				return false;
 			}
 		}
-		command = new CommandCapture(0,"ls /data/local/tmp/busybox"){
+		command = new CommandCapture(0,"ls /data/local/tmp/freegee/busybox"){
 		    @Override
 		    public void output(int id, String line)
 		    {
@@ -583,12 +583,12 @@ public class tools {
 			shell.add(command);
 			commandWait(command);
 		} catch (IOException e) {
-			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/busybox!");
+			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/freegee/busybox!");
 			Notices.alertbuilder("Error!","IOException checking if busybox copied fine","Ok",1,activity);
 			return false;
 		} catch (TimeoutException e) {
-			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/busybox!");
-			Notices.alertbuilder("Error!","Timed out looking for /data/local/tmp/busybox","Ok",1,activity);
+			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/freegee/busybox!");
+			Notices.alertbuilder("Error!","Timed out looking for /data/local/tmp/freegee/busybox","Ok",1,activity);
 			return false;
 		} catch (RootDeniedException e) {
 			utils.customlog(Log.ERROR, "Root Denined!");
@@ -606,7 +606,7 @@ public class tools {
 			}
 		}
 		
-		command = new CommandCapture(0,"ls /data/local/tmp/busybox"){
+		command = new CommandCapture(0,"ls /data/local/tmp/freegee/busybox"){
 		    @Override
 		    public void output(int id, String line)
 		    {
@@ -619,12 +619,12 @@ public class tools {
 			shell.add(command);
 			commandWait(command);
 		} catch (IOException e) {
-			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/keys!");
+			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/freegee/keys!");
 			Notices.alertbuilder("Error!","IOException checking if keys copied fine","Ok",1,activity);
 			return false;
 		} catch (TimeoutException e) {
-			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/keys!");
-			Notices.alertbuilder("Error!","Timed out looking for /data/local/tmp/keys","Ok",1,activity);
+			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/freegee/keys!");
+			Notices.alertbuilder("Error!","Timed out looking for /data/local/tmp/freegee/keys","Ok",1,activity);
 			return false;
 		} catch (RootDeniedException e) {
 			utils.customlog(Log.ERROR, "Root Denined!");
@@ -642,7 +642,7 @@ public class tools {
 			}
 		}
 		
-		command = new CommandCapture(0,"ls /data/local/tmp/mkbootimg"){
+		command = new CommandCapture(0,"ls /data/local/tmp/freegee/mkbootimg"){
 		    @Override
 		    public void output(int id, String line)
 		    {
@@ -655,12 +655,12 @@ public class tools {
 			shell.add(command);
 			commandWait(command);
 		} catch (IOException e) {
-			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/mkbootimg!");
+			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/freegee/mkbootimg!");
 			Notices.alertbuilder("Error!","IOException checking if mkbootimg copied fine","Ok",1,activity);
 			return false;
 		} catch (TimeoutException e) {
-			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/mkbootimg!");
-			Notices.alertbuilder("Error!","Timed out looking for /data/local/tmp/mkbootimg","Ok",1,activity);
+			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/freegee/mkbootimg!");
+			Notices.alertbuilder("Error!","Timed out looking for /data/local/tmp/freegee/mkbootimg","Ok",1,activity);
 			return false;
 		} catch (RootDeniedException e) {
 			utils.customlog(Log.ERROR, "Root Denined!");
@@ -678,7 +678,7 @@ public class tools {
 			}
 		}
 		
-		command = new CommandCapture(0,"ls /data/local/tmp/unpackbootimg"){
+		command = new CommandCapture(0,"ls /data/local/tmp/freegee/unpackbootimg"){
 		    @Override
 		    public void output(int id, String line)
 		    {
@@ -691,12 +691,12 @@ public class tools {
 			shell.add(command);
 			commandWait(command);
 		} catch (IOException e) {
-			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/unpackbootimg!");
+			utils.customlog(Log.ERROR, "IOException on ls /data/local/tmp/freegee/unpackbootimg!");
 			Notices.alertbuilder("Error!","IOException checking if unpackbootimg copied fine","Ok",1,activity);
 			return false;
 		} catch (TimeoutException e) {
-			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/unpackbootimg!");
-			Notices.alertbuilder("Error!","Timed out looking for /data/local/tmp/unpackbootimg","Ok",1,activity);
+			utils.customlog(Log.ERROR, "Timed out ls /data/local/tmp/freegee/unpackbootimg!");
+			Notices.alertbuilder("Error!","Timed out looking for /data/local/tmp/freegee/unpackbootimg","Ok",1,activity);
 			return false;
 		} catch (RootDeniedException e) {
 			utils.customlog(Log.ERROR, "Root Denined!");
@@ -788,7 +788,7 @@ public class tools {
     	else if(myDevice !=null)
     		ending = "-"+myDevice.getModel()+".img";
     	String abootOut = constants.FreeGeeFolder+"aboot"+ending;
-		Command command = new CommandCapture(0,"/data/local/tmp/busybox dd if="+"/dev/block/platform/msm_sdcc.1/by-name/"+"aboot" + " of="+abootOut){
+		Command command = new CommandCapture(0,"/data/local/tmp/freegee/busybox dd if="+"/dev/block/platform/msm_sdcc.1/by-name/"+"aboot" + " of="+abootOut){
 	        @Override
 	        public void output(int id, String line)
 	        {

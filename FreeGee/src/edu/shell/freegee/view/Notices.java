@@ -14,31 +14,37 @@ public final class Notices {
      * @param exits 0 does not exit application, 1 forces exit
      */
     public static void alertbuilder(String title, String text, String Button, final int exits, final Activity activity){
-    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity);
-    	    
-    	// set title
-    	alertDialogBuilder.setTitle(title);
-
-    	// set dialog message
-    	alertDialogBuilder
-    	.setMessage(text)
-    	.setCancelable(false)
-    	.setPositiveButton(Button,new DialogInterface.OnClickListener() {
-    	public void onClick(DialogInterface dialog,int id) {
-    	// if this button is clicked, close
-    	// current activity
-    		if(exits==1){
-    			activity.finish();
-    			}
-    	}
+    	final String ftitle = title;
+    	final String ftext = text;
+    	final String fButton = Button;
+    	activity.runOnUiThread(new Runnable() {
+    		  public void run() {
+			    	AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity);
+			    	    
+			    	// set title
+			    	alertDialogBuilder.setTitle(ftitle);
+			
+			    	// set dialog message
+			    	alertDialogBuilder
+			    	.setMessage(ftext)
+			    	.setCancelable(false)
+			    	.setPositiveButton(fButton,new DialogInterface.OnClickListener() {
+			    	public void onClick(DialogInterface dialog,int id) {
+			    	// if this button is clicked, close
+			    	// current activity
+			    		if(exits==1){
+			    			activity.finish();
+			    			}
+			    	}
+			    	});
+			
+			    	// create alert dialog
+			    	AlertDialog alertDialog = alertDialogBuilder.create();
+			
+			    	// show it
+			    	alertDialog.show();
+			
+			    	}
     	});
-
-    	// create alert dialog
-    	AlertDialog alertDialog = alertDialogBuilder.create();
-
-    	// show it
-    	alertDialog.show();
-
-    	}
-
+    }
 }

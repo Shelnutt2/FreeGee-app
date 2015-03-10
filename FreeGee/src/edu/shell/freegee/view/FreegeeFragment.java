@@ -56,4 +56,13 @@ public class FreegeeFragment extends Fragment {
 		return false;
 		
 	}
+
+	public boolean setContent(View content) {
+		if(v != null){
+			ViewGroup layout = (ViewGroup) v;
+			layout.addView(content);
+			return true;
+		}
+		return false;
+	}
 }

@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.json.JSONArray;
@@ -48,32 +49,36 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import android.graphics.PorterDuff;
 
 /**
  * @author Seth Shelnutt
  */
-public class FreeGee extends Activity implements ActionBar.TabListener {
+public class FreeGee extends Activity implements ActionBar.TabListener, OnClickListener {
 
     
     private static ProgressDialog mProgressDialog;
     private static FileDialog fileDialog;
     public static boolean isSpecial;
-    private ArrayList<Object> mButtons = new ArrayList<Object>();
         
     private static boolean mMainActivityActive;
 
@@ -96,7 +101,7 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
     
 	File logFile = new File(constants.LOG_FILE);
 	
-	private ArrayList<FreegeeFragment> fragList = new ArrayList<FreegeeFragment>();
+	private SparseArray<FreegeeFragment> fragList = new SparseArray<FreegeeFragment>();
 	private int currentPosition;
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -234,7 +239,7 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
      		final ActionBar actionBar = getActionBar();
      		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
-     		fragList.add(FreegeeFragment.newInstance(fragList.size()+1,"Device Details"));
+     		fragList.put(0,FreegeeFragment.newInstance(0,"Device Details"));
  //    		fragList.add(FreegeeFragment.newInstance(fragList.size()+1,"Recoveries"));
      		// Create the adapter that will return a fragment for each of the three
      		// primary sections of the activity.
@@ -335,16 +340,34 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
         JsonHelper JH = new JsonHelper(this,mProgressDialog);
         JH.Handshake();
     }
+    
+    @Override
+    public void onClick(View v) {
+     Button selection = (Button)v;
+     //Toast.makeText(getBaseContext(), selection.getText()+ " was pressed!", Toast.LENGTH_SHORT).show();
+     for(final Action a:myDevice.getActions()){
+    	 if(a.getName().equalsIgnoreCase(selection.getText().toString())){
+    			 showActionAlertDialog(a);
+    			 break;
+    		 }
+    	 }
+     }
 
     public boolean addFragement(String title){
-    	FreegeeFragment newFrag = FreegeeFragment.newInstance(fragList.size()+1,title);
-    	fragList.add(newFrag);
+    	FreegeeFragment newFrag = FreegeeFragment.newInstance(fragList.size(),title);
+    	
+    	//fragList.add(newFrag);
     	mSectionsPagerAdapter.addItem(newFrag);
+    	fragList = mSectionsPagerAdapter.getSparseArray();
+    	mSectionsPagerAdapter.notifyDataSetChanged();
+    	getFragmentManager().executePendingTransactions();
+    	mViewPager.getAdapter().notifyDataSetChanged();
 		getActionBar().addTab(getActionBar().newTab()
 				.setText(title)
 				.setTabListener(this));
     	return true;
     }
+    
     /**
      * 
      */
@@ -356,6 +379,19 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
     	}
     	return true;
     }
+    
+    /**
+     * 
+     */
+    public boolean setFragmentContent(View content,int position){
+    	FreegeeFragment f1 = (FreegeeFragment)mSectionsPagerAdapter.getItem(position);
+    	if(!f1.setContent(content)){
+    		utils.customlog(Log.DEBUG, "Could not set content");
+    		return false;
+    	}
+    	return true;
+    }
+    
 	/**
 	 * Show an alertDialog to prompt for action selected
 	 * @param a Action
@@ -434,7 +470,65 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
        }
 	
 	private void updateUI(){
+		ArrayList<Object> mButtons = new ArrayList<Object>();
 		setFragmentContent(myDevice.getDescription(),0);
+		
+		HashMap<String, ArrayList<Action>> Categories = new HashMap<String,ArrayList<Action>>();
+		for(int i = 0; i < myDevice.getActions().size();i++){
+			Action action = myDevice.getActions().get(i);
+			if(Categories.containsKey(action.getCategory())){
+				ArrayList<Action> current = Categories.get(action.getCategory());
+				current.add(action);
+				Categories.put(action.getCategory(), current);
+			}
+			else{
+				ArrayList<Action> newArrayList = new ArrayList<Action>();
+				newArrayList.add(action);
+				Categories.put(action.getCategory(), newArrayList);
+			}
+		}
+		
+		
+	   	//Toast.makeText(this, "Updating Grid View", Toast.LENGTH_LONG).show();
+	       for(Entry<String, ArrayList<Action>> entry : Categories.entrySet()){
+	       		String category = entry.getKey();
+	       		ArrayList<Action> actions = entry.getValue();
+	       		int index = fragList.size();
+	       		addFragement(category);
+	       		for(int i = 0; i < actions.size(); i++){
+			   		Button cb = new Button(this);
+			 		    cb.setText(actions.get(i).getName());
+			 		    
+					    if(i % 2 == 0){
+			 		      cb.getBackground().setColorFilter(Color.parseColor("#005030"), PorterDuff.Mode.DARKEN);
+			 		      cb.setTextColor(Color.parseColor("#f47321"));
+			           }
+			 		    else if(i % 2 == 1){
+			   		      cb.getBackground().setColorFilter(Color.parseColor("#f47321"), PorterDuff.Mode.DARKEN);
+			   		      cb.setTextColor(Color.parseColor("#005030"));
+			             }
+/*			 		    else if(i % 4 == 2){
+			   		      cb.getBackground().setColorFilter(Color.parseColor("#f47321"), PorterDuff.Mode.DARKEN);
+			   		      cb.setTextColor(Color.parseColor("#005030"));
+			             }
+			 		    else if(i % 4 == 3){
+			   		      cb.getBackground().setColorFilter(Color.parseColor("#005030"), PorterDuff.Mode.DARKEN);
+			   		      cb.setTextColor(Color.parseColor("#f47321"));
+			             }*/
+		
+			 		    cb.setTypeface(null, Typeface.BOLD);
+			 		    cb.setMinHeight(150);
+			 		    //cb.setMinWidth(100);
+			 		    cb.setPadding(100, 100, 100, 100);
+			 		    cb.setOnClickListener(this);
+			 		    cb.setId(i);
+			 		    mButtons.add(cb);
+			 		    //j++;
+	       		}
+				GridView gridView = new GridView(this);
+				gridView.setAdapter(new ButtonAdapter(mButtons));
+				setFragmentContent(gridView,index);
+	       }
 	}
     
     @Override
@@ -736,7 +830,7 @@ public class FreeGee extends Activity implements ActionBar.TabListener {
 		// When the given tab is selected, switch to the corresponding page in
 		// the ViewPager.
 		mViewPager.setCurrentItem(tab.getPosition());
-		
+		ft.commit();
 	}
 
 	@Override

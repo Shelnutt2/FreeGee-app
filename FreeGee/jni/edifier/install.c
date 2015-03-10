@@ -110,23 +110,7 @@ try_update_binary(const char *path, ZipArchive *zip) {
         mzCloseZipArchive(zip);
         return INSTALL_UPDATE_BINARY_MISSING;
     }
-    char* binary = "/data/local/tmp/update_binary";
-    unlink(binary);
-    int fd = creat(binary, 0755);
-
-    if (fd < 0) {
-        mzCloseZipArchive(zip);
-        LOGE("Can't make %s\n", binary);
-        return 1;
-    }
-
-    bool ok = mzExtractZipEntryToFile(zip, binary_entry, fd);
-    close(fd);
-    if (!ok) {
-        LOGE("Can't copy %s\n", ASSUMED_UPDATE_BINARY_NAME);
-        mzCloseZipArchive(zip);
-        return 1;
-    }
+    char* binary = "/data/local/tmp/freegee/update_binary";
 
     int pipefd[2];
     pipe(pipefd);

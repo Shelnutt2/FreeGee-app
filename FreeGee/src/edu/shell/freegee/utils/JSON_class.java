@@ -9,7 +9,7 @@ import android.util.Log;
 import com.loopj.android.http.*;
 
 public class JSON_class {
-  private static final String BASE_URL = "http://freegee.ufteach.no-ip.org/public/index.php";
+  private static final String BASE_URL = "http://ufteach.no-ip.org/public/index.php";
 
   private static AsyncHttpClient client = new AsyncHttpClient();
 
